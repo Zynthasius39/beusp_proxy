@@ -1,29 +1,74 @@
-from flask import Flask, jsonify, request 
+from flask import Flask, jsonify, request, make_response, render_template
 from flask_restful import reqparse, abort, Api, Resource
-from session.tms import TMSession
+from flask_cors import CORS
+from session.tms import TMSession, SessionException
+import json
 
-# creating the flask app 
 app = Flask(__name__) 
-# creating an API object 
-api = Api(app) 
+api = Api(app)
+CORS(app, origins=["*"])
 
-session = None;
+SESSION = None;
 
-parser = reqparse.RequestParser()
-parser.add_argument('student_id')
-parser.add_argument('password')
+@api.representation('text/html')
+def output_html(data, code, headers=None):
+    pass
 
-class Auth(Resource): 
+class Index(Resource):
+    """Main Endpoint
+
+    Returns:
+        _type_: _description_
+    """
+    
     def get(self):
-        return TODOS
+        parser = reqparse.RequestParser()
+        parser.add_argument('mod', type=str, help="Invalid page")
+        # res = make_response(SESSION.get('?mod=' + args.get('mod')))
+        res = make_response(SESSION.get('?mod=home'))
+        res.headers['Content-Type'] = 'text/html'
+        return res
 
+class Auth(Resource):
+    """Auth Endpoint
+
+    Returns:
+        201: Authenticated
+        401: Bad credentials
+        502: Bad response
+    """
+    
     def post(self): 
+        global SESSION
+        parser = reqparse.RequestParser()
+        parser.add_argument('student_id', required=True, help="Missing the credential parameter in the JSON body")
+        parser.add_argument('password', required=True, help="Missing the credential parameter in the JSON body")
         args = parser.parse_args()
-        session = TMSession(args['student_id'], args['password'])
-        print(session)
-        return session.json(), 201
+        SESSION = TMSession(args.get('student_id'), args.get('password'))
+        try:
+            SESSION.auth()
+        except SessionException as e:
+            if (e.error_code == 10):
+                abort(401)
+            else:
+                abort(502)
+        return '', 201
 
-api.add_resource(Auth, '/auth') 
+class LogOut(Resource):
+    """LogOut Endpoint
+    
+    Returns:
+        200: Logged out
+        502: Bad response
+    """
+    
+    def get(self):
+        try:
+            SESSION.logout()
+        except SessionException as e:
+            abort(502)
+        return '', 200
 
-if __name__ == '__main__': 
-	app.run(debug = True) 
+api.add_resource(Index, '/')
+api.add_resource(Auth, '/auth')
+api.add_resource(LogOut, '/logout')
