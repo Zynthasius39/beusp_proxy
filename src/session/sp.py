@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 import requests
 import json
 
@@ -6,14 +7,14 @@ ROOT = 'https://' + HOST + '/'
 censorLength = 5
 userAgent = "Mozilla/5.0 (iPhone14,3; U; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) Version/10.0 Mobile/19A346 Safari/602.1"
 
-class TMSession:
-    """TMSession object"""
+class SPSession:
+    """SPSession object"""
     
     def __init__(self, student_id, password):
         """Initiate a TMS Session"""
         self.student_id = student_id
         self.password = password
-        self.protectedPass = TMSession.credsCensor(self.password, censorLength)
+        self.protectedPass = SPSession.credsCensor(self.password, censorLength)
     
     def __str__(self):
         return f"[{self.student_id}:{self.protectedPass}] -> {self.protectedSess}"
@@ -37,15 +38,15 @@ class TMSession:
         return True
     
     def get(self, target):
-        res = requests.post(ROOT + target,
+        print(ROOT + "?mod=" + target)
+        res = requests.post(ROOT + "?mod=" + target,
             headers = {
                 "Host": HOST,
                 "Cookie": "PHPSESSID=" + self.phpsessid,
                 "User-Agent": userAgent
             },
             allow_redirects=False)
-        if not res.status_code == 200:
-            raise SessionException("GET Failed", 11)
+        print(res.text)
         return res.text
         
     
@@ -67,7 +68,7 @@ class TMSession:
         for header in cookies.replace(' ', '').split(';'):
             if (not header.find('PHPSESSID') == -1):
                 self.phpsessid = header.split('=')[1]
-                self.protectedSess = TMSession.credsCensor(self.phpsessid, censorLength)
+                self.protectedSess = SPSession.credsCensor(self.phpsessid, censorLength)
                 return
         raise SessionException("Couldn't find session ID", 8)
     
@@ -79,7 +80,7 @@ class TMSession:
                 "User-Agent": userAgent
             },
             allow_redirects=False)
-        if not res.status_coed == 302:
+        if not res.status_code == 302:
             raise SessionException("Couldn't logout", 11)
         
     
