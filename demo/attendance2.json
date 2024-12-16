@@ -1,0 +1,189 @@
+{
+  "attendance": {
+    "course_code": "IT 254",
+    "course_name": "Data structure and algorithms",
+    "data": [
+      {
+        "date": "20.FEB",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "20.FEB",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "27.FEB",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "27.FEB",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "05.MAR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "05.MAR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "12.MAR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "12.MAR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "19.MAR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "19.MAR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "26.MAR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": ""
+      },
+      {
+        "date": "26.MAR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": ""
+      },
+      {
+        "date": "02.APR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "02.APR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "09.APR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "09.APR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "16.APR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "16.APR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "23.APR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "23.APR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "30.APR",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "30.APR",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "07.MAY",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "07.MAY",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "14.MAY",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "14.MAY",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "21.MAY",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "21.MAY",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": "+"
+      },
+      {
+        "date": "28.MAY",
+        "hour": "10:30",
+        "place": "238 (Laboratory)",
+        "present": ""
+      },
+      {
+        "date": "28.MAY",
+        "hour": "11:10",
+        "place": "238 (Laboratory)",
+        "present": ""
+      }
+    ],
+    "educator": "Etibar Seyidzade"
+  }
+}

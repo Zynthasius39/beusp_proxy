@@ -1,0 +1,94 @@
+{
+  "attendance": {
+    "BA108": {
+      "absent": "1",
+      "absent_percent": "7",
+      "atds": "13",
+      "course_educator": "John Doe",
+      "course_name": "Principles of Entrepreneurship and Introduction to Business",
+      "credit": "1+1+0",
+      "hours": "15",
+      "limit": "3.75"
+    },
+    "BA108-məş": {
+      "absent": "1",
+      "absent_percent": "7",
+      "atds": "13",
+      "course_educator": "John Doe",
+      "course_name": "Principles of Entrepreneurship and Introduction to Business",
+      "credit": "1+1+0",
+      "hours": "15",
+      "limit": "3.75"
+    },
+    "ECON163": {
+      "absent": "0",
+      "absent_percent": "0",
+      "atds": "14",
+      "course_educator": "John Doe",
+      "course_name": "Engineering Economics",
+      "credit": "1+1+0",
+      "hours": "15",
+      "limit": "3.75"
+    },
+    "ECON163-məş": {
+      "absent": "0",
+      "absent_percent": "0",
+      "atds": "14",
+      "course_educator": "John Doe",
+      "course_name": "Engineering Economics",
+      "credit": "1+1+0",
+      "hours": "15",
+      "limit": "3.75"
+    },
+    "ENG010-məş": {
+      "absent": "1",
+      "absent_percent": "1",
+      "atds": "100",
+      "course_educator": "John Doe",
+      "course_name": "English for business and academic communication (reading and writing)",
+      "credit": "0+7+0",
+      "hours": "105",
+      "limit": "26.25"
+    },
+    "ENG020-məş": {
+      "absent": "1",
+      "absent_percent": "1",
+      "atds": "100",
+      "course_educator": "John Doe",
+      "course_name": "English for business and academic communication (listening and speaking)",
+      "credit": "0+7+0",
+      "hours": "105",
+      "limit": "26.25"
+    },
+    "LAW110": {
+      "absent": "0",
+      "absent_percent": "0",
+      "atds": "15",
+      "course_educator": "John Doe",
+      "course_name": "Constitution of Republic of Azerbaijan and Fundamentals of Law",
+      "credit": "1+1+0",
+      "hours": "15",
+      "limit": "3.75"
+    },
+    "LAW110-məş": {
+      "absent": "0",
+      "absent_percent": "0",
+      "atds": "15",
+      "course_educator": "John Doe",
+      "course_name": "Constitution of Republic of Azerbaijan and Fundamentals of Law",
+      "credit": "1+1+0",
+      "hours": "15",
+      "limit": "3.75"
+    },
+    "TRX111-məş": {
+      "absent": "2",
+      "absent_percent": "4",
+      "atds": "28",
+      "course_educator": "John Doe",
+      "course_name": "History of Azerbaijan",
+      "credit": "2+2+0",
+      "hours": "30",
+      "limit": "7.5"
+    }
+  }
+}
