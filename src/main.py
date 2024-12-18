@@ -16,6 +16,6 @@ if __name__ == '__main__':
 
     if TMSAPI_OFFLINE:
         from controller.api_offline import app
-        app.run(debug = True)
+        app.run(debug = True, host="0.0.0.0")
     else:
-        app.run(debug = True)
+        app.run(debug = True, host="0.0.0.0")

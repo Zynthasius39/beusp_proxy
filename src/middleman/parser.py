@@ -315,6 +315,7 @@ def transcriptParser(html):
 
     transcript = {}
     trs = soup.find("table", class_="simple-table").find_all("tr")
+    transcript["semesters"] = {}
     transcript["name"] = trs[0].find_all("td")[1].text.strip()
     transcript["faculty"] = trs[0].find_all("td")[3].text.strip()
     transcript["id"] = trs[1].find_all("td")[1].text.strip()
@@ -359,7 +360,7 @@ def transcriptParser(html):
             current_semester["total_credits"] = tds[3].text.strip()
             current_semester["spa"] = tds[4].text.strip().replace(" ", "").split(":")[1]
             current_semester["gpa"] = tds[5].text.strip().replace(" ", "").split(":")[1]
-            transcript[current_semester_label] = current_semester
+            transcript["semesters"][current_semester_label] = current_semester
             continue
         tds = tr.find_all("td")
         course_table = {}

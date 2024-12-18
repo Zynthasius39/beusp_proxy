@@ -1,275 +1,277 @@
 {
   "transcript": {
-    "2022#1": {
-      "courses": {
-        "BA108": {
-          "credit": "3",
-          "grade": "98",
-          "hours": "2",
-          "letter_grade": "A",
-          "name": "Principles of Entrepreneurship and Introduction to Business",
-          "repeat": ""
+    "semesters": {
+      "2022#1": {
+        "courses": {
+          "BA108": {
+            "credit": "3",
+            "grade": "98",
+            "hours": "2",
+            "letter_grade": "A",
+            "name": "Principles of Entrepreneurship and Introduction to Business",
+            "repeat": ""
+          },
+          "ECON163": {
+            "credit": "9",
+            "grade": "87",
+            "hours": "2",
+            "letter_grade": "B",
+            "name": "Engineering Economics",
+            "repeat": ""
+          },
+          "ENG010": {
+            "credit": "5",
+            "grade": "99",
+            "hours": "7",
+            "letter_grade": "A",
+            "name": "English for business and academic communication (reading and writing)",
+            "repeat": ""
+          },
+          "ENG020": {
+            "credit": "5",
+            "grade": "96",
+            "hours": "7",
+            "letter_grade": "A",
+            "name": "English for business and academic communication (listening and speaking)",
+            "repeat": ""
+          },
+          "LAW110": {
+            "credit": "3",
+            "grade": "79",
+            "hours": "2",
+            "letter_grade": "C",
+            "name": "Constitution of Republic of Azerbaijan and Fundamentals of Law",
+            "repeat": ""
+          },
+          "TRX111": {
+            "credit": "5",
+            "grade": "83",
+            "hours": "4",
+            "letter_grade": "B",
+            "name": "History of Azerbaijan",
+            "repeat": ""
+          }
         },
-        "ECON163": {
-          "credit": "9",
-          "grade": "87",
-          "hours": "2",
-          "letter_grade": "B",
-          "name": "Engineering Economics",
-          "repeat": ""
-        },
-        "ENG010": {
-          "credit": "5",
-          "grade": "99",
-          "hours": "7",
-          "letter_grade": "A",
-          "name": "English for business and academic communication (reading and writing)",
-          "repeat": ""
-        },
-        "ENG020": {
-          "credit": "5",
-          "grade": "96",
-          "hours": "7",
-          "letter_grade": "A",
-          "name": "English for business and academic communication (listening and speaking)",
-          "repeat": ""
-        },
-        "LAW110": {
-          "credit": "3",
-          "grade": "79",
-          "hours": "2",
-          "letter_grade": "C",
-          "name": "Constitution of Republic of Azerbaijan and Fundamentals of Law",
-          "repeat": ""
-        },
-        "TRX111": {
-          "credit": "5",
-          "grade": "83",
-          "hours": "4",
-          "letter_grade": "B",
-          "name": "History of Azerbaijan",
-          "repeat": ""
-        }
+        "gpa": "90.13",
+        "sac": "30",
+        "spa": "90.13",
+        "tacc": "30",
+        "tatc": "30",
+        "total_credits": "30",
+        "total_hours": "24"
       },
-      "gpa": "90.13",
-      "sac": "30",
-      "spa": "90.13",
-      "tacc": "30",
-      "tatc": "30",
-      "total_credits": "30",
-      "total_hours": "24"
-    },
-    "2022#2": {
-      "courses": {
-        "ENG030": {
-          "credit": "5",
-          "grade": "91",
-          "hours": "8",
-          "letter_grade": "A",
-          "name": "English for business and academic communication (for academic purposes)",
-          "repeat": ""
+      "2022#2": {
+        "courses": {
+          "ENG030": {
+            "credit": "5",
+            "grade": "91",
+            "hours": "8",
+            "letter_grade": "A",
+            "name": "English for business and academic communication (for academic purposes)",
+            "repeat": ""
+          },
+          "IT136": {
+            "credit": "7",
+            "grade": "100",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Web systems and technologies",
+            "repeat": ""
+          },
+          "IT186": {
+            "credit": "8",
+            "grade": "97",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Basics of information technology",
+            "repeat": ""
+          },
+          "IT188": {
+            "credit": "7",
+            "grade": "100",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Computer-aided design",
+            "repeat": ""
+          },
+          "MATH136": {
+            "credit": "3",
+            "grade": "94",
+            "hours": "3",
+            "letter_grade": "A",
+            "name": "Linear algebra and analytic geometry",
+            "repeat": ""
+          }
         },
-        "IT136": {
-          "credit": "7",
-          "grade": "100",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Web systems and technologies",
-          "repeat": ""
-        },
-        "IT186": {
-          "credit": "8",
-          "grade": "97",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Basics of information technology",
-          "repeat": ""
-        },
-        "IT188": {
-          "credit": "7",
-          "grade": "100",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Computer-aided design",
-          "repeat": ""
-        },
-        "MATH136": {
-          "credit": "3",
-          "grade": "94",
-          "hours": "3",
-          "letter_grade": "A",
-          "name": "Linear algebra and analytic geometry",
-          "repeat": ""
-        }
+        "gpa": "93.62",
+        "sac": "30",
+        "spa": "97.1",
+        "tacc": "60",
+        "tatc": "60",
+        "total_credits": "30",
+        "total_hours": "23"
       },
-      "gpa": "93.62",
-      "sac": "30",
-      "spa": "97.1",
-      "tacc": "60",
-      "tatc": "60",
-      "total_credits": "30",
-      "total_hours": "23"
-    },
-    "2023#1": {
-      "courses": {
-        "AZD130": {
-          "credit": "4",
-          "grade": "93",
-          "hours": "3",
-          "letter_grade": "A",
-          "name": "Official and Academic Communication in Azerbaijani language",
-          "repeat": ""
+      "2023#1": {
+        "courses": {
+          "AZD130": {
+            "credit": "4",
+            "grade": "93",
+            "hours": "3",
+            "letter_grade": "A",
+            "name": "Official and Academic Communication in Azerbaijani language",
+            "repeat": ""
+          },
+          "COMP236": {
+            "credit": "8",
+            "grade": "86",
+            "hours": "4",
+            "letter_grade": "B",
+            "name": "Computer architecture",
+            "repeat": ""
+          },
+          "IT120": {
+            "credit": "6",
+            "grade": "99",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Fundamentals of Programming- 1",
+            "repeat": ""
+          },
+          "MATH166": {
+            "credit": "7",
+            "grade": "91",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Mathematical analysis",
+            "repeat": ""
+          },
+          "PHYS202": {
+            "credit": "5",
+            "grade": "94",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Phyisics",
+            "repeat": ""
+          }
         },
-        "COMP236": {
-          "credit": "8",
-          "grade": "86",
-          "hours": "4",
-          "letter_grade": "B",
-          "name": "Computer architecture",
-          "repeat": ""
-        },
-        "IT120": {
-          "credit": "6",
-          "grade": "99",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Fundamentals of Programming- 1",
-          "repeat": ""
-        },
-        "MATH166": {
-          "credit": "7",
-          "grade": "91",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Mathematical analysis",
-          "repeat": ""
-        },
-        "PHYS202": {
-          "credit": "5",
-          "grade": "94",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Phyisics",
-          "repeat": ""
-        }
+        "gpa": "93.09",
+        "sac": "30",
+        "spa": "92.03",
+        "tacc": "90",
+        "tatc": "90",
+        "total_credits": "30",
+        "total_hours": "19"
       },
-      "gpa": "93.09",
-      "sac": "30",
-      "spa": "92.03",
-      "tacc": "90",
-      "tatc": "90",
-      "total_credits": "30",
-      "total_hours": "19"
-    },
-    "2023#2": {
-      "courses": {
-        "COMP326": {
-          "credit": "6",
-          "grade": "97",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Operating Systems",
-          "repeat": ""
+      "2023#2": {
+        "courses": {
+          "COMP326": {
+            "credit": "6",
+            "grade": "97",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Operating Systems",
+            "repeat": ""
+          },
+          "IT206": {
+            "credit": "6",
+            "grade": "96",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Multimedia technologies",
+            "repeat": ""
+          },
+          "IT252": {
+            "credit": "5",
+            "grade": "96",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Basics of programming- 2",
+            "repeat": ""
+          },
+          "IT254": {
+            "credit": "7",
+            "grade": "91",
+            "hours": "4",
+            "letter_grade": "A",
+            "name": "Data structure and algorithms",
+            "repeat": ""
+          },
+          "MATH235": {
+            "credit": "3",
+            "grade": "95",
+            "hours": "3",
+            "letter_grade": "A",
+            "name": "Differential equations",
+            "repeat": ""
+          },
+          "MATH275": {
+            "credit": "3",
+            "grade": "90",
+            "hours": "3",
+            "letter_grade": "B",
+            "name": "Discrete mathematics",
+            "repeat": ""
+          }
         },
-        "IT206": {
-          "credit": "6",
-          "grade": "96",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Multimedia technologies",
-          "repeat": ""
-        },
-        "IT252": {
-          "credit": "5",
-          "grade": "96",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Basics of programming- 2",
-          "repeat": ""
-        },
-        "IT254": {
-          "credit": "7",
-          "grade": "91",
-          "hours": "4",
-          "letter_grade": "A",
-          "name": "Data structure and algorithms",
-          "repeat": ""
-        },
-        "MATH235": {
-          "credit": "3",
-          "grade": "95",
-          "hours": "3",
-          "letter_grade": "A",
-          "name": "Differential equations",
-          "repeat": ""
-        },
-        "MATH275": {
-          "credit": "3",
-          "grade": "90",
-          "hours": "3",
-          "letter_grade": "B",
-          "name": "Discrete mathematics",
-          "repeat": ""
-        }
+        "gpa": "93.4",
+        "sac": "30",
+        "spa": "94.33",
+        "tacc": "120",
+        "tatc": "120",
+        "total_credits": "30",
+        "total_hours": "22"
       },
-      "gpa": "93.4",
-      "sac": "30",
-      "spa": "94.33",
-      "tacc": "120",
-      "tatc": "120",
-      "total_credits": "30",
-      "total_hours": "22"
-    },
-    "2024#1": {
-      "courses": {
-        "IT205": {
-          "credit": "7",
-          "grade": "0",
-          "hours": "4",
-          "letter_grade": "In progress",
-          "name": "Object oriented programming",
-          "repeat": ""
+      "2024#1": {
+        "courses": {
+          "IT205": {
+            "credit": "7",
+            "grade": "0",
+            "hours": "4",
+            "letter_grade": "In progress",
+            "name": "Object oriented programming",
+            "repeat": ""
+          },
+          "IT317": {
+            "credit": "6",
+            "grade": "0",
+            "hours": "4",
+            "letter_grade": "In progress",
+            "name": "Modern Programming Languages- 1",
+            "repeat": ""
+          },
+          "IT387": {
+            "credit": "7",
+            "grade": "0",
+            "hours": "4",
+            "letter_grade": "In progress",
+            "name": "Introduction to multi-platform programming",
+            "repeat": ""
+          },
+          "IT389": {
+            "credit": "7",
+            "grade": "0",
+            "hours": "4",
+            "letter_grade": "In progress",
+            "name": "Database systems",
+            "repeat": ""
+          },
+          "MM101": {
+            "credit": "3",
+            "grade": "0",
+            "hours": "3",
+            "letter_grade": "In progress",
+            "name": "Civil Defence",
+            "repeat": ""
+          }
         },
-        "IT317": {
-          "credit": "6",
-          "grade": "0",
-          "hours": "4",
-          "letter_grade": "In progress",
-          "name": "Modern Programming Languages- 1",
-          "repeat": ""
-        },
-        "IT387": {
-          "credit": "7",
-          "grade": "0",
-          "hours": "4",
-          "letter_grade": "In progress",
-          "name": "Introduction to multi-platform programming",
-          "repeat": ""
-        },
-        "IT389": {
-          "credit": "7",
-          "grade": "0",
-          "hours": "4",
-          "letter_grade": "In progress",
-          "name": "Database systems",
-          "repeat": ""
-        },
-        "MM101": {
-          "credit": "3",
-          "grade": "0",
-          "hours": "3",
-          "letter_grade": "In progress",
-          "name": "Civil Defence",
-          "repeat": ""
-        }
-      },
-      "gpa": "93.4",
-      "sac": "0t",
-      "spa": "0",
-      "tacc": "120",
-      "tatc": "120",
-      "total_credits": "30",
-      "total_hours": "19"
+        "gpa": "93.4",
+        "sac": "0t",
+        "spa": "0",
+        "tacc": "120",
+        "tatc": "120",
+        "total_credits": "30",
+        "total_hours": "19"
+      }
     },
     "entry_date": "07 September 2022",
     "faculty": "Faculty of Computer and Information Technologies",

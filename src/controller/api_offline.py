@@ -1,6 +1,6 @@
 import json
 from flask import Flask, make_response
-from flask_restful import Api, Resource, abort
+from flask_restful import Api, Resource, abort, reqparse
 from flask_cors import CORS
 from flasgger import Swagger
 import os
@@ -9,7 +9,8 @@ from middleman import parser_offline
 
 app = Flask(__name__)
 api = Api(app)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://127.0.0.1:5173"}})
+# CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://127.0.0.1:5173"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.12.42.99:5173"}})
 FLASGGER_ENABLED = os.getenv("SWAGGER_ENABLED", "false").lower() == "true"
 SESSIONS = {}
 
@@ -59,6 +60,10 @@ class Res(Resource):
 
         page = json.loads(resourceParser())
         res = make_response(page, 200)
+
+        if resource == "home":
+            res.set_cookie("ImgID", "offline_img_id", httponly=False, secure=False, samesite="Lax")
+
         return res
 
 
@@ -239,6 +244,15 @@ class StudPhoto(Resource):
             412:
                 description: Bad response from root server
         """
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "ImgID",
+            type=str,
+            help="Invalid imgid",
+            location="cookies",
+            required=True,
+        )
+        rp.parse_args()
 
         with open("demo/studphoto.jpg", "rb") as f:
             img = f.read()
@@ -313,6 +327,32 @@ class LogOut(Resource):
         return "Spaghettified"
 
 
+class Verify(Resource):
+
+    def post(self):
+        """
+        LogOut Endpoint
+        ---
+        summary: Logs out given SessionID.
+        description: Logs out the SessionID used in API.
+        responses:
+            200:
+                description: Logged out
+            400:
+                description: Couldn't log out
+        """
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "SessionID",
+            type=str,
+            help="Invalid sessionid",
+            location="cookies",
+            required=True,
+        )
+        rp.parse_args()
+
+        return ""
+
 api.add_resource(Msg, "/api/resource/msg")
 api.add_resource(Res, "/api/resource/<resource>")
 api.add_resource(Grades, "/api/resource/grades/<int:year>/<int:semester>")
@@ -322,4 +362,5 @@ api.add_resource(Deps, "/api/resource/deps/<code>")
 api.add_resource(Program, "/api/resource/program/<int:code>/<int:year>")
 api.add_resource(Auth, "/api/auth")
 api.add_resource(LogOut, "/api/logout")
+api.add_resource(Verify, "/api/verify")
 api.add_resource(StudPhoto, "/api/studphoto")

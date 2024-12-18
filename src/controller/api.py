@@ -14,7 +14,7 @@ import requests
 
 app = Flask(__name__)
 api = Api(app)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://127.0.0.1:5173"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.12.42.99:5173"}})
 SESSIONS = {}
 
 tms_pages = {
@@ -98,7 +98,10 @@ class Res(Resource):
 
         page = resourceParser(middleResponse.get("text"))
         res = make_response(jsonify(page), 200)
-        res.set_cookie("ImgID", page.get("home").get("image"), httponly=False, secure=False, samesite="Lax")
+
+        if resource == "home":
+            res.set_cookie("ImgID", page.get("home").get("image"), httponly=False, secure=False, samesite="Lax")
+
         return res
 
 
@@ -721,6 +724,62 @@ class LogOut(Resource):
 
         return middleResponse
 
+
+class Verify(Resource):
+
+    def post(self):
+        """
+        LogOut Endpoint
+        ---
+        summary: Logs out given SessionID.
+        description: Logs out the SessionID used in API.
+        responses:
+            200:
+                description: Logged out
+            400:
+                description: Couldn't log out
+        """
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "SessionID",
+            type=str,
+            help="Invalid sessionid",
+            location="cookies",
+            required=True,
+        )
+        args = rp.parse_args()
+
+        def request():
+            return asyncio.run(wrapper(
+            {
+                "method": "POST",
+                "url": ROOT,
+                "data": f"ajx=1",
+                "headers": {
+                    "Host": HOST,
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "User-Agent": userAgent,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                }
+            }))
+        middleResponse = request()
+
+        if parser.isThereMsg(middleResponse.get("text")):
+            readMsgs(args.get("SessionID"), parser.msgParser2(middleResponse.get("text")))
+            middleResponse = request()
+
+        if parser.isThereMsg(middleResponse.get("text")):
+            abort(412, help="Bad request from root server")
+
+        if not middleResponse["status"] == 200:
+            abort(412, help="Bad request from root server")
+
+        if parser.isExpired(middleResponse.get("text")):
+            abort(401, help="Session invalid or has expired")
+
+        return ""
+
+
 def readAnnounce(sessid):
     asyncio.run(wrapper(
     {
@@ -772,4 +831,5 @@ api.add_resource(Deps, "/api/resource/deps/<code>")
 api.add_resource(Program, "/api/resource/program/<int:code>/<int:year>")
 api.add_resource(Auth, "/api/auth")
 api.add_resource(LogOut, "/api/logout")
+api.add_resource(Verify, "/api/verify")
 api.add_resource(StudPhoto, "/api/studphoto")
