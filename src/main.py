@@ -5,6 +5,7 @@ import os
 if __name__ == '__main__':
     FLASGGER_ENABLED = os.getenv("SWAGGER_ENABLED", "false").lower() == "true"
     TMSAPI_OFFLINE = os.getenv("TMSAPI_OFFLINE", "false").lower() == "true"
+    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
     if FLASGGER_ENABLED:
         app.config["SWAGGER"] = {
@@ -16,6 +17,6 @@ if __name__ == '__main__':
 
     if TMSAPI_OFFLINE:
         from controller.api_offline import app
-        app.run(debug = True, host="0.0.0.0")
+        app.run(debug = DEBUG, host="0.0.0.0")
     else:
-        app.run(debug = True, host="0.0.0.0")
+        app.run(debug = DEBUG, host="0.0.0.0")

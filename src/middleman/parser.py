@@ -30,6 +30,24 @@ def homeParser(text):
     return {"home": {"student_info": student_info_table, "documents": documents_table, "image": image_url}}
 
 
+def gradesParser(text):
+    soup = BeautifulSoup(text, "html.parser")
+    
+    all_enabled = False
+    grades_ops = []
+    for op in soup.find("select", id="ysem").find_all("option"):
+        m = re.search(r"(\d+)#(\d)", op.attrs.get("value"))
+        if (m.group(1) == "1"):
+            all_enabled = True
+        else :
+            grades_ops.append({
+                "year": m.group(1),
+                "semester": m.group(2),
+            })
+        
+    return {"grade_options": grades_ops, "can_request_all": all_enabled}
+
+
 def faqParser(text):
     soup = BeautifulSoup(text, "html.parser")
 
@@ -119,27 +137,66 @@ def depsParser2(text):
 
 
 def gradesParser2(html):
+    html = re.sub(r"\\(r|n|t)", "", html)
+    html = re.sub(r"\\", "", html)
+    # html = html.replace("Course code", "course_code")
+    # html = html.replace("Course name", "course_name")
     soup = BeautifulSoup(html, "html.parser")
-
-    table = []
-    for tr in soup.find("div", class_="table-responsive").find_all("tr"):
-        row = []
-        for td in tr.find_all("td"):
-            row.append(td.text.strip())
-        table.append(row)
+    
+    rename_table = {
+        "ABS.": "absents",
+        "AVG": "sum",
+        "IGB": "calc",
+        "SDF1": "act1",
+        "SDF2": "act2",
+        "TSI": "iw",
+        "DVM": "att",
+        "SSI": "final",
+        "ƏI": "addfinal",
+        "TI": "refinal",
+        "N": "n",
+        "M": "m",
+        "L": "l",
+        "Course code": "course_code",
+        "Course name": "course_name",
+        "ECTS": "ects",
+    }
 
     grades_table = {}
-    for i in table[1:-1]:
-        rowName = ""
-        row = {}
-        for inx, j in enumerate(i[:-1]):
-            if not table[0][inx] == "course_name":
-                j = j.replace(" ", "")
-            if table[0][inx] == "course_code":
-                rowName = j
-                continue
-            row[table[0][inx]] = j
-        grades_table[rowName] = row
+    
+    ys_count = 0
+    with open("out.html", "w") as f:
+        f.write(html)
+    table_ys = soup.find_all("b", recursive=False)
+    
+    for table_r in soup.find_all("div", class_="table-responsive"):
+        table = []
+        for tr in table_r.find_all("tr"):
+            row = []
+            for td in tr.find_all("td"):
+                if not table:
+                    row.append(rename_table[td.text.strip()])
+                else:
+                    row.append(td.text.strip())
+            table.append(row)
+
+        m = re.search(r'(\d{4})-\d{4} ([12]). term', table_ys[ys_count].text.strip())
+        ys_cur = f"{m.group(1)}#{m.group(2)}"
+        ys_count += 1
+        for i in table[1:-1]:
+            row_name = ""
+            row = {}
+            for inx, j in enumerate(i):
+                if table[0][inx] == "calc":
+                    continue
+                if not table[0][inx] == "course_name":
+                    j = j.replace(" ", "")
+                if table[0][inx] == "course_code":
+                    row_name = j
+                    continue
+                row[table[0][inx]] = j
+            row["ys"] = ys_cur
+            grades_table[row_name] = row
 
     return {"grades": grades_table}
 
@@ -293,6 +350,7 @@ def isAnnounce(html):
 
 
 def isThereMsg(html):
+    return False
     soup = BeautifulSoup(html, "html.parser")
 
     if soup.find("span", attrs={"style": "color:#1E1E1E ;font-weight:bold"}):

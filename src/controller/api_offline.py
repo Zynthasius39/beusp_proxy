@@ -9,8 +9,7 @@ from middleman import parser_offline
 
 app = Flask(__name__)
 api = Api(app)
-# CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://127.0.0.1:5173"}})
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.12.42.99:5173"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.0.10.75:5173"}})
 FLASGGER_ENABLED = os.getenv("SWAGGER_ENABLED", "false").lower() == "true"
 SESSIONS = {}
 
@@ -63,8 +62,39 @@ class Res(Resource):
 
         if resource == "home":
             res.set_cookie("ImgID", "offline_img_id", httponly=False, secure=False, samesite="Lax")
-
+        
         return res
+
+
+class GradesAll(Resource):
+
+    def get(self):
+        """
+        Grades Endpoint
+        ---
+        summary: Returns grades in given semester.
+        parameters:
+          - name: year
+            in: path
+            required: true
+            example: 2022
+            type: number
+          - name: semester
+            in: path
+            required: true
+            example: 1 / 2
+            type: number
+        responses:
+            200:
+                description: Success
+            400:
+                description: Bad request
+            401:
+                description: Unauthorized
+            412:
+                description: Bad response from root server
+        """
+        return json.loads(parser_offline.OfflineGradesAllParser())
 
 
 class Grades(Resource):
@@ -355,6 +385,7 @@ class Verify(Resource):
 
 api.add_resource(Msg, "/api/resource/msg")
 api.add_resource(Res, "/api/resource/<resource>")
+api.add_resource(GradesAll, "/api/resource/grades/all")
 api.add_resource(Grades, "/api/resource/grades/<int:year>/<int:semester>")
 api.add_resource(AttendanceByCourse, "/api/resource/attendance/<int:course>")
 api.add_resource(AttendanceBySemester, "/api/resource/attendance/<int:year>/<int:semester>")

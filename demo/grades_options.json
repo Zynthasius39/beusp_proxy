@@ -1,0 +1,25 @@
+{
+  "can_request_all": true,
+  "grade_options": [
+    {
+      "semester": "1",
+      "year": "2022"
+    },
+    {
+      "semester": "2",
+      "year": "2022"
+    },
+    {
+      "semester": "1",
+      "year": "2023"
+    },
+    {
+      "semester": "2",
+      "year": "2023"
+    },
+    {
+      "semester": "1",
+      "year": "2024"
+    }
+  ]
+}

@@ -2,6 +2,13 @@ def OfflineHomeParser():
     with open("demo/home.json") as f:
         return f.read()
 
+def OfflineGradesParser():
+    with open("demo/grades_options.json") as f:
+        return f.read()
+
+def OfflineGradesAllParser():
+    with open("demo/grades_all.json") as f:
+        return f.read()
 
 def OfflineFaqParser():
     with open("demo/faq.json") as f:

@@ -1,5 +1,6 @@
 import asyncio
 from concurrent.futures.thread import ThreadPoolExecutor
+import time
 import json
 import re
 import aiohttp
@@ -14,11 +15,12 @@ import requests
 
 app = Flask(__name__)
 api = Api(app)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.12.42.99:5173"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.0.10.75:5173"}})
 SESSIONS = {}
 
 tms_pages = {
     "home": "home",
+    "grades": "grades",
     "faq": "faq",
     "announces": "elan",
     "deps": "viewdeps",
@@ -77,7 +79,7 @@ class Res(Resource):
                 "url": f"{ROOT}?mod={tms_pages[resource]}",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                 }
             }))
@@ -102,6 +104,74 @@ class Res(Resource):
         if resource == "home":
             res.set_cookie("ImgID", page.get("home").get("image"), httponly=False, secure=False, samesite="Lax")
 
+        return res
+
+
+class GradesAll(Resource):
+
+    def get(self):
+        """
+        Grades Endpoint
+        ---
+        summary: Returns all grades.
+        responses:
+            200:
+                description: Success
+            400:
+                description: Bad request
+            401:
+                description: Unauthorized
+            412:
+                description: Bad response from root server
+        """
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "SessionID",
+            type=str,
+            help="Invalid sessionid",
+            location="cookies",
+            required=True,
+        )
+        args = rp.parse_args()
+
+        def request():
+            return asyncio.run(wrapper(
+            {
+                "method": "POST",
+                "url": ROOT,
+                "data": f"ajx=1&mod=grades&action=GetGrades&yt=1#1&{round(time.time())}",
+                "headers": {
+                    "Host": HOST,
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
+                    "User-Agent": userAgent,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                }
+            }))
+        middleResponse = request()
+
+        if parser.isThereMsg(middleResponse.get("text")):
+            readMsgs(args.get("SessionID"), parser.msgParser2(middleResponse.get("text")))
+            middleResponse = request()
+
+        if parser.isThereMsg(middleResponse.get("text")):
+            abort(412, help="Bad request from root server")
+
+        if not middleResponse["status"] == 200:
+            abort(412, help="Bad request from root server")
+
+        if parser.isExpired(middleResponse.get("text")):
+            abort(401, help="Session invalid or has expired")
+
+        ajax = json.loads(middleResponse.get("text"))
+        if int(ajax["CODE"]) < 1:
+            abort(400, help=f"Proxy server returned CODE {ajax["CODE"]}")
+
+        text = ajax["DATA"]
+        if not text.find("There aren't any registered section for the selected year-term.") == -1:
+            abort(400, help="There aren't any registered section for the selected year-term")
+
+        page = jsonify(parser.gradesParser2(text))
+        res = make_response(page, 200)
         return res
 
 
@@ -148,10 +218,10 @@ class Grades(Resource):
             {
                 "method": "POST",
                 "url": ROOT,
-                "data": f"ajx=1&mod=grades&action=GetGrades&yt={year}#{semester}",
+                "data": f"ajx=1&mod=grades&action=GetGrades&yt={year}#{semester}&{round(time.time())}",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
@@ -178,11 +248,6 @@ class Grades(Resource):
         text = ajax["DATA"]
         if not text.find("There aren't any registered section for the selected year-term.") == -1:
             abort(400, help="There aren't any registered section for the selected year-term")
-
-        text = re.sub(r"\\(r|n|t)", "", text)
-        text = re.sub(r"\\", "", text)
-        text = text.replace("Course code", "course_code")
-        text = text.replace("Course name", "course_name")
 
         page = jsonify(parser.gradesParser2(text))
         res = make_response(page, 200)
@@ -235,7 +300,7 @@ class AttendanceBySemester(Resource):
                 "data": f"ajx=1&mod=ejurnal&action=getCourses&ysem={year}#{semester}",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
@@ -304,7 +369,7 @@ class AttendanceByCourse(Resource):
                 "data": f"ajx=1&mod=ejurnal&action=viewCourse&derst={course}",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
@@ -370,7 +435,7 @@ class Deps(Resource):
                 "url": f"{ROOT}?mod=viewdeps&d={code}",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                 }
             }))
@@ -440,7 +505,7 @@ class Program(Resource):
                 "url": f"{ROOT}?mod=progman&pc={code}&py={year}",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                 }
             }))
@@ -500,7 +565,7 @@ class Msg(Resource):
                 "url": f"{ROOT}?mod=msg",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                 }
             }))
@@ -566,7 +631,7 @@ class StudPhoto(Resource):
             f"{ROOT}stud_photo.php?ses={args.get("ImgID")}",
             headers = {
                 "Host": HOST,
-                "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                 "User-Agent": userAgent,
             },
             timeout = 10
@@ -709,7 +774,7 @@ class LogOut(Resource):
                 "url": f"{ROOT}logout.php",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                 }
             }))
@@ -757,7 +822,7 @@ class Verify(Resource):
                 "data": f"ajx=1",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; ",
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": userAgent,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
@@ -824,6 +889,7 @@ def readMsgs(sessid, msg_ids):
 
 api.add_resource(Msg, "/api/resource/msg")
 api.add_resource(Res, "/api/resource/<resource>")
+api.add_resource(GradesAll, "/api/resource/grades/all")
 api.add_resource(Grades, "/api/resource/grades/<int:year>/<int:semester>")
 api.add_resource(AttendanceByCourse, "/api/resource/attendance/<int:course>")
 api.add_resource(AttendanceBySemester, "/api/resource/attendance/<int:year>/<int:semester>")
