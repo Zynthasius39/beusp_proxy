@@ -139,8 +139,6 @@ def depsParser2(text):
 def gradesParser2(html):
     html = re.sub(r"\\(r|n|t)", "", html)
     html = re.sub(r"\\", "", html)
-    # html = html.replace("Course code", "course_code")
-    # html = html.replace("Course name", "course_name")
     soup = BeautifulSoup(html, "html.parser")
     
     rename_table = {
@@ -161,6 +159,28 @@ def gradesParser2(html):
         "Course name": "course_name",
         "ECTS": "ects",
     }
+    
+    grade_fields = {
+        "sum": 100,
+        "act1": 15,
+        "act2": 15,
+        "iw": 10,
+        "att": 10,
+        "final": 50,
+        "addfinal": 50,
+        "refinal": 50,
+    }
+    
+    digit_fields = [
+        "absents",
+        "ects",
+        "act2",
+        # "l", Unknown field
+        "m",
+        "n",
+        *grade_fields.keys(),
+    ]
+    
 
     grades_table = {}
     
@@ -184,8 +204,17 @@ def gradesParser2(html):
         ys_cur = f"{m.group(1)}#{m.group(2)}"
         ys_count += 1
         for i in table[1:-1]:
+            is_old_graded = False
             row_name = ""
             row = {}
+            for inx, j in enumerate(i):
+                grade_field = grade_fields.get(table[0][inx])
+                if not grade_field == None:
+                    if j.isdigit():
+                        grade = int(j)
+                        if grade > grade_field:
+                            is_old_graded = True
+                            break
             for inx, j in enumerate(i):
                 if table[0][inx] == "calc":
                     continue
@@ -194,6 +223,15 @@ def gradesParser2(html):
                 if table[0][inx] == "course_code":
                     row_name = j
                     continue
+                if table[0][inx] in digit_fields:
+                    if j.strip() == "":
+                        j = -1
+                    else:
+                        grade_field = grade_fields.get(table[0][inx])
+                        if not grade_field == None and is_old_graded:
+                            j = round(int(j) / 100 * grade_field, 2)
+                        else:
+                            j = int(j)
                 row[table[0][inx]] = j
             row["ys"] = ys_cur
             grades_table[row_name] = row
