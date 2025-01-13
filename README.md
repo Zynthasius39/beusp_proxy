@@ -3,9 +3,10 @@
   <img src="https://github.com/user-attachments/assets/3e07f85b-7dbd-4181-b2e9-ae61f249006c" />
 </p>
 
-## Individual Assignment for Multi Platform Programming
+## Student Information System
+## Tələbə Məlumat Sistemi
 
-### Student Information System | Tələbə Məlumat Sistemi
+### Individual Assignment for Multi Platform Programming
 
 ![Screenshot 2024-12-17 at 02-12-11 Baku Engineering University TMS_PMS - Rest API](https://github.com/user-attachments/assets/f98020bc-3cee-4375-8ab0-ed9b5319cf03)
 
@@ -48,6 +49,12 @@ set SWAGGER_ENABLED=true         # Windows (CMD)
 export TMSAPI_OFFLINE=true      # Linux / macOS
 $Env:TMSAPI_OFFLINE = "true"    # Windows (Powershell)
 set TMSAPI_OFFLINE=true         # Windows (CMD)
+```
+- Enable Debugging:
+```bash
+export DEBUG=true      # Linux / macOS
+$Env:DEBUG = "true"    # Windows (Powershell)
+set DEBUG=true         # Windows (CMD)
 ```
 ```diff
 # Use proper URL in the webserver
