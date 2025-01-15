@@ -4,7 +4,7 @@ import time
 import json
 import re
 import aiohttp
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, g
 from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
 from config import *
@@ -12,6 +12,8 @@ from controller.aiohttp import make_request, wrapper
 from middleman import parser
 import secrets
 import requests
+import sqlite3
+import datetime
 
 app = Flask(__name__)
 api = Api(app)
@@ -26,6 +28,20 @@ tms_pages = {
     "deps": "viewdeps",
     "transcript": "transkript",
 }
+
+def get_db():
+    """Get a SQLite database connection"""
+    if 'db' not in g:
+        g.db = sqlite3.connect("beusp.db")
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(e):
+    """Close database connection"""
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 class Res(Resource):
 
@@ -736,6 +752,11 @@ class Auth(Resource):
             if not header.find("PHPSESSID") == -1:
                 sessid = header.split("=")[1]
 
+        con = get_db()
+        con.cursor().execute("""
+                    INSERT INTO Student_Sessions(student_id, session_id, last_login) VALUES(?, ?, ?)
+                    """, (student_id, sessid, datetime.datetime.now().isoformat()))
+        con.commit()
         middleResponse = make_response("", 200)
         middleResponse.set_cookie("SessionID", sessid, httponly=False, secure=False, samesite="Lax", max_age=3600)
         middleResponse.set_cookie("StudentID", student_id, httponly=False, secure=False, samesite="Lax", max_age=3600)
@@ -845,6 +866,163 @@ class Verify(Resource):
         return ""
 
 
+class Bot(Resource):
+    def get(self):
+        """
+        Bot Endpoint
+        ---
+        summary: Bot status
+        description: Gets Bot status for current user.
+        responses:
+            200:
+                description: Bot status
+            400:
+                description: Invalid credentials
+            404:
+                description: Bot is not active
+        """
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "SessionID",
+            type=str,
+            help="Invalid sessionid",
+            location="cookies",
+            required=True,
+        )
+        rp.add_argument(
+            "StudentID",
+            type=str,
+            help="Invalid studentid",
+            location="cookies",
+            required=True,
+        )
+        args = rp.parse_args()
+        
+        con = get_db()
+        res = con.cursor().execute("""
+            SELECT * FROM Student_Sessions ss
+            WHERE ss.student_id = ? AND ss.session_id = ?
+            LIMIT 1;
+            """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+        
+        if res is None:
+            abort(400, help="Session invalid or has expired")
+        
+        res = con.cursor().execute("""
+            SELECT * FROM Subscribers sb
+            WHERE sb.student_id = ?;
+            """, (args.get("StudentID"), )).fetchone()
+        
+        subscriptions = {}
+        
+        if res is not None:
+            if res["telegram_id"] is not None:
+                sres = con.cursor().execute("""
+                    SELECT ts.username FROM Telegram_Subscribers ts
+                    LEFT JOIN Subscribers s
+                    ON ts.telegram_id = s.telegram_id
+                    WHERE s.student_id = ?;
+                """, (args.get("StudentID"), )).fetchone()
+                if sres is not None:
+                    subscriptions["telegram_username"] = sres["username"]
+            if res["discord_id"] is not None:
+                sres = con.cursor().execute("""
+                    SELECT ds.webhook_url FROM Discord_Subscribers ds
+                    LEFT JOIN Subscribers s ON ds.discord_id = s.discord_id 
+                    WHERE s.student_id = ?;  
+                """, (args.get("StudentID"), )).fetchone()
+                if sres is not None:
+                    subscriptions["discord_webhook_url"] = sres["webhook_url"]
+            if res["email_id"] is not None:
+                sres = con.cursor().execute("""
+                    SELECT es.email FROM Email_Subscribers es
+                    LEFT JOIN Subscribers s ON es.email_id = s.email_id
+                    WHERE s.student_id = ?;
+                """, (args.get("StudentID"), )).fetchone()
+                if sres is not None:
+                    subscriptions["email"] = sres["email"]
+        
+        return {"subscriptions": subscriptions}
+        
+    
+    def post(self):
+        """
+        Bot Endpoint
+        ---
+        summary: Subscribe to Bot
+        description: Subscribes the current user.
+        responses:
+            200:
+                description: Bot status
+            400:
+                description: Invalid credentials
+            404:
+                description: Bot is not active
+        """
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "SessionID",
+            type=str,
+            help="Invalid sessionid",
+            location="cookies",
+            required=True,
+        )
+        rp.add_argument(
+            "StudentID",
+            type=str,
+            help="Invalid studentid",
+            location="cookies",
+            required=True,
+        )
+        rp.add_argument(
+            "telegram_username",
+            type=str,
+        )
+        rp.add_argument(
+            "discord_webhook_url",
+            type=str,
+        )
+        rp.add_argument(
+            "email",
+            type=str,
+        )
+        args = rp.parse_args()
+        
+        con = get_db()
+        res = con.cursor().execute("""
+            SELECT * FROM Student_Sessions ss
+            WHERE ss.student_id = ? AND ss.session_id = ?
+            LIMIT 1;
+            """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+        
+        if res is None:
+            abort(400, help="Session invalid or has expired")
+        
+        if args.get("telegram_username") is not None:
+            # con.cursor().execute("""
+            #     INSERT INTO
+            # """)
+        
+        
+    
+    def delete(self):
+        """
+        Bot Endpoint
+        ---
+        summary: Unsubscribe to Bot
+        description: Unsubscribes the current user.
+        responses:
+            200:
+                description: Bot status
+            400:
+                description: Invalid credentials
+            404:
+                description: Bot is not active
+        """
+        abort(404, help="Bot is not active")
+        
+
+
 def readAnnounce(sessid):
     asyncio.run(wrapper(
     {
@@ -887,6 +1065,9 @@ def readMsgs(sessid, msg_ids):
 
     return results
 
+def verifyCodeGen(length):
+    return ''.join(str(random.randint(0, 9)) for _ in range(length))
+
 api.add_resource(Msg, "/api/resource/msg")
 api.add_resource(Res, "/api/resource/<resource>")
 api.add_resource(GradesAll, "/api/resource/grades/all")
@@ -899,3 +1080,4 @@ api.add_resource(Auth, "/api/auth")
 api.add_resource(LogOut, "/api/logout")
 api.add_resource(Verify, "/api/verify")
 api.add_resource(StudPhoto, "/api/studphoto")
+api.add_resource(Bot, "/api/bot")
