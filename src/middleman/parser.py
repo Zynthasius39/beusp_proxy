@@ -147,6 +147,7 @@ def gradesParser2(html):
         "IGB": "calc",
         "SDF1": "act1",
         "SDF2": "act2",
+        "SDF3": "act3",
         "TSI": "iw",
         "DVM": "att",
         "SSI": "final",
@@ -164,6 +165,7 @@ def gradesParser2(html):
         "sum": 100,
         "act1": 15,
         "act2": 15,
+        "act3": 10,
         "iw": 10,
         "att": 10,
         "final": 50,
@@ -174,7 +176,6 @@ def gradesParser2(html):
     digit_fields = [
         "absents",
         "ects",
-        "act2",
         # "l", Unknown field
         "m",
         "n",
@@ -191,6 +192,7 @@ def gradesParser2(html):
     
     for table_r in soup.find_all("div", class_="table-responsive"):
         table = []
+        act3_enabled = False
         for tr in table_r.find_all("tr"):
             row = []
             for td in tr.find_all("td"):
@@ -203,6 +205,10 @@ def gradesParser2(html):
         m = re.search(r'(\d{4})-\d{4} ([12]). term', table_ys[ys_count].text.strip())
         ys_cur = f"{m.group(1)}#{m.group(2)}"
         ys_count += 1
+        for i in table[0]:
+            if i == "act3":
+                act3 = True
+                break
         for i in table[1:-1]:
             is_old_graded = False
             row_name = ""
@@ -228,6 +234,8 @@ def gradesParser2(html):
                         j = -1
                     else:
                         grade_field = grade_fields.get(table[0][inx])
+                        if act3_enabled and grade_field == 15:
+                            grade_field = 10
                         if not grade_field == None and is_old_graded:
                             j = round(int(j) / 100 * grade_field, 2)
                         else:
