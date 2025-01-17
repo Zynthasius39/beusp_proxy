@@ -1,17 +1,18 @@
-import json
 from flask import Flask, make_response
 from flask_restful import Api, Resource, abort, reqparse
 from flask_cors import CORS
 from flasgger import Swagger
-import os
 
 from middleman import parser_offline
+
+import json
+import os
+
 
 app = Flask(__name__)
 api = Api(app)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.0.10.75:5173"}})
 FLASGGER_ENABLED = os.getenv("SWAGGER_ENABLED", "false").lower() == "true"
-SESSIONS = {}
 
 if FLASGGER_ENABLED:
     app.config["SWAGGER"] = {

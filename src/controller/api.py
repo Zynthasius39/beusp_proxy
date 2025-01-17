@@ -1,24 +1,25 @@
-import asyncio
 from concurrent.futures.thread import ThreadPoolExecutor
-import time
-import json
-import re
-import aiohttp
+from controller.aiohttp import make_request, wrapper
 from flask import Flask, jsonify, make_response, g
 from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
+
 from config import *
-from controller.aiohttp import make_request, wrapper
 from middleman import parser
-import secrets
-import requests
-import sqlite3
+
+import aiohttp
+import asyncio
 import datetime
+import json
+import random
+import requests
+import secrets
+import sqlite3
+import time
 
 app = Flask(__name__)
 api = Api(app)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.0.10.75:5173"}})
-SESSIONS = {}
 
 tms_pages = {
     "home": "home",
@@ -723,7 +724,6 @@ class Auth(Resource):
 
         sessid = secrets.token_hex(32)
         print(f"Student {student_id} has logged in")
-        SESSIONS[student_id] = {"student_id": student_id, "sessid": sessid}
 
         def request():
             return asyncio.run(wrapper(
@@ -746,7 +746,7 @@ class Auth(Resource):
         cookies = middleResponse.get("headers").get("Set-Cookie")
 
         if not cookies:
-            abort(412, "Couldn't get the cookies")
+            abort(412, help="Couldn't get the cookies")
 
         for header in cookies.replace(" ", "").split(";"):
             if not header.find("PHPSESSID") == -1:
@@ -863,7 +863,7 @@ class Verify(Resource):
         if parser.isExpired(middleResponse.get("text")):
             abort(401, help="Session invalid or has expired")
 
-        return ""
+        return make_response("", 200)
 
 
 class Bot(Resource):
@@ -945,12 +945,31 @@ class Bot(Resource):
         return {"subscriptions": subscriptions}
         
     
-    def post(self):
+    def put(self):
         """
         Bot Endpoint
         ---
         summary: Subscribe to Bot
         description: Subscribes the current user.
+        parameters:
+          - name: subscribe
+            in: body
+            required: yes
+            description: Subscriptions to add.
+            schema:
+                properties:
+                    telegram_username:
+                        type: string
+                        description: Telegram Username
+                        example: slaffoe
+                    discord_webhook_url:
+                        type: string
+                        description: Discord Webhook
+                        example: https://discord.com/api/webhooks/{token}
+                    email:
+                        type: string
+                        description: E-Mail
+                        example: admin@alakx.com
         responses:
             200:
                 description: Bot status
@@ -997,11 +1016,32 @@ class Bot(Resource):
         
         if res is None:
             abort(400, help="Session invalid or has expired")
-        
+            
+        key = secrets.token_hex(32)
         if args.get("telegram_username") is not None:
-            # con.cursor().execute("""
-            #     INSERT INTO
-            # """)
+            con.cursor().execute("""
+                INSERT INTO Verifications(verification_key, code, telegram_username) VALUES(?, ?, ?);
+            """, (key, verifyCodeGen(6), args.get("telegram_username")))
+            con.commit()
+            con.close()
+            return {"key": key}
+        if args.get("discord_webhook_url") is not None:
+            con.cursor().execute("""
+                INSERT INTO Discord_Subscribers(webhook_url) VALUES(?);
+            """, (args.get("discord_webhook_url"), ))
+            con.commit()
+            con.close()
+            return make_response("", 200)
+        if args.get("email") is not None:
+            con.cursor().execute("""
+                INSERT INTO Verifications(verification_key, code, email) VALUES(?);
+            """, (key, verifyCodeGen(6), args.get("email")))
+            con.commit()
+            con.close()
+            return {"key": key}
+        
+        con.close()
+        return '', 204
         
         
     
@@ -1011,17 +1051,158 @@ class Bot(Resource):
         ---
         summary: Unsubscribe to Bot
         description: Unsubscribes the current user.
+        parameters:
+          - name: unsubscribe
+            in: body
+            required: yes
+            description: Subscriptions to cancel.
+            schema:
+                properties:
+                    telegram_username:
+                        type: string
+                        description: Telegram Username
+                        example: slaffoe
+                    discord_webhook_url:
+                        type: string
+                        description: Discord Webhook
+                        example: https://discord.com/webhook/{token}
+                    email:
+                        type: string
+                        description: E-Mail
+                        example: admin@alakx.com
         responses:
-            200:
-                description: Bot status
+            202:
+                description: Empty response for empty request
+            204:
+                description: Unsubscried
             400:
+                description: Cannot find the subscription
+            401:
                 description: Invalid credentials
             404:
                 description: Bot is not active
         """
-        abort(404, help="Bot is not active")
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "SessionID",
+            type=str,
+            help="Invalid sessionid",
+            location="cookies",
+            required=True,
+        )
+        rp.add_argument(
+            "StudentID",
+            type=str,
+            help="Invalid studentid",
+            location="cookies",
+            required=True,
+        )
+        rp.add_argument(
+            "telegram_username",
+            type=str,
+        )
+        rp.add_argument(
+            "discord_webhook_url",
+            type=str,
+        )
+        rp.add_argument(
+            "email",
+            type=str,
+        )
+        args = rp.parse_args()
         
-
+        con = get_db()
+        res = con.cursor().execute("""
+            SELECT * FROM Student_Sessions ss
+            WHERE ss.student_id = ? AND ss.session_id = ?
+            LIMIT 1;
+            """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+        
+        if res is None:
+            abort(401, help="Session invalid or has expired")
+        
+        res = con.cursor().execute("""
+            SELECT * FROM Subscribers sb
+            WHERE sb.student_id = ?
+            LIMIT 1;
+        """, (args.get("StudentID"), )).fetchone()
+        
+        if res is None:
+            abort(400, help="No subscriptions found")
+        
+        if res["telegram_id"] is not None and args.get("telegram_username") is not None:
+            cur = con.cursor()
+            sub_res = cur.execute("""
+                DELETE FROM Telegram_Subscribers
+                WHERE telegram_id IN (
+                    SELECT ts.telegram_id FROM Telegram_Subscribers ts
+                    INNER JOIN Subscribers sb
+                    ON ts.telegram_id = sb.telegram_id
+                    WHERE sb.student_id = ? AND ts.username = ?
+                );
+            """, (args.get("StudentID"), args.get("telegram_username")))
+            con.commit()
+            if not sub_res.rowcount > 0:
+                con.rollback()
+                abort(400, help="Couldn't find the subscription")
+            cur.execute("""
+                UPDATE Subscribers
+                SET telegram_id = NULL
+                WHERE student_id = ?;
+            """, (args.get("StudentID"), ))
+            con.commit()
+            return '', 204
+        if res["discord_id"] is not None and args.get("discord_webhook_url") is not None:
+            cur = con.cursor()
+            sub_res = cur.execute("""
+                DELETE FROM Discord_Subscribers
+                WHERE discord_id IN (
+                    SELECT ds.discord_id FROM Discord_Subscribers ds
+                    INNER JOIN Subscribers sb
+                    ON ds.discord_id = sb.discord_id
+                    WHERE sb.student_id = ? AND ds.webhook_url = ?
+                );
+            """, (args.get("StudentID"), args.get("discord_webhook_url")))
+            if not sub_res.rowcount > 0:
+                con.rollback()
+                abort(400, help="Couldn't find the subscription")
+            con.commit()
+            cur.execute("""
+                UPDATE Subscribers
+                SET discord_id = NULL
+                WHERE student_id = ?;
+            """, (args.get("StudentID"), ))
+            con.commit()
+            return '', 204
+        if res["email_id"] is not None and args.get("email") is not None:
+            cur = con.cursor()
+            sub_res = cur.execute("""
+                DELETE FROM Email_Subscribers
+                WHERE email_id IN (
+                    SELECT es.email_id FROM Email_Subscribers es
+                    INNER JOIN Subscribers sb
+                    ON es.email_id = sb.email_id
+                    WHERE sb.student_id = ? AND es.email = ?
+                );
+            """, (args.get("StudentID"), args.get("email")))
+            if not sub_res.rowcount > 0:
+                con.rollback()
+                abort(400, help="Couldn't find the subscription")
+            con.commit()
+            cur.execute("""
+                UPDATE Subscribers
+                SET email_id = NULL
+                WHERE student_id = ?;
+            """, (args.get("StudentID"), ))
+            con.commit()
+            return '', 204
+        
+        if args.get("telegram_username") is not None or args.get("discord_webhook_url") is not None or args.get("email") is not None:
+            abort(400, help="Couldn't find the subscription")
+        
+        con.close()
+        return make_response("", 200)
+            
 
 def readAnnounce(sessid):
     asyncio.run(wrapper(
