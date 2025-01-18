@@ -767,11 +767,35 @@ class Auth(Resource):
             if not header.find("PHPSESSID") == -1:
                 sessid = header.split("=")[1]
 
-        con = get_db()
-        con.cursor().execute("""
-                    INSERT INTO Student_Sessions(student_id, session_id, last_login) VALUES(?, ?, ?)
-                    """, (student_id, sessid, datetime.datetime.now().isoformat()))
-        con.commit()
+        db_con = get_db()
+        db_cur = db_con.cursor()
+
+        # Update student information, adding new student
+        # if it's not present who hopefully read the ToS.
+        db_res = db_cur.execute("""
+            REPLACE INTO Students(id, student_id, password)
+            VALUES ((
+                SELECT id FROM Students
+                WHERE student_id = ?
+            ), ?, ?)
+            RETURNING id;
+        """, (student_id, student_id, password)).fetchone()
+
+        if db_res is None:
+            db_con.rollback()
+            db_con.close()
+            abort(400, help="Unknown error")
+        db_con.commit()
+
+        # Pushing new session_id
+        db_cur.execute("""
+            INSERT INTO Student_Sessions(owner_id, session_id, last_login)
+            VALUES (?, ?, ?);
+        """, (db_res["id"], sessid, datetime.datetime.now().isoformat()))
+        db_con.commit()
+        db_con.close()
+
+        # Sending out freshly baked cookies
         mid_res = make_response("", 200)
         mid_res.set_cookie("SessionID",
                            sessid,
@@ -811,24 +835,78 @@ class LogOut(Resource):
             location="cookies",
             required=True,
         )
+        rp.add_argument(
+            "StudentID",
+            type=str,
+            help="Invalid studentid",
+            location="cookies",
+            required=True,
+        )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
+        db_con = get_db()
+        db_cur = db_con.cursor()
+
+        # Querying current session to see if it exists
+        db_res = db_cur.execute("""
+            SELECT ss.owner_id FROM Student_Sessions ss
+            INNER JOIN Students s
+            ON ss.owner_id = s.id
+            WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
+            LIMIT 1;
+        """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+        if db_res is None:
+            db_con.close()
+            abort(400, help="Couldn't logout")
+
+        # Querying all sessions with ids which are not logged out yet
+        owner_id = db_res["owner_id"]
+        db_res = db_cur.execute("""
+            SELECT ss.session_id FROM Student_Sessions ss
+            WHERE ss.owner_id = ? AND ss.logged_out = 0;
+        """, (owner_id, )).fetchall()
+        if len(db_res) == 0:
+            db_con.close()
+            abort(400, help="Couldn't logout")
+
+        # Updating database all sessions with fetched ids
+        db_cur.execute("""
+            UPDATE Student_Sessions
+            SET logged_out = 1
+            WHERE owner_id = ?
+        """, (owner_id, ))
+        db_con.commit()
+        db_con.close()
+
+        # Logging out of all sessions with fetched session_ids
+        session_ids = list(map(lambda row: row["session_id"], db_res))
+        def thread_target():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            async def n_wrapper(rqsts):
+                async with aiohttp.ClientSession() as session:
+                    tasks = [make_request(session, req) for req in rqsts]
+                    return await asyncio.gather(*tasks)
+
+            rqsts = [
             {
                 "method": "GET",
                 "url": f"{ROOT}logout.php",
                 "headers": {
                     "Host": HOST,
-                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": userAgent,
+                    "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
+                    "User-Agent": user_agent,
                 }
-            }))
-        mid_res = request()
+            } for session_id in session_ids]
+            return loop.run_until_complete(n_wrapper(rqsts))
 
-        if not mid_res["status"] == 302:
-            abort(400, help="Couldn't logout")
+        with ThreadPoolExecutor() as executor:
+            executor.submit(thread_target)
 
+        app.logger.info("Student %s has logged out", args.get("StudentID"))
+
+        # Getting rid of spoiled cookies.
         mid_res = make_response("", 200)
         mid_res.set_cookie("SessionID", "", httponly=False, secure=False, samesite="Lax")
         mid_res.set_cookie("StudentID", "", httponly=False, secure=False, samesite="Lax")
@@ -925,52 +1003,51 @@ class Bot(Resource):
         )
         args = rp.parse_args()
 
-        con = get_db()
-        res = con.cursor().execute("""
-            SELECT * FROM Student_Sessions ss
-            WHERE ss.student_id = ? AND ss.session_id = ?
+        db_con = get_db()
+        db_cur = db_con.cursor()
+        db_res = db_cur.execute("""
+            SELECT ss.owner_id, s.active_telegram_id, s.active_discord_id, s.active_email_id
+            FROM Student_Sessions ss
+            INNER JOIN Students s
+            ON ss.owner_id = s.id
+            WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
             LIMIT 1;
-            """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
-
-        if res is None:
-            con.close()
-            abort(400, help="Session invalid or has expired")
-
-        res = con.cursor().execute("""
-            SELECT * FROM Subscribers sb
-            WHERE sb.student_id = ?;
-            """, (args.get("StudentID"), )).fetchone()
+        """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+        if db_res is None:
+            db_con.close()
+            abort(401, help="Session invalid or has expired")
 
         subscriptions = {}
+        owner_id = db_res["owner_id"]
 
-        if res is not None:
-            if res["telegram_id"] is not None:
-                sres = con.cursor().execute("""
-                    SELECT ts.username FROM Telegram_Subscribers ts
-                    LEFT JOIN Subscribers s
-                    ON ts.telegram_id = s.telegram_id
-                    WHERE s.student_id = ?;
-                """, (args.get("StudentID"), )).fetchone()
-                if sres is not None:
-                    subscriptions["telegram_username"] = sres["username"]
-            if res["discord_id"] is not None:
-                sres = con.cursor().execute("""
-                    SELECT ds.webhook_url FROM Discord_Subscribers ds
-                    LEFT JOIN Subscribers s ON ds.discord_id = s.discord_id 
-                    WHERE s.student_id = ?;  
-                """, (args.get("StudentID"), )).fetchone()
-                if sres is not None:
-                    subscriptions["discord_webhook_url"] = sres["webhook_url"]
-            if res["email_id"] is not None:
-                sres = con.cursor().execute("""
+        if db_res is not None:
+            if db_res["active_telegram_id"] is not None:
+                db_sub_res = db_cur.execute("""
+                    SELECT ts.telegram_username FROM Telegram_Subscribers ts
+                    INNER JOIN Students s
+                    ON ts.telegram_id = s.active_telegram_id
+                    WHERE s.id = ?;
+                """, (owner_id, )).fetchone()
+                if db_sub_res is not None:
+                    subscriptions["telegram_username"] = db_sub_res["telegram_username"]
+            if db_res["active_discord_id"] is not None:
+                db_sub_res = db_con.cursor().execute("""
+                    SELECT ds.discord_webhook_url FROM Discord_Subscribers ds
+                    INNER JOIN Students s ON ds.discord_id = s.active_discord_id 
+                    WHERE s.id = ?;  
+                """, (owner_id, )).fetchone()
+                if db_sub_res is not None:
+                    subscriptions["discord_webhook_url"] = db_sub_res["discord_webhook_url"]
+            if db_res["active_email_id"] is not None:
+                db_sub_res = db_con.cursor().execute("""
                     SELECT es.email FROM Email_Subscribers es
-                    LEFT JOIN Subscribers s ON es.email_id = s.email_id
-                    WHERE s.student_id = ?;
-                """, (args.get("StudentID"), )).fetchone()
-                if sres is not None:
-                    subscriptions["email"] = sres["email"]
+                    INNER JOIN Students s ON es.email_id = s.active_email_id
+                    WHERE s.id = ?;
+                """, (owner_id, )).fetchone()
+                if db_sub_res is not None:
+                    subscriptions["email"] = db_sub_res["email"]
 
-        con.close()
+        db_con.close()
         return {"subscriptions": subscriptions}
 
 
@@ -1036,41 +1113,63 @@ class Bot(Resource):
         )
         args = rp.parse_args()
 
-        con = get_db()
-        res = con.cursor().execute("""
-            SELECT * FROM Student_Sessions ss
-            WHERE ss.student_id = ? AND ss.session_id = ?
+        db_con = get_db()
+        db_res = db_con.cursor().execute("""
+            SELECT ss.owner_id
+            FROM Student_Sessions ss
+            INNER JOIN Students s
+            ON ss.owner_id = s.id
+            WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
             LIMIT 1;
             """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
 
-        if res is None:
-            abort(400, help="Session invalid or has expired")
+        if db_res is None:
+            db_con.close()
+            abort(401, help="Session invalid or has expired")
 
-        key = secrets.token_hex(32)
+        owner_id = db_res["owner_id"]
         if args.get("telegram_username") is not None:
-            con.cursor().execute("""
-                INSERT INTO Verifications(verification_key, code, telegram_username) VALUES(?, ?, ?);
-            """, (key, verify_code_gen(6), args.get("telegram_username")))
-            con.commit()
-            con.close()
-            return {"key": key}
+            code = verify_code_gen(6)
+            db_con.cursor().execute("""
+                INSERT INTO Verifications
+                (owner_id, verify_code, verify_item, verify_date, verify_service)
+                VALUES(?, ?, ?, ?, 0);
+            """, (owner_id, code, args.get("telegram_username"), datetime.datetime.now().isoformat()))
+            db_con.commit()
+            db_con.close()
+            return {"telegram_code": code}, 204
         if args.get("discord_webhook_url") is not None:
-            con.cursor().execute("""
-                INSERT INTO Discord_Subscribers(webhook_url) VALUES(?);
-            """, (args.get("discord_webhook_url"), ))
-            con.commit()
-            con.close()
-            return make_response("", 200)
+            db_sub_res = db_con.cursor().execute("""
+                INSERT INTO Discord_Subscribers(owner_id, discord_webhook_url)
+                VALUES(?, ?)
+                RETURNING discord_id;
+            """, (owner_id, args.get("discord_webhook_url"))).fetchone()
+            if db_sub_res is None:
+                db_con.rollback()
+                db_con.close()
+                abort(400, help="Unknown error")
+            db_con.commit()
+            db_con.cursor().execute("""
+                UPDATE Students
+                SET active_discord_id = ?
+                WHERE id = ?;
+            """, (db_sub_res["discord_id"], owner_id))
+            db_con.commit()
+            db_con.close()
+            return make_response("", 201)
         if args.get("email") is not None:
-            con.cursor().execute("""
-                INSERT INTO Verifications(verification_key, code, email) VALUES(?);
-            """, (key, verify_code_gen(6), args.get("email")))
-            con.commit()
-            con.close()
-            return {"key": key}
+            code = verify_code_gen(6)
+            db_con.cursor().execute("""
+                INSERT INTO Verifications
+                (owner_id, verify_code, verify_item, verify_date, verify_service)
+                VALUES(?, ?, ?, ?, 1);
+            """, (owner_id, code, args.get("email"), datetime.datetime.now().isoformat()))
+            db_con.commit()
+            db_con.close()
+            return make_response("", 204)
 
-        con.close()
-        return '', 204
+        db_con.close()
+        return '', 200
 
 
     def delete(self):
@@ -1139,99 +1238,90 @@ class Bot(Resource):
         )
         args = rp.parse_args()
 
-        con = get_db()
-        res = con.cursor().execute("""
-            SELECT * FROM Student_Sessions ss
-            WHERE ss.student_id = ? AND ss.session_id = ?
+        db_con = get_db()
+        db_cur = db_con.cursor()
+        db_res = db_cur.execute("""
+            SELECT ss.owner_id, s.active_telegram_id, s.active_discord_id, s.active_email_id
+            FROM Student_Sessions ss
+            INNER JOIN Students s
+            ON ss.owner_id = s.id
+            WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
             LIMIT 1;
             """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
 
-        if res is None:
+        if db_res is None:
+            db_con.close()
             abort(401, help="Session invalid or has expired")
+        owner_id = db_res["owner_id"]
 
-        res = con.cursor().execute("""
-            SELECT * FROM Subscribers sb
-            WHERE sb.student_id = ?
-            LIMIT 1;
-        """, (args.get("StudentID"), )).fetchone()
-
-        if res is None:
-            abort(400, help="No subscriptions found")
-
-        if res["telegram_id"] is not None and args.get("telegram_username") is not None:
-            cur = con.cursor()
-            sub_res = cur.execute("""
-                DELETE FROM Telegram_Subscribers
-                WHERE telegram_id IN (
-                    SELECT ts.telegram_id FROM Telegram_Subscribers ts
-                    INNER JOIN Subscribers sb
-                    ON ts.telegram_id = sb.telegram_id
-                    WHERE sb.student_id = ? AND ts.username = ?
+        if db_res["active_telegram_id"] is not None and args.get("telegram_username") is not None:
+            db_sub_res = db_cur.execute("""
+                UPDATE Students
+                SET active_telegram_id = NULL
+                WHERE id = ? AND
+                active_telegram_id = (
+                    SELECT ts.telegram_id
+                    FROM Telegram_Subscribers ts
+                    WHERE ts.owner_id = ? AND ts.telegram_username = ?
+                    ORDER BY ts.telegram_id DESC
+                    LIMIT 1
                 );
-            """, (args.get("StudentID"), args.get("telegram_username")))
-            con.commit()
-            if not sub_res.rowcount > 0:
-                con.rollback()
+            """, (owner_id, owner_id, args.get("telegram_username")))
+            if not db_sub_res.rowcount > 0:
+                db_con.rollback()
+                db_con.close()
                 abort(400, help="Couldn't find the subscription")
-            cur.execute("""
-                UPDATE Subscribers
-                SET telegram_id = NULL
-                WHERE student_id = ?;
-            """, (args.get("StudentID"), ))
-            con.commit()
-            return '', 204
-        if res["discord_id"] is not None and args.get("discord_webhook_url") is not None:
-            cur = con.cursor()
-            sub_res = cur.execute("""
-                DELETE FROM Discord_Subscribers
-                WHERE discord_id IN (
-                    SELECT ds.discord_id FROM Discord_Subscribers ds
-                    INNER JOIN Subscribers sb
-                    ON ds.discord_id = sb.discord_id
-                    WHERE sb.student_id = ? AND ds.webhook_url = ?
+            db_con.commit()
+            db_con.close()
+            return make_response("", 200)
+        if db_res["active_discord_id"] is not None and args.get("discord_webhook_url") is not None:
+            db_sub_res = db_cur.execute("""
+                UPDATE Students
+                SET active_discord_id = NULL
+                WHERE id = ? AND
+                active_discord_id = (
+                    SELECT ds.discord_id
+                    FROM Discord_Subscribers ds
+                    WHERE ds.owner_id = ? AND ds.discord_webhook_url = ?
+                    ORDER BY ds.discord_id DESC
+                    LIMIT 1
                 );
-            """, (args.get("StudentID"), args.get("discord_webhook_url")))
-            if not sub_res.rowcount > 0:
-                con.rollback()
+            """, (owner_id, owner_id, args.get("discord_webhook_url")))
+            if not db_sub_res.rowcount > 0:
+                db_con.rollback()
+                db_con.close()
                 abort(400, help="Couldn't find the subscription")
-            con.commit()
-            cur.execute("""
-                UPDATE Subscribers
-                SET discord_id = NULL
-                WHERE student_id = ?;
-            """, (args.get("StudentID"), ))
-            con.commit()
-            return '', 204
-        if res["email_id"] is not None and args.get("email") is not None:
-            cur = con.cursor()
-            sub_res = cur.execute("""
-                DELETE FROM Email_Subscribers
-                WHERE email_id IN (
-                    SELECT es.email_id FROM Email_Subscribers es
-                    INNER JOIN Subscribers sb
-                    ON es.email_id = sb.email_id
-                    WHERE sb.student_id = ? AND es.email = ?
+            db_con.commit()
+            db_con.close()
+            return make_response("", 200)
+        if db_res["active_email_id"] is not None and args.get("email") is not None:
+            db_sub_res = db_cur.execute("""
+                UPDATE Students
+                SET active_email_id = NULL
+                WHERE id = ? AND
+                active_email_id = (
+                    SELECT es.email_id
+                    FROM Email_Subscribers es
+                    WHERE es.owner_id = ? AND es.email = ?
+                    ORDER BY es.email_id DESC
+                    LIMIT 1
                 );
-            """, (args.get("StudentID"), args.get("email")))
-            if not sub_res.rowcount > 0:
-                con.rollback()
+            """, (owner_id, owner_id, args.get("email")))
+            if not db_sub_res.rowcount > 0:
+                db_con.rollback()
+                db_con.close()
                 abort(400, help="Couldn't find the subscription")
-            con.commit()
-            cur.execute("""
-                UPDATE Subscribers
-                SET email_id = NULL
-                WHERE student_id = ?;
-            """, (args.get("StudentID"), ))
-            con.commit()
-            return '', 204
+            db_con.commit()
+            db_con.close()
+            return make_response("", 200)
 
         if (args.get("telegram_username") is not None or
             args.get("discord_webhook_url") is not None or
             args.get("email") is not None):
             abort(400, help="Couldn't find the subscription")
 
-        con.close()
-        return make_response("", 200)
+        db_con.close()
+        return '', 204
 
 
 def read_announce(sessid):
