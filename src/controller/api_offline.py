@@ -1,3 +1,6 @@
+import json
+import os
+
 from flask import Flask, make_response
 from flask_restful import Api, Resource, abort, reqparse
 from flask_cors import CORS
@@ -5,8 +8,6 @@ from flasgger import Swagger
 
 from middleman import parser_offline
 
-import json
-import os
 
 
 app = Flask(__name__)
@@ -44,7 +45,7 @@ class Res(Resource):
                     Cookie:
                         schema:
                             type: string
-                            example: SessionID=8c3589030a3854dc98100b0eeaa0ff67f1ba384895dbd6138dfabj25220694f9;
+                            example: SessionID=8c3589030a3854d... (32 char);
             400:
                 description: Invalid Page
             401:
@@ -52,18 +53,21 @@ class Res(Resource):
             412:
                 description: Bad response from root server
         """
-        resourceParser = None
+        res_parser = None
         try:
-            resourceParser = getattr(parser_offline, f"Offline{resource.capitalize()}Parser")
+            res_parser = getattr(parser_offline, f"Offline{resource.capitalize()}Parser")
         except AttributeError:
             abort(404)
 
-        page = json.loads(resourceParser())
+        page = json.loads(res_parser())
         res = make_response(page, 200)
 
         if resource == "home":
-            res.set_cookie("ImgID", "offline_img_id", httponly=False, secure=False, samesite="Lax")
-        
+            res.set_cookie("ImgID", "offline_img_id",
+                           httponly=False,
+                           secure=False,
+                           samesite="Lax")
+
         return res
 
 
@@ -100,7 +104,7 @@ class GradesAll(Resource):
 
 class Grades(Resource):
 
-    def get(self, year, semester):
+    def get(self, _, __):
         """
         Grades Endpoint
         ---
@@ -131,7 +135,7 @@ class Grades(Resource):
 
 class AttendanceBySemester(Resource):
 
-    def get(self, year, semester):
+    def get(self, _, __):
         """
         Attendance Endpoint
         ---
@@ -162,7 +166,7 @@ class AttendanceBySemester(Resource):
 
 class AttendanceByCourse(Resource):
 
-    def get(self, course):
+    def get(self, _):
         """
         Attendance Endpoint
         ---
@@ -187,7 +191,7 @@ class AttendanceByCourse(Resource):
 
 
 class Deps(Resource):
-    def get(self, code):
+    def get(self, _):
         """
         Departments Endpoint
         ---
@@ -210,7 +214,7 @@ class Deps(Resource):
 
 
 class Program(Resource):
-    def get(self, code, year):
+    def get(self, _, __):
         """
         Programs Endpoint
         ---
@@ -324,7 +328,7 @@ class Auth(Resource):
                     Set-Cookie:
                         schema:
                             type: string
-                            example: SessionID=8c3589030a3854dc98100b0eeaa0ff67f1ba384895dbd6138dfabj25220694f9;
+                            example: SessionID=8c3589030a3854d... (32 char);
             400:
                 description: Invalid credentials
             401:
