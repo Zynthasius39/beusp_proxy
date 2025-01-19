@@ -1,5 +1,3 @@
-from concurrent.futures.thread import ThreadPoolExecutor
-
 import asyncio
 import datetime
 import json
@@ -789,7 +787,7 @@ class Auth(Resource):
 
         # Pushing new session_id
         db_cur.execute("""
-            INSERT INTO Student_Sessions(owner_id, session_id, last_login)
+            INSERT INTO Student_Sessions(owner_id, session_id, login_date)
             VALUES (?, ?, ?);
         """, (db_res["id"], sessid, datetime.datetime.now().isoformat()))
         db_con.commit()
@@ -863,7 +861,8 @@ class LogOut(Resource):
         owner_id = db_res["owner_id"]
         db_res = db_cur.execute("""
             SELECT ss.session_id FROM Student_Sessions ss
-            WHERE ss.owner_id = ? AND ss.logged_out = 0;
+            WHERE ss.owner_id = ? AND ss.logged_out = 0
+            ORDER BY ss.last_login DESC;
         """, (owner_id, )).fetchall()
         if len(db_res) == 0:
             db_con.close()
@@ -879,30 +878,26 @@ class LogOut(Resource):
         db_con.close()
 
         # Logging out of all sessions with fetched session_ids
-        session_ids = list(map(lambda row: row["session_id"], db_res))
-        def thread_target():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        rqsts = [
+        {
+            "method": "GET",
+            "url": f"{ROOT}logout.php",
+            "headers": {
+                "Host": HOST,
+                "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
+                "User-Agent": user_agent,
+            }
+        } for session_id in list(map(lambda row: row["session_id"], db_res))]
 
-            async def n_wrapper(rqsts):
-                async with aiohttp.ClientSession() as session:
-                    tasks = [make_request(session, req) for req in rqsts]
-                    return await asyncio.gather(*tasks)
-
-            rqsts = [
-            {
-                "method": "GET",
-                "url": f"{ROOT}logout.php",
-                "headers": {
-                    "Host": HOST,
-                    "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
-                }
-            } for session_id in session_ids]
-            return loop.run_until_complete(n_wrapper(rqsts))
-
-        with ThreadPoolExecutor() as executor:
-            executor.submit(thread_target)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        responses = loop.run_until_complete(n_wrapper(rqsts))
+        
+        try:
+            if responses[0]["response"] != 302:
+                abort(400, help="Couldn't logout")
+        except IndexError:
+            abort(400, help="Couldn't logout")
 
         app.logger.info("Student %s has logged out", args.get("StudentID"))
 
@@ -1324,6 +1319,12 @@ class Bot(Resource):
         return '', 204
 
 
+async def n_wrapper(rqsts):
+    async with aiohttp.ClientSession() as session:
+        tasks = [make_request(session, req) for req in rqsts]
+        return await asyncio.gather(*tasks)
+
+
 def read_announce(sessid):
     asyncio.run(wrapper(
     {
@@ -1337,16 +1338,8 @@ def read_announce(sessid):
         }
     }))
 
+
 def read_msgs(sessid, msg_ids):
-    def thread_target():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        async def n_wrapper(rqsts):
-            async with aiohttp.ClientSession() as session:
-                tasks = [make_request(session, req) for req in rqsts]
-                return await asyncio.gather(*tasks)
-
         rqsts = [
         {
             "method": "POST",
@@ -1359,15 +1352,15 @@ def read_msgs(sessid, msg_ids):
                 "User-Agent": user_agent,
             }
         } for id in msg_ids]
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         return loop.run_until_complete(n_wrapper(rqsts))
 
-    with ThreadPoolExecutor() as executor:
-        results = executor.submit(thread_target).result()
-
-    return results
 
 def verify_code_gen(length):
     return ''.join(str(random.randint(0, 9)) for _ in range(length))
+
 
 api.add_resource(Msg, "/api/resource/msg")
 api.add_resource(Res, "/api/resource/<resource>")
