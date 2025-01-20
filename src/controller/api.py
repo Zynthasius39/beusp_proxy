@@ -5,15 +5,14 @@ import random
 import secrets
 import sqlite3
 import time
-import aiohttp
 import requests
 
 from flask import Flask, jsonify, make_response, g
 from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
 
-from controller.aiohttp import make_request, wrapper
-from config import HOST, ROOT, user_agent
+from controller.aioreq import wrapper, n_wrapper
+from config import HOST, ROOT, USER_AGENT
 from middleman import parser
 
 
@@ -45,6 +44,10 @@ def close_db(_):
         db.close()
 
 class Res(Resource):
+    """Resource
+    
+    Flask-RESTFUL resource
+    """
 
     def get(self, resource):
         """
@@ -85,7 +88,7 @@ class Res(Resource):
 
         res_parser = None
         try:
-            res_parser = getattr(parser, f"{resource}Parser")
+            res_parser = getattr(parser, f"{resource}_parser")
         except AttributeError:
             abort(404)
 
@@ -97,22 +100,22 @@ class Res(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from root server")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
         page = res_parser(mid_res.get("text"))
@@ -129,6 +132,10 @@ class Res(Resource):
 
 
 class GradesAll(Resource):
+    """All Grades
+
+    Flask-RESTFUL resource
+    """
 
     def get(self):
         """
@@ -164,23 +171,23 @@ class GradesAll(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from root server")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
         ajax = json.loads(mid_res.get("text"))
@@ -191,12 +198,16 @@ class GradesAll(Resource):
         if not text.find("There aren't any registered section for the selected year-term.") == -1:
             abort(400, help="There aren't any registered section for the selected year-term")
 
-        page = jsonify(parser.gradesParser2(text))
+        page = jsonify(parser.grades2_parser(text))
         res = make_response(page, 200)
         return res
 
 
 class Grades(Resource):
+    """Grades
+
+    Flask-RESTFUL resource
+    """
 
     def get(self, year, semester):
         """
@@ -244,23 +255,23 @@ class Grades(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from root server")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
         ajax = json.loads(mid_res.get("text"))
@@ -271,12 +282,16 @@ class Grades(Resource):
         if not text.find("There aren't any registered section for the selected year-term.") == -1:
             abort(400, help="There aren't any registered section for the selected year-term")
 
-        page = jsonify(parser.gradesParser2(text))
+        page = jsonify(parser.grades2_parser(text))
         res = make_response(page, 200)
         return res
 
 
 class AttendanceBySemester(Resource):
+    """Attendance by year and semester
+
+    Flask-RESTFUL resource
+    """
 
     def get(self, year, semester):
         """
@@ -323,34 +338,38 @@ class AttendanceBySemester(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from root server")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
         if not mid_res.get("text").find("No section found.") == -1:
             abort(400, help="No section found")
 
-        page = jsonify(parser.attendanceParser2(mid_res.get("text")))
+        page = jsonify(parser.attendance2_parser(mid_res.get("text")))
         res = make_response(page, 200)
         return res
 
 
 class AttendanceByCourse(Resource):
+    """Attendance by course
+
+    Flask-RESTFUL resource
+    """
 
     def get(self, course):
         """
@@ -392,35 +411,40 @@ class AttendanceByCourse(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from root server")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
         ajax = json.loads(mid_res.get("text"))
         if int(ajax["CODE"]) < 1:
             abort(400, help=ajax["DATA"])
 
-        page = jsonify(parser.attendanceParser3(ajax["DATA"]))
+        page = jsonify(parser.attendance3_parser(ajax["DATA"]))
         res = make_response(page, 200)
         return res
 
 
 class Deps(Resource):
+    """Departments
+
+    Flask-RESTFUL resource
+    """
+
     def get(self, code):
         """
         Departments Endpoint
@@ -458,30 +482,35 @@ class Deps(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from gateway")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
-        page = jsonify(parser.depsParser2(mid_res.get("text")))
+        page = jsonify(parser.deps2_parser(mid_res.get("text")))
         res = make_response(page, 200)
         return res
 
 
 class Program(Resource):
+    """Programs
+
+    Flask-RESTFUL resource
+    """
+
     def get(self, code, year):
         """
         Programs Endpoint
@@ -528,25 +557,25 @@ class Program(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from root server")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
-        page = parser.programParser2(mid_res.get("text"))
+        page = parser.program2_parser(mid_res.get("text"))
 
         if not page:
             abort(404, help="Not Found")
@@ -555,6 +584,11 @@ class Program(Resource):
 
 
 class Msg(Resource):
+    """Messages
+
+    Flask-RESTFUL resource
+    """
+
     def get(self):
         """
         Messages Endpoint
@@ -588,36 +622,41 @@ class Msg(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from gateway")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
-        results = read_msgs(args.get("SessionID"), parser.msgParser(mid_res.get("text")))
+        results = read_msgs(args.get("SessionID"), parser.msg_parser(mid_res.get("text")))
 
         msgs = []
         for res in results:
             if res["status"] == 200:
-                msgs.append(parser.msgParser2(res.get("text")))
+                msgs.append(parser.msg2_parser(res.get("text")))
 
         res = make_response(jsonify(msgs), 200)
         return res
 
 
 class StudPhoto(Resource):
+    """Student Photo
+
+    Flask-RESTFUL resource
+    """
+
     def get(self):
         """
         Student Photo Endpoint
@@ -654,7 +693,7 @@ class StudPhoto(Resource):
             headers = {
                 "Host": HOST,
                 "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                "User-Agent": user_agent,
+                "User-Agent": USER_AGENT,
             },
             timeout = 10
         )
@@ -670,6 +709,11 @@ class StudPhoto(Resource):
 
 
 class Auth(Resource):
+    """Authenticate
+
+    Flask-RESTFUL resource
+    """
+
     def post(self):
         """
         Auth Endpoint
@@ -744,7 +788,7 @@ class Auth(Resource):
                     "Host": HOST,
                     "Content-Type": "application/x-www-form-urlencoded",
                     "Cookie": f"PHPSESSID={sessid}; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
@@ -812,6 +856,10 @@ class Auth(Resource):
 
 
 class LogOut(Resource):
+    """Logout
+
+    Flask-RESTFUL resource
+    """
 
     def post(self):
         """
@@ -862,7 +910,7 @@ class LogOut(Resource):
         db_res = db_cur.execute("""
             SELECT ss.session_id FROM Student_Sessions ss
             WHERE ss.owner_id = ? AND ss.logged_out = 0
-            ORDER BY ss.last_login DESC;
+            ORDER BY ss.login_date DESC;
         """, (owner_id, )).fetchall()
         if len(db_res) == 0:
             db_con.close()
@@ -885,14 +933,14 @@ class LogOut(Resource):
             "headers": {
                 "Host": HOST,
                 "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
-                "User-Agent": user_agent,
+                "User-Agent": USER_AGENT,
             }
         } for session_id in list(map(lambda row: row["session_id"], db_res))]
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         responses = loop.run_until_complete(n_wrapper(rqsts))
-        
+
         try:
             if responses[0]["response"] != 302:
                 abort(400, help="Couldn't logout")
@@ -910,6 +958,10 @@ class LogOut(Resource):
 
 
 class Verify(Resource):
+    """Session Verification
+
+    Flask-RESTFUL resource
+    """
 
     def post(self):
         """
@@ -944,29 +996,34 @@ class Verify(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
         mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msgParser2(mid_res.get("text")))
+        if parser.is_there_msg(mid_res.get("text")):
+            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
             mid_res = request()
 
-        if parser.isThereMsg(mid_res.get("text")):
+        if parser.is_there_msg(mid_res.get("text")):
             abort(412, help="Bad request from root server")
 
         if not mid_res["status"] == 200:
             abort(412, help="Bad request from root server")
 
-        if parser.isExpired(mid_res.get("text")):
+        if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
         return make_response("", 200)
 
 
 class Bot(Resource):
+    """BeuTMSBot
+
+    Flask-RESTFUL resource
+    """
+
     def get(self):
         """
         Bot Endpoint
@@ -1129,7 +1186,8 @@ class Bot(Resource):
                 INSERT INTO Verifications
                 (owner_id, verify_code, verify_item, verify_date, verify_service)
                 VALUES(?, ?, ?, ?, 0);
-            """, (owner_id, code, args.get("telegram_username"), datetime.datetime.now().isoformat()))
+            """, (owner_id, code, args.get("telegram_username"),
+                  datetime.datetime.now().isoformat()))
             db_con.commit()
             db_con.close()
             return {"telegram_code": code}, 204
@@ -1319,13 +1377,12 @@ class Bot(Resource):
         return '', 204
 
 
-async def n_wrapper(rqsts):
-    async with aiohttp.ClientSession() as session:
-        tasks = [make_request(session, req) for req in rqsts]
-        return await asyncio.gather(*tasks)
-
-
 def read_announce(sessid):
+    """Read announces of student
+
+    Args:
+        sessid (str): Student session_id
+    """
     asyncio.run(wrapper(
     {
         "method": "POST",
@@ -1334,31 +1391,48 @@ def read_announce(sessid):
         "headers": {
             "Host": HOST,
             "Cookie": f"PHPSESSID={sessid}; ",
-            "User-Agent": user_agent,
+            "User-Agent": USER_AGENT,
         }
     }))
 
 
 def read_msgs(sessid, msg_ids):
-        rqsts = [
-        {
-            "method": "POST",
-            "url": ROOT,
-            "data": f"ajx=1&mod=msg&action=ShowReceivedMessage&sm_id={id}",
-            "headers": {
-                "Host": HOST,
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Cookie": f"PHPSESSID={sessid}; ",
-                "User-Agent": user_agent,
-            }
-        } for id in msg_ids]
-        
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop.run_until_complete(n_wrapper(rqsts))
+    """Read messages of student
+
+    Args:
+        sessid (str): Student session_id
+        msg_ids (list): List of message ids to be read
+
+    Returns:
+        list: List of responses
+    """
+    rqsts = [
+    {
+        "method": "POST",
+        "url": ROOT,
+        "data": f"ajx=1&mod=msg&action=ShowReceivedMessage&sm_id={id}",
+        "headers": {
+            "Host": HOST,
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Cookie": f"PHPSESSID={sessid}; ",
+            "User-Agent": USER_AGENT,
+        }
+    } for id in msg_ids]
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop.run_until_complete(n_wrapper(rqsts))
 
 
 def verify_code_gen(length):
+    """Generate verification code of given length
+
+    Args:
+        length (int): Length of desired code
+
+    Returns:
+        str: Randomly generated code in given length
+    """
     return ''.join(str(random.randint(0, 9)) for _ in range(length))
 
 

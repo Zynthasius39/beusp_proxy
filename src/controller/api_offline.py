@@ -25,6 +25,10 @@ if FLASGGER_ENABLED:
 
 
 class Res(Resource):
+    """Resource
+    
+    Flask-RESTFUL resource
+    """
 
     def get(self, resource):
         """
@@ -55,7 +59,7 @@ class Res(Resource):
         """
         res_parser = None
         try:
-            res_parser = getattr(parser_offline, f"Offline{resource.capitalize()}Parser")
+            res_parser = getattr(parser_offline, f"{resource}_parser_offline")
         except AttributeError:
             abort(404)
 
@@ -72,6 +76,10 @@ class Res(Resource):
 
 
 class GradesAll(Resource):
+    """All Grades
+
+    Flask-RESTFUL resource
+    """
 
     def get(self):
         """
@@ -99,10 +107,14 @@ class GradesAll(Resource):
             412:
                 description: Bad response from root server
         """
-        return json.loads(parser_offline.OfflineGradesAllParser())
+        return json.loads(parser_offline.grades_all_parser_offline())
 
 
 class Grades(Resource):
+    """Grades
+
+    Flask-RESTFUL resource
+    """
 
     def get(self, _, __):
         """
@@ -130,10 +142,14 @@ class Grades(Resource):
             412:
                 description: Bad response from root server
         """
-        return json.loads(parser_offline.OfflineGradesParser2())
+        return json.loads(parser_offline.grades2_parser_offline())
 
 
 class AttendanceBySemester(Resource):
+    """Attendance by year and semester
+
+    Flask-RESTFUL resource
+    """
 
     def get(self, _, __):
         """
@@ -161,10 +177,14 @@ class AttendanceBySemester(Resource):
             412:
                 description: Bad response from root server
         """
-        return json.loads(parser_offline.OfflineAttendanceParser2())
+        return json.loads(parser_offline.attendance2_parser_offline())
 
 
 class AttendanceByCourse(Resource):
+    """Attendance by course
+
+    Flask-RESTFUL resource
+    """
 
     def get(self, _):
         """
@@ -187,10 +207,15 @@ class AttendanceByCourse(Resource):
             412:
                 description: Bad response from root server
         """
-        return json.loads(parser_offline.OfflineAttendanceParser3())
+        return json.loads(parser_offline.attendance3_parser_offline())
 
 
 class Deps(Resource):
+    """Departments
+
+    Flask-RESTFUL resource
+    """
+
     def get(self, _):
         """
         Departments Endpoint
@@ -210,10 +235,15 @@ class Deps(Resource):
             412:
                 description: Bad response from root server
         """
-        return json.loads(parser_offline.OfflineDepsParser2())
+        return json.loads(parser_offline.deps2_parser_offline())
 
 
 class Program(Resource):
+    """Programs
+
+    Flask-RESTFUL resource
+    """
+
     def get(self, _, __):
         """
         Programs Endpoint
@@ -242,10 +272,15 @@ class Program(Resource):
             412:
                 description: Bad response from root server
         """
-        return json.loads(parser_offline.OfflineProgramParser2())
+        return json.loads(parser_offline.program_parser_offline())
 
 
 class Msg(Resource):
+    """Messages
+
+    Flask-RESTFUL resource
+    """
+
     def get(self):
         """
         Messages Endpoint
@@ -261,10 +296,15 @@ class Msg(Resource):
             412:
                 description: Bad response from root server
         """
-        return json.loads(parser_offline.OfflineMsgParser2())
+        return json.loads(parser_offline.msg_parser_offline())
 
 
 class StudPhoto(Resource):
+    """Student Photo
+
+    Flask-RESTFUL resource
+    """
+
     def get(self):
         """
         Student Photo Endpoint
@@ -300,6 +340,11 @@ class StudPhoto(Resource):
 
 
 class Auth(Resource):
+    """Authenticate
+
+    Flask-RESTFUL resource
+    """
+
     def post(self):
         """
         Auth Endpoint
@@ -346,6 +391,10 @@ class Auth(Resource):
 
 
 class LogOut(Resource):
+    """Logout
+
+    Flask-RESTFUL resource
+    """
 
     def post(self):
         """
@@ -359,10 +408,14 @@ class LogOut(Resource):
             400:
                 description: Couldn't log out
         """
-        return "Spaghettified"
+        return make_response("Spaghettified", 200)
 
 
 class Verify(Resource):
+    """Session Verification
+
+    Flask-RESTFUL resource
+    """
 
     def post(self):
         """
