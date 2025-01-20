@@ -15,33 +15,33 @@ def home_parser(text):
     soup = BeautifulSoup(text, "html.parser")
 
     student_info_table = {}
-    # Find main table with given class name
+    # Find main table with given class name.
     for tr in soup.find("table", class_="table").find_all("tr")[1:]:
         cells = tr.find_all("td")
         if cells:
-            # Clean the cell, parse field and value
+            # Clean the cell, parse field and value.
             field = re.sub(r"\s\s+", " ", cells[0].text.replace(":", "").strip().replace("\n", ""))
             value = cells[-1].text.strip()
-            # Clean the advisor
+            # Clean the advisor.
             if field == "Advisor":
                 value_val = value.split(" ")
                 value = f"{value_val[0].lower().capitalize()} {value_val[1].lower().capitalize()}"
-            # Add the field if it is not empty
+            # Add the field if it is not empty.
             if not field == "":
                 student_info_table[field] = value
 
-    # Find documents table which is the table without any border
+    # Find documents table which is the table without any border.
     documents_table = {}
     for tr in soup.find("table", {"border": "0"}).find_all("tr"):
         for link in tr.find_all("a"):
-            # Clean the cell, parse field and value
+            # Clean the cell, parse field and value.
             field = link.text.strip()
             value = link["href"].strip()
-            # Add the field if it is not empty
+            # Add the field if it is not empty.
             if not field == "":
                 documents_table[field] = value
 
-    # Match image id via regex
+    # Match image id via regex.
     image_url = re.findall(
         r"(?<==)(.*?)(?=&)",
         soup.find("img", class_="img-circle")["src"].strip())[0]
@@ -67,14 +67,14 @@ def grades_parser(text):
 
     grades_ops = []
     all_enabled = False
-    # Find all grade options in select tag with given id
+    # Find all grade options in select tag with given id.
     for op in soup.find("select", id="ysem").find_all("option"):
-        # Match year and semester via regex. 2024#2 -> ("2024", "2")
+        # Match year and semester via regex. 2024#2 -> ("2024", "2").
         m = re.search(r"(\d+)#(\d)", op.attrs.get("value"))
-        # If year is 1, inform that all grades can be requested at once
+        # If year is 1, inform that all grades can be requested at once.
         if m.group(1) == "1":
             all_enabled = True
-        # Append year and semester
+        # Append year and semester.
         else :
             grades_ops.append({
                 "year": m.group(1),
@@ -96,9 +96,9 @@ def faq_parser(text):
     soup = BeautifulSoup(text, "html.parser")
 
     faq_table = []
-    # Find FAQ sitting in ul element with given class name
+    # Find FAQ sitting in ul element with given class name.
     for li in soup.find("ul", class_="timeline").find_all("li"):
-        # Append FAQ item and body into a list
+        # Append FAQ item and body into a list.
         faq_table.append(
             {
                 "item": li.find(class_="timeline-item").text.strip(),
@@ -123,18 +123,18 @@ def announces_parser(text):
     anns_table = []
     # Find announces sitting in div tags
     # through nested div elements
-    # without recursion in given order
+    # without recursion in given order.
     for dev in (
         soup.find("div", class_="box-body")
         .find_all("div", recursive=False)[-1]
         .find_all("div", recursive=False)
     ):
-        # Find nested div tags without recursion
+        # Find nested div tags without recursion.
         subdivs = dev.div.find_all("div", recursive=False)
-        # Decompose unneeded br tags
+        # Decompose unneeded br tags.
         for br in subdivs[1].find_all("br"):
             br.decompose()
-        # Append Announce to anns_table
+        # Append Announce to anns_table.
         anns_table.append(
             {
                 "name": subdivs[0].i.text.strip(),
@@ -155,32 +155,32 @@ def deps_parser(text):
     Returns:
         dict: parsed JSON output
     """
-    # Translate fields
+    # Translate fields.
     text = text.replace("Code of the department", "dep_code")
     text = text.replace("Department name", "dep_name")
     text = text.replace("Department specific course code prefixes", "dep_prefix")
 
     soup = BeautifulSoup(text, "html.parser")
 
-    # Collect table cells in a list for further processing
+    # Collect table cells in a list for further processing.
     table = []
-    # Find departments table with given class name
+    # Find departments table with given class name.
     for tr in soup.find("div", class_="table-responsive").find_all("tr"):
         row = []
         for td in tr.find_all("td")[:-1]:
-            # Append striped cells
+            # Append striped cells.
             row.append(td.text.strip())
-        # Finally append the row to the list
+        # Finally append the row to the list.
         table.append(row)
 
     deps_table = {}
-    # Iterating through rows while ignoring header row
+    # Iterating through rows while ignoring header row.
     for i in table[1:]:
         row_name = ""
         row = {}
-        # Iterating through cells with index
+        # Iterating through cells with index.
         for inx, j in enumerate(i):
-            # If it is the number cell, assign it to be row key
+            # If it is the number cell, assign it to be row key.
             if table[0][inx] == "№":
                 row_name = j
                 continue
@@ -201,9 +201,9 @@ def deps2_parser(text):
     """
     soup = BeautifulSoup(text, "html.parser")
 
-    # Collect table cells in a list for further processing
+    # Collect table cells in a list for further processing.
     table = []
-    # Find department table with given class name
+    # Find department table with given class name.
     for tr in soup.find("table", class_="table box").find_all("tr"):
         row = []
         for td in tr.find_all("td"):
@@ -211,13 +211,13 @@ def deps2_parser(text):
         table.append(row)
 
     deps_table = {}
-    # Iterating through rows in table while ignoring header row
+    # Iterating through rows in table while ignoring header row.
     for i in table[1:]:
         row_name = ""
         row = {}
-        # Iterating through cells with index
+        # Iterating through cells with index.
         for inx, j in enumerate(i):
-            # If it is the number cell, assign it to be row key
+            # If it is the number cell, assign it to be row key.
             if table[0][inx] == "№":
                 row_name = j
                 continue
@@ -242,7 +242,7 @@ def grades2_parser(html):
     # pylint: disable=R0915
     # pylint: disable=R1702
 
-    # Cleaning input HTML
+    # Cleaning input HTML.
     html = re.sub(r"\\(r|n|t)", "", html)
     html = re.sub(r"\\", "", html)
     soup = BeautifulSoup(html, "html.parser")
@@ -280,8 +280,8 @@ def grades2_parser(html):
         "addfinal": 50,
         "refinal": 50,
     }
-    
-    # Specifing digit fields
+
+    # Specifing digit fields.
     digit_fields = [
         "absents",
         "ects",
@@ -293,12 +293,12 @@ def grades2_parser(html):
 
     ys_count = 0
     grades_table = {}
-    # Find all year & semester headers
+    # Find all year & semester headers.
     table_ys = soup.find_all("b", recursive=False)
 
-    # Find and iterate through grade tables by given class name
+    # Find and iterate through grade tables by given class name.
     for table_r in soup.find_all("div", class_="table-responsive"):
-        # Seperate table for each semester table
+        # Seperate table for each semester table.
         table = []
         act3_enabled = False
         for tr in table_r.find_all("tr"):
@@ -313,49 +313,49 @@ def grades2_parser(html):
         m = re.search(r'(\d{4})-\d{4} ([12]). term', table_ys[ys_count].text.strip())
         ys_cur = f"{m.group(1)}#{m.group(2)}"
         ys_count += 1
-        # Checking if SDF3 exists in header row
+        # Checking if SDF3 exists in header row.
         for i in table[0]:
             if i == "act3":
                 act3_enabled = True
                 break
-        # Iterating through rows while ignoring header and empty last row
+        # Iterating through rows while ignoring header and empty last row.
         for i in table[1:-1]:
             is_old_graded = False
             row_name = ""
             row = {}
-            # Iterating through cells with index
+            # Iterating through cells with index.
             for inx, j in enumerate(i):
-                # Getting scale in given column
+                # Getting scale in given column.
                 grade_field = grade_fields.get(table[0][inx])
                 # If field exists in scale table
-                # and if it is a digit
+                # and if it is a digit.
                 if not grade_field is None and j.isdigit():
-                        # Cast the grade into int
-                        grade = int(j)
-                        # Check if grade table is using old scale
-                        if grade > grade_field:
-                            is_old_graded = True
-                            break
-            # Iterating through cells with index
+                    # Cast the grade into int.
+                    grade = int(j)
+                    # Check if grade table is using old scale.
+                    if grade > grade_field:
+                        is_old_graded = True
+                        break
+            # Iterating through cells with index.
             for inx, j in enumerate(i):
-                # Skip calculator column
+                # Skip calculator column.
                 if table[0][inx] == "calc":
                     continue
-                # Remove whitespace in all cells except course name
+                # Remove whitespace in all cells except course name.
                 if not table[0][inx] == "course_name":
                     j = j.replace(" ", "")
                 # Set course key
                 if table[0][inx] == "course_code":
                     row_name = j
                     continue
-                # If grade is empty, set it to -1
+                # If grade is empty, set it to -1.
                 if table[0][inx] in digit_fields:
                     if j.strip() == "":
                         j = -1
                     else:
-                        # Getting scale in given column
+                        # Getting scale in given column.
                         grade_field = grade_fields.get(table[0][inx])
-                        # Set SDF1 and SDF2 scale to 10, if SDF3 is enabled
+                        # Set SDF1 and SDF2 scale to 10, if SDF3 is enabled.
                         if act3_enabled and grade_field == 15:
                             grade_field = 10
                         # Convert 100-point scale grade to new scale
@@ -364,7 +364,7 @@ def grades2_parser(html):
                         else:
                             j = int(j)
                 row[table[0][inx]] = j
-            # Appending year & semester header
+            # Appending year & semester header.
             row["ys"] = ys_cur
             grades_table[row_name] = row
 
@@ -386,7 +386,7 @@ def program2_parser(html):
     if not soup.find("div", class_="moddesc"):
         return None
 
-    # Collecting courses for further processing
+    # Collecting courses for further processing.
     courses = []
     # Iterating through multiple layers of tables, rows, and cells
     # in a very poorly designed table
@@ -403,19 +403,19 @@ def program2_parser(html):
                 courses.append(table)
 
     course_table = {}
-    # Iterating through semesters
+    # Iterating through semesters.
     for isemester, semester in enumerate(courses):
         semester_table = {}
-        # Iterating through subjects while ignoring header
+        # Iterating through subjects while ignoring header.
         for subject in semester[1:]:
             row_name = ""
             row = {}
-            # Iterating through fields of the subject with inedx
+            # Iterating through fields of the subject with index.
             for i, j in enumerate(subject):
                 # Skip if empty
                 if not semester[0][i].strip() and not j.strip():
                     continue
-                # If it is the number cell, assign it to be row key
+                # If it is the number cell, assign it to be row key.
                 if semester[0][i] == "№":
                     row_name = j
                     continue
@@ -434,17 +434,22 @@ def program2_parser(html):
 
     ae = []
     ae_table = {}
-    # Find AE tr tags
-    ae_bs = soup.find(lambda tag: tag.name == "div" and tag.text == " AE - Area Elective Courses").parent.parent.parent.parent.find_all("tr")
+    # Find AE tr tags.
+    ae_bs = soup.find(
+        lambda tag: (
+            tag.name == "div" and
+            tag.text == " AE - Area Elective Courses")
+    ).parent.parent.parent.parent.find_all("tr")
+
     if ae_bs:
-        # Iterating through tr tags while ignoring header and last two empty rows
+        # Iterating through tr tags while ignoring header and last two empty rows.
         for tr in ae_bs[1:-2]:
             row = []
             for td in tr.find_all("td"):
                 row.append(td.text.strip())
             ae.append(row)
 
-        # Generate ae_table using collected cells
+        # Generate ae_table using collected cells.
         for i, j in enumerate(ae[1:]):
             row_name = ""
             row = {}
@@ -457,20 +462,20 @@ def program2_parser(html):
 
     nae = []
     nae_table = {}
-    # Find NAE tr tags
+    # Find NAE tr tags.
     nae_bs = soup.find(
         lambda tag: tag.name == "div" and
         tag.text == " NAE - Non-Area Elective Courses"
     ).parent.parent.parent.parent.find_all("tr")
     if nae_bs:
-        # Iterating through tr tags while ignoring header and last two empty rows
+        # Iterating through tr tags while ignoring header and last two empty rows.
         for tr in nae_bs[1:-2]:
             row = []
             for td in tr.find_all("td"):
                 row.append(td.text.strip())
             nae.append(row)
 
-        # Generate nae_table using collected cells
+        # Generate nae_table using collected cells.
         for i, j in enumerate(nae[1:]):
             row_name = ""
             row = {}
@@ -483,17 +488,22 @@ def program2_parser(html):
 
     references = []
     reference_table = {}
-    # Find References div tag
-    reference_bs = soup.find(lambda tag: tag.name == "div" and tag.text == " Courses with normal (one-to-one ) reference")
+    # Find References div tag.
+    reference_bs = soup.find(
+        lambda tag: (
+            tag.name == "div" and
+            tag.text == " Courses with normal (one-to-one ) reference"
+        )
+    )
     if reference_bs:
-        # Iterating through tr tags while ignoring header and last empty row
+        # Iterating through tr tags while ignoring header and last empty row.
         for tr in reference_bs.parent.parent.parent.parent.find_all("tr")[1:-1]:
             row = []
             for td in tr.find_all("td"):
                 row.append(td.text.strip())
             references.append(row)
 
-        # Generate reference_table using collected cells
+        # Generate reference_table using collected cells.
         for i, j in enumerate(references[1:]):
             row_name = ""
             row = {}
@@ -521,8 +531,8 @@ def is_expired(html):
     Returns:
         bool: Whether the session is expired
     """
-    # Check if session is expired
-    # When it is, response will consist of this abomination
+    # Check if session is expired.
+    # When it is, response will consist of this abomination.
     if (
         html == "#!3%6$#@458#!2*/-&2@"
         or not html.find("Daxil ol - Tələbə Məlumat Sistemi") == -1
@@ -541,8 +551,8 @@ def msg_parser(html):
         list: List of message ids
     """
     msg_ids = []
-    # Iterate through matches of regex and append it to list
-    # Regex is used to match message ids from html
+    # Iterating through matches of regex and append it to list.
+    # Regex is used to match message ids from html.
     for i in re.findall(r"(?<=onclick=\"ShowReceivedMessage\().*?(?=\))", html):
         msg_ids.append(i)
     return msg_ids
@@ -566,11 +576,34 @@ def msg2_parser(text):
     header = soup.find_all("tr")
     body = soup.find("div", class_="mailbox-read-message")
 
-    # If all fields exist, append them to msg
+    # If all fields exist, append them to msg.
     if header[0] and header[1] and header[2] and body:
-        msg["from"] = re.sub(r"\s\s+", " ", header[0].find_all("td")[1].text.strip().replace("\n", ""))
-        msg["date"] = re.sub(r"\s\s+", " ", header[1].find_all("td")[1].text.strip().replace("\n", ""))
-        msg["subject"] = re.sub(r"\s\s+", " ", header[2].find_all("td")[1].text.strip().replace("\n", ""))
+        msg["from"] = re.sub(
+            r"\s\s+", " ",
+            header[0]
+            .find_all("td")[1]
+            .text
+            .strip()
+            .replace("\n", "")
+        )
+        msg["date"] = re.sub(
+            r"\s\s+",
+            " ",
+            header[1]
+            .find_all("td")[1]
+            .text
+            .strip()
+            .replace("\n", "")
+        )
+        msg["subject"] = re.sub(
+            r"\s\s+",
+            " ",
+            header[2]
+            .find_all("td")[1]
+            .text
+            .strip()
+            .replace("\n", "")
+        )
         msg["body"] = re.sub(r"\s\s+", " ", body.text.strip())
 
     return msg
@@ -585,7 +618,7 @@ def is_announce(html):
     Returns:
         bool: If it is an announcment
     """
-    # Checking for stud_announce string
+    # Checking for stud_announce string.
     if not html.find("stud_announce") == -1:
         return True
     return False
@@ -602,7 +635,7 @@ def is_there_msg(html):
     """
     soup = BeautifulSoup(html, "html.parser")
 
-    # Checking if span with given attributes exist
+    # Checking if span with given attributes exist.
     if soup.find("span", attrs={"style": "color:#1E1E1E ;font-weight:bold"}):
         return True
     return False
@@ -620,8 +653,8 @@ def msg_id_parser(html):
     soup = BeautifulSoup(html, "html.parser")
 
     msg_ids = []
-    # Iterate through matches of regex and append it to list
-    # Regex is used to match message ids from html
+    # Iterating through matches of regex and append it to list.
+    # Regex is used to match message ids from html.
     for i in soup.find_all("span", attrs={"style":"color:#1E1E1E ;font-weight:bold"}):
         for k in re.findall(r"(?<=\().*?(?=\))", i.parent.parent.attrs["onclick"]):
             msg_ids.append(k)
@@ -629,6 +662,7 @@ def msg_id_parser(html):
 
 
 def transcript_parser(html):
+    # pylint: disable=R0915
     """Transcript parser
 
     Args:
@@ -640,16 +674,16 @@ def transcript_parser(html):
     soup = BeautifulSoup(html, "html.parser")
 
     transcript = {}
-    # Find extra table by given class name
+    # Find extra table by given class name.
     trs = soup.find("table", class_="simple-table").find_all("tr")
-    
-    # Strip, clean and append additional datas to transcript dictionary
+
+    # Strip, clean and append additional datas to transcript dictionary.
     transcript["semesters"] = {}
     transcript["name"] = trs[0].find_all("td")[1].text.strip()
     transcript["faculty"] = trs[0].find_all("td")[3].text.strip()
     transcript["id"] = trs[1].find_all("td")[1].text.strip()
     transcript["program"] = trs[1].find_all("td")[3].text.strip()
-    # Should have got the value via regex
+    # Should have got the value via regex.
     # Maybe open a issue?
     transcript["level"] = (
         trs[2]
@@ -668,18 +702,18 @@ def transcript_parser(html):
     footer_counter = 0
     current_semester = {}
     current_semester_label = ""
-    # Find main transcript table by given class name
+    # Find main transcript table by given class name.
     table = soup.find("table", class_="table").find_all("tr")
 
-    # Iterating through rows while ignoring header row
+    # Iterating through rows while ignoring header row.
     for tr in table[1:]:
-        # Find semester cell by its style
+        # Find semester cell by its style.
         semester_label = tr.find("td", attrs={
-            "style": "font-weight:bold;border:none;"
+            "style": "font-weight:bold; border:none; "
             "padding-top:10px; padding-bottom:2px"
         })
         if semester_label:
-            # Should have got the value via regex
+            # Should have got the value via regex.
             # Maybe open a issue?
             semester_val = (
                 semester_label
@@ -689,24 +723,24 @@ def transcript_parser(html):
                 .replace(".", "")
                 .split(" ")
             )
-            # Save year & semester to be used as key
+            # Save year & semester to be used as key.
             current_semester_label = f"{semester_val[0]}#{semester_val[2]}"
             current_semester = {}
             current_semester["courses"] = {}
             continue
-        
+
         #
         # Semester Footer parsing
         #
-        
-        # Check if we stepped upon a row with given styles
+
+        # Check if we stepped upon a row with given styles.
         if (
             tr.attrs.get("style") == "font-size:12px; font-weight:bold" or
             tr.attrs.get("style") == "color:Maroon; font-size:12px; font-weight:bold"
         ):
-            # Checking if we hit the end of the table
+            # Checking if we hit the end of the table.
             if tr.attrs.get("style") == "color:Maroon; font-size:12px; font-weight:bold":
-                # Counter to determine the position of total information rows
+                # Counter to determine the position of total information rows.
                 if footer_counter > 0:
                     if footer_counter == 1:
                         transcript["total_earned_ects"] = (
@@ -744,9 +778,10 @@ def transcript_parser(html):
             #
             # Last Semester Footer parsing
             #
-            tds = tr.find_all("td")
 
-            # Splitting as first cell contains multiple values
+            tds = tr.find_all("td")
+            # Splitting as first cell contains multiple values.
+            # sac, tacc, tatc.
             for i in (
                 tds[1]
                 .text
@@ -758,8 +793,7 @@ def transcript_parser(html):
             ):
                 j = i.replace(" ", "").split(":")
                 current_semester[j[0].lower()] = j[1]
-            # Appending remaining cells
-            current_semester["sac"]
+            # Appending remaining cells.
             current_semester["total_hours"] = tds[2].text.strip()
             current_semester["total_credits"] = tds[3].text.strip()
             current_semester["spa"] = tds[4].text.strip().replace(" ", "").split(":")[1]
@@ -779,9 +813,18 @@ def transcript_parser(html):
     return {"transcript" : transcript}
 
 
-def attendanceParser2(html):
+def attendance2_parser(html):
+    """Attendace parser by year & semester
+
+    Args:
+        html (str): HTML input
+
+    Returns:
+        dict: JSON output
+    """
     soup = BeautifulSoup(html, "html.parser")
 
+    # New headers
     headers = [
         "code",
         "course_name",
@@ -793,19 +836,29 @@ def attendanceParser2(html):
         "absent",
         "absent_percent",
     ]
+
     attendance = {}
+    # Find attendance table by given class name.
+    # Iterating through rows while ignoring header and last empty row.
     for tr in soup.find("table", class_="table box").find_all("tr")[1:-1]:
         course_table = {}
         course_name = ""
+        # Iterating through cells while ignoring first and last empty cells.
         for i, td in enumerate(tr.find_all("td")[1:-1]):
             val = td.text.strip()
             if i == 0:
+                # Store course_name to be used as key.
                 course_name = td.find("a").text.strip().replace(" ", "")
                 continue
-            elif i == 2:
+            if i == 2:
+                # Clean educator name and surname.
                 course_educator_val = td.text.strip().split(" ")
-                val = f"{course_educator_val[0].lower().capitalize()} {course_educator_val[1].lower().capitalize()}"
+                val = (
+                    f"{course_educator_val[0].lower().capitalize()} "
+                    f"{course_educator_val[1].lower().capitalize()}"
+                )
             elif i == 8:
+                # Clean unnecessary characters.
                 val = td.text.strip().replace("%", "")
             course_table[headers[i]] = val
         attendance[course_name] = course_table
@@ -814,7 +867,15 @@ def attendanceParser2(html):
     return {"attendance": attendance}
 
 
-def attendanceParser3(html):
+def attendance3_parser(html):
+    """Attendance parser by course
+
+    Args:
+        html (str): HTML input
+
+    Returns:
+        dict: JSON output
+    """
     soup = BeautifulSoup(html, "html.parser")
 
     headers = [
@@ -825,25 +886,42 @@ def attendanceParser3(html):
     ]
 
     attendance = []
+    # Find attendance table with given id.
+    # Iterating through rows while ignoring empty and header rows.
     for tr in soup.find("table", id="tblJourn").find_all("tr")[2:]:
         course_table = {}
+        # Iterating through cells while ignoring first and last ones.
         for i, td in enumerate(tr.find_all("td", recursive=False)[1:-1]):
             val = td.text.strip()
             course_table[headers[i]] = val
         attendance.append(course_table)
 
     attendance_table = {"data": attendance}
+    # Find all information div tags without recursion.
     info_divs = soup.find_all("div", recursive=False)
+    # Cleaning and splitting values.
     course_val = info_divs[0].find("h4").text.replace(" - ", ":").split(":")
     educator_val = info_divs[1].find("b").text.strip().split(" ")
     attendance_table["course_code"] = course_val[0].strip()
     attendance_table["course_name"] = course_val[1].strip()
-    attendance_table["educator"] = f"{educator_val[0].lower().capitalize()} {educator_val[1].lower().capitalize()}"
+    attendance_table["educator"] = (
+        f"{educator_val[0].lower().capitalize()} "
+        f"{educator_val[1].lower().capitalize()}"
+    )
 
     return {"attendance": attendance_table}
 
 
 def is_invalid(html):
+    """Check if HTML is invalid
+    Used before understanding the bad design of student portal
+
+    Args:
+        html (str): HTML input
+
+    Returns:
+        dict: JSON output
+    """
     if not html.find("<html>") == -1:
         return True
     return False

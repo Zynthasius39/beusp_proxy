@@ -198,7 +198,7 @@ class GradesAll(Resource):
         if not text.find("There aren't any registered section for the selected year-term.") == -1:
             abort(400, help="There aren't any registered section for the selected year-term")
 
-        page = jsonify(parser.gradesParser2(text))
+        page = jsonify(parser.grades2_parser(text))
         res = make_response(page, 200)
         return res
 
@@ -282,7 +282,7 @@ class Grades(Resource):
         if not text.find("There aren't any registered section for the selected year-term.") == -1:
             abort(400, help="There aren't any registered section for the selected year-term")
 
-        page = jsonify(parser.gradesParser2(text))
+        page = jsonify(parser.grades2_parser(text))
         res = make_response(page, 200)
         return res
 
@@ -360,7 +360,7 @@ class AttendanceBySemester(Resource):
         if not mid_res.get("text").find("No section found.") == -1:
             abort(400, help="No section found")
 
-        page = jsonify(parser.attendanceParser2(mid_res.get("text")))
+        page = jsonify(parser.attendance2_parser(mid_res.get("text")))
         res = make_response(page, 200)
         return res
 
@@ -434,7 +434,7 @@ class AttendanceByCourse(Resource):
         if int(ajax["CODE"]) < 1:
             abort(400, help=ajax["DATA"])
 
-        page = jsonify(parser.attendanceParser3(ajax["DATA"]))
+        page = jsonify(parser.attendance3_parser(ajax["DATA"]))
         res = make_response(page, 200)
         return res
 
@@ -500,7 +500,7 @@ class Deps(Resource):
         if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
-        page = jsonify(parser.depsParser2(mid_res.get("text")))
+        page = jsonify(parser.deps2_parser(mid_res.get("text")))
         res = make_response(page, 200)
         return res
 
@@ -575,7 +575,7 @@ class Program(Resource):
         if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
-        page = parser.programParser2(mid_res.get("text"))
+        page = parser.program2_parser(mid_res.get("text"))
 
         if not page:
             abort(404, help="Not Found")
@@ -640,7 +640,7 @@ class Msg(Resource):
         if parser.is_expired(mid_res.get("text")):
             abort(401, help="Session invalid or has expired")
 
-        results = read_msgs(args.get("SessionID"), parser.msgParser(mid_res.get("text")))
+        results = read_msgs(args.get("SessionID"), parser.msg_parser(mid_res.get("text")))
 
         msgs = []
         for res in results:
