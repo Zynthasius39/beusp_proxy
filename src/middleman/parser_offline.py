@@ -1,51 +1,67 @@
-def OfflineHomeParser():
-    with open("demo/home.json") as f:
-        return f.read()
+def home_parser_offline():
+    """Home Parser (Offline)"""
+    return read_json_file("demo/home.json")
 
-def OfflineGradesParser():
-    with open("demo/grades_options.json") as f:
-        return f.read()
+def grades_parser_offline():
+    """Grade Options Parser (Offline)"""
+    return read_json_file("demo/grades_options.json")
 
-def OfflineGradesAllParser():
-    with open("demo/grades_all.json") as f:
-        return f.read()
+def grades_all_parser_offline():
+    """All Grade Parser (Offline)"""
+    return read_json_file("demo/grades_all.json")
 
-def OfflineFaqParser():
-    with open("demo/faq.json") as f:
-        return f.read()
+def faq_parser_offline():
+    """FAQ Parser (Offline)"""
+    return read_json_file("demo/faq.json")
 
-def OfflineAnnouncesParser():
-    with open("demo/announces.json") as f:
-        return f.read()
+def announces_parser_offline():
+    """Announce Parser (Offline)"""
+    return read_json_file("demo/announces.json")
 
-def OfflineDepsParser():
-    with open("demo/deps.json") as f:
-        return f.read()
+def deps_parser_offline():
+    """Department Parser (Offline)"""
+    return read_json_file("demo/deps.json")
 
-def OfflineTranscriptParser():
-    with open("demo/transcript.json") as f:
-        return f.read()
+def transcript_parser_offline():
+    """Transcript Parser (Offline)"""
+    return read_json_file("demo/transcript.json")
 
-def OfflineGradesParser2():
-    with open("demo/grades.json") as f:
-        return f.read()
+def grades2_parser_offline():
+    """Grade Parser (Offline)"""
+    return read_json_file("demo/grades.json")
 
-def OfflineAttendanceParser2():
-    with open("demo/attendance2.json") as f:
-        return f.read()
+def attendance2_parser_offline():
+    """Attendance Parser by Course (Offline)"""
+    return read_json_file("demo/attendance2.json")
 
-def OfflineAttendanceParser3():
-    with open("demo/attendance3.json") as f:
-        return f.read()
+def attendance3_parser_offline():
+    """Attendance Parser by Student (Offline)"""
+    return read_json_file("demo/attendance3.json")
 
-def OfflineDepsParser2():
-    with open("demo/deps2.json") as f:
-        return f.read()
+def deps2_parser_offline():
+    """Departments Parser by Code (Offline)"""
+    return read_json_file("demo/deps2.json")
 
-def OfflineProgramParser2():
-    with open("demo/program.json") as f:
-        return f.read()
+def program_parser_offline():
+    """Program Parser (Offline)"""
+    return read_json_file("demo/program.json")
 
-def OfflineMsgParser2():
-    with open("demo/msg.json") as f:
-        return f.read()
+def msg_parser_offline():
+    """Message Parser (Offline)"""
+    return read_json_file("demo/msg.json")
+
+def read_json_file(path):
+    """Read JSON file in the given path
+
+    Args:
+        path (str): File path
+
+    Returns:
+        str: File contents
+    """
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""

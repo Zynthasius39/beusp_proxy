@@ -17,7 +17,7 @@ CREATE TABLE Students(
 CREATE TABLE Student_Sessions(
 	owner_id INTEGER,
 	session_id VARCHAR(32) NOT NULL,
-	last_login TEXT,
+	login_date TEXT,
 	logged_out INTEGER(1) NOT NULL DEFAULT 0
 );
 
