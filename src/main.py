@@ -1,6 +1,8 @@
-from controller.api import app
-from flasgger import Swagger
 import os
+
+from flasgger import Swagger
+
+from controller.api import app
 
 if __name__ == '__main__':
     FLASGGER_ENABLED = os.getenv("SWAGGER_ENABLED", "false").lower() == "true"
@@ -16,7 +18,6 @@ if __name__ == '__main__':
         swagger = Swagger(app)
 
     if TMSAPI_OFFLINE:
-        from controller.api_offline import app
         app.run(debug = DEBUG, host="0.0.0.0")
     else:
         app.run(debug = DEBUG, host="0.0.0.0")

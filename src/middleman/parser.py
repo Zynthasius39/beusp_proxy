@@ -372,6 +372,9 @@ def grades2_parser(html):
 
 
 def program2_parser(html):
+    # pylint: disable=R0912
+    # pylint: disable=R0914
+    # pylint: disable=R0915
     """Program parser by year & semester
 
     Args:

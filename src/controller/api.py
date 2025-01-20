@@ -12,7 +12,7 @@ from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
 
 from controller.aioreq import wrapper, n_wrapper
-from config import HOST, ROOT, user_agent
+from config import HOST, ROOT, USER_AGENT
 from middleman import parser
 
 
@@ -100,7 +100,7 @@ class Res(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
@@ -171,7 +171,7 @@ class GradesAll(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
@@ -255,7 +255,7 @@ class Grades(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
@@ -338,7 +338,7 @@ class AttendanceBySemester(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
@@ -411,7 +411,7 @@ class AttendanceByCourse(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
@@ -482,7 +482,7 @@ class Deps(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
@@ -557,7 +557,7 @@ class Program(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
@@ -622,7 +622,7 @@ class Msg(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
@@ -693,7 +693,7 @@ class StudPhoto(Resource):
             headers = {
                 "Host": HOST,
                 "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                "User-Agent": user_agent,
+                "User-Agent": USER_AGENT,
             },
             timeout = 10
         )
@@ -788,7 +788,7 @@ class Auth(Resource):
                     "Host": HOST,
                     "Content-Type": "application/x-www-form-urlencoded",
                     "Cookie": f"PHPSESSID={sessid}; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                 }
             }))
         mid_res = request()
@@ -933,7 +933,7 @@ class LogOut(Resource):
             "headers": {
                 "Host": HOST,
                 "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
-                "User-Agent": user_agent,
+                "User-Agent": USER_AGENT,
             }
         } for session_id in list(map(lambda row: row["session_id"], db_res))]
 
@@ -996,7 +996,7 @@ class Verify(Resource):
                 "headers": {
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                    "User-Agent": user_agent,
+                    "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
                 }
             }))
@@ -1391,7 +1391,7 @@ def read_announce(sessid):
         "headers": {
             "Host": HOST,
             "Cookie": f"PHPSESSID={sessid}; ",
-            "User-Agent": user_agent,
+            "User-Agent": USER_AGENT,
         }
     }))
 
@@ -1415,7 +1415,7 @@ def read_msgs(sessid, msg_ids):
             "Host": HOST,
             "Content-Type": "application/x-www-form-urlencoded",
             "Cookie": f"PHPSESSID={sessid}; ",
-            "User-Agent": user_agent,
+            "User-Agent": USER_AGENT,
         }
     } for id in msg_ids]
 
