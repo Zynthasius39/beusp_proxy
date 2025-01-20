@@ -11,7 +11,7 @@
 ![Screenshot 2024-12-17 at 02-12-11 Baku Engineering University TMS_PMS - Rest API](https://github.com/user-attachments/assets/f98020bc-3cee-4375-8ab0-ed9b5319cf03)
 
 ### This proxy is designed from a student's point of view
-Don't expect a fully working model. Endpoints last tested on 16 December 2024 11:58 PM.
+Don't expect a fully working model. Endpoints last tested on 20 January 2025 16:20.
 
 SHA256SUM of ```common/general.js``` found in the website:
 ```1d750059806e36fa731f0b045e2844bf52e150a404ab01ac5224dc7e10bbf040  general.js```
