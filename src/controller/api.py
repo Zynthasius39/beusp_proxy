@@ -1,12 +1,13 @@
 import asyncio
-import datetime
 import json
+import math
 import random
 import secrets
 import sqlite3
 import time
-import requests
+from datetime import datetime
 
+import requests
 from flask import Flask, jsonify, make_response, g
 from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
@@ -833,7 +834,7 @@ class Auth(Resource):
         db_cur.execute("""
             INSERT INTO Student_Sessions(owner_id, session_id, login_date)
             VALUES (?, ?, ?);
-        """, (db_res["id"], sessid, datetime.datetime.now().isoformat()))
+        """, (db_res["id"], sessid, datetime.now().isoformat()))
         db_con.commit()
         db_con.close()
 
@@ -965,7 +966,7 @@ class Verify(Resource):
 
     def post(self):
         """
-        LogOut Endpoint
+        Session Verify Endpoint
         ---
         summary: Logs out given SessionID.
         description: Logs out the SessionID used in API.
@@ -1029,12 +1030,37 @@ class Bot(Resource):
         Bot Endpoint
         ---
         summary: Bot status
-        description: Gets Bot status for current user.
+        description: Gets telegram bot and the email used by bot
         responses:
             200:
                 description: Bot status
-            400:
-                description: Invalid credentials
+            404:
+                description: Bot is not active
+        """
+
+        return {
+            "bot_email": BOT_EMAIL,
+            "bot_telegram": TELEGRAM_USERNAME
+        }
+
+
+class BotSubscribe(Resource):
+    """BeuTMSBot Subscribe
+
+    Flask-RESTFUL resource
+    """
+
+    def get(self):
+        """
+        Bot Subscribe Endpoint
+        ---
+        summary: Bot subcriptions status
+        description: Gets a list of subscriptions for current user.
+        responses:
+            200:
+                description: Success
+            401:
+                description: Session invalid or has expired
             404:
                 description: Bot is not active
         """
@@ -1105,7 +1131,7 @@ class Bot(Resource):
 
     def put(self):
         """
-        Bot Endpoint
+        Bot Subscribe Endpoint
         ---
         summary: Subscribe to Bot
         description: Subscribes the current user.
@@ -1130,9 +1156,13 @@ class Bot(Resource):
                         example: admin@alakx.com
         responses:
             200:
-                description: Bot status
-            400:
-                description: Invalid credentials
+                description: Nothing to do
+            201:
+                description: Subscribed
+            204:
+                description: Waiting for verification
+            401:
+                description: Session invalid or has expired
             404:
                 description: Bot is not active
         """
@@ -1187,7 +1217,7 @@ class Bot(Resource):
                 (owner_id, verify_code, verify_item, verify_date, verify_service)
                 VALUES(?, ?, ?, ?, 0);
             """, (owner_id, code, args.get("telegram_username"),
-                  datetime.datetime.now().isoformat()))
+                  datetime.now().isoformat()))
             db_con.commit()
             db_con.close()
             return {"telegram_code": code}, 204
@@ -1216,7 +1246,7 @@ class Bot(Resource):
                 INSERT INTO Verifications
                 (owner_id, verify_code, verify_item, verify_date, verify_service)
                 VALUES(?, ?, ?, ?, 1);
-            """, (owner_id, code, args.get("email"), datetime.datetime.now().isoformat()))
+            """, (owner_id, code, args.get("email"), datetime.now().isoformat()))
             db_con.commit()
             db_con.close()
             return make_response("", 204)
@@ -1227,7 +1257,7 @@ class Bot(Resource):
 
     def delete(self):
         """
-        Bot Endpoint
+        Bot Subscribe Endpoint
         ---
         summary: Unsubscribe to Bot
         description: Unsubscribes the current user.
@@ -1251,14 +1281,14 @@ class Bot(Resource):
                         description: E-Mail
                         example: admin@alakx.com
         responses:
-            200:
-                description: Unsubscribed
-            204:
+            202:
                 description: Nothing to do
+            204:
+                description: Unsubscribed
             400:
                 description: Cannot find the subscription
             401:
-                description: Invalid credentials
+                description: Session invalid or has expired
             404:
                 description: Bot is not active
         """
@@ -1326,7 +1356,7 @@ class Bot(Resource):
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
             db_con.close()
-            return make_response("", 200)
+            return make_response("", 204)
         if db_res["active_discord_id"] is not None and args.get("discord_webhook_url") is not None:
             db_sub_res = db_cur.execute("""
                 UPDATE Students
@@ -1346,7 +1376,7 @@ class Bot(Resource):
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
             db_con.close()
-            return make_response("", 200)
+            return make_response("", 204)
         if db_res["active_email_id"] is not None and args.get("email") is not None:
             db_sub_res = db_cur.execute("""
                 UPDATE Students
@@ -1366,7 +1396,7 @@ class Bot(Resource):
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
             db_con.close()
-            return make_response("", 200)
+            return make_response("", 204)
 
         if (args.get("telegram_username") is not None or
             args.get("discord_webhook_url") is not None or
@@ -1374,7 +1404,206 @@ class Bot(Resource):
             abort(400, help="Couldn't find the subscription")
 
         db_con.close()
-        return '', 204
+        return '', 202
+
+
+class BotVerify(Resource):
+    """BeuTMSBot Verification
+    
+    Flask-RESTFUL resource
+    """
+    def post(self):
+        # pylint: disable=R0915
+        """
+        Bot Verify Endpoint
+        ---
+        summary: Verification step
+        description: Validate code and complete subscription step.
+        parameters:
+          - name: subscribe_verify
+            in: body
+            required: yes
+            description: Subscription verifications
+            schema:
+                properties:
+                    verify_code:
+                        type: string
+                        description: Verification code
+                        example: 012345
+                    service:
+                        type: string
+                        description: Service
+                        example: telegram
+        responses:
+            200:
+                description: Nothing to do
+            201:
+                description: Subscribed
+            204:
+                description: Waiting for verification
+            401:
+                description: Session invalid or has expired
+            404:
+                description: Bot is not active
+            406:
+                description: Couldn't find verification
+            500:
+                description: Problem with database
+        """
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "SessionID",
+            type=str,
+            help="Invalid sessionid",
+            location="cookies",
+            required=True,
+        )
+        rp.add_argument(
+            "StudentID",
+            type=str,
+            help="Invalid studentid",
+            location="cookies",
+            required=True,
+        )
+        rp.add_argument(
+            "verify_code",
+            type=int,
+        )
+        rp.add_argument(
+            "service",
+            type=str,
+        )
+        args = rp.parse_args()
+
+        if (not args.get("service") or
+            not args.get("verify_code")):
+            abort(400, help="Neither service, nor verify_code was specified.")
+
+        db_con = get_db()
+        db_cur = db_con.cursor()
+        db_res = db_cur.execute("""
+            SELECT ss.owner_id
+            FROM Student_Sessions ss
+            INNER JOIN Students s
+            ON ss.owner_id = s.id
+            WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
+            LIMIT 1;
+            """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+
+        if db_res is None:
+            db_con.close()
+            abort(401, help="Session invalid or has expired")
+        owner_id = db_res["owner_id"]
+
+        if args.get("service") == "email":
+            db_res = db_cur.execute("""
+                SELECT v.verify_code, v.verify_date, v.verify_item
+                FROM Verifications v
+                WHERE v.owner_id = ? AND v.verify_service = 1 AND v.verified = 0
+                ORDER BY v.verify_date DESC
+                LIMIT 1;
+            """, (owner_id, )).fetchone()
+            if not db_res:
+                db_con.close()
+                abort(406, help="No valid verification found for the user")
+            if (not db_res["verify_code"] or
+                not db_res["verify_date"]):
+                db_con.close()
+                abort(406, help="No valid verification found for the user")
+            if not db_res["verify_code"] == args.get("verify_code"):
+                db_con.close()
+                abort(400, help="Incorrect verification code")
+            if (
+                math.floor(
+                    (
+                        datetime.now() -
+                        datetime.fromisoformat(
+                            db_res["verify_date"]
+                        )
+                    ).total_seconds() / 60
+                ) > 9
+            ):
+                db_con.close()
+                abort(400, help="Verification code has expired")
+
+            db_sub_res = db_cur.execute("""
+                UPDATE Verifications
+                SET verified = 1
+                WHERE owner_id = ?;
+            """, (owner_id, ))
+
+            if not db_sub_res.rowcount > 0:
+                db_con.rollback()
+                db_con.close()
+                abort(500)
+            db_con.commit()
+
+            db_sub_res = db_cur.execute("""
+                INSERT INTO Email_Subscribers
+                (owner_id, email)
+                VALUES (?, ?)
+                RETURNING email_id;
+            """, (owner_id, db_res["verify_item"])).fetchone()
+
+            if not db_sub_res:
+                db_con.rollback()
+                db_con.close()
+                abort(500)
+            db_con.commit()
+            new_email_id = db_sub_res["email_id"]
+
+            db_sub_res = db_cur.execute("""
+                UPDATE Students
+                SET active_email_id = ?
+                WHERE student_id = ?
+            """, (new_email_id, args.get("StudentID")))
+
+            if not db_sub_res.rowcount > 0:
+                db_con.rollback()
+                db_con.close()
+                abort(500)
+            db_con.commit()
+
+            db_con.close()
+            return make_response("", 201)
+        elif args.get("service") == "telegram":
+            db_res = db_cur.execute("""
+                SELECT v.verify_code, v.verify_date, v.verify_item
+                FROM Verifications v
+                WHERE v.owner_id = ? AND v.verify_service = 0 AND v.verified = 0
+                ORDER BY v.verify_date DESC
+                LIMIT 1;
+            """, (owner_id, )).fetchone()
+            if not db_res:
+                db_con.close()
+                abort(406, help="No valid verification found for the user")
+            if (not db_res["verify_code"] or
+                not db_res["verify_date"]):
+                db_con.close()
+                abort(406, help="No valid verification found for the user")
+            if not db_res["verify_code"] == args.get("verify_code"):
+                db_con.close()
+                abort(400, help="Incorrect verification code")
+            if (
+                math.floor(
+                    (
+                        datetime.now() -
+                        datetime.fromisoformat(
+                            db_res["verify_date"]
+                        )
+                    ).total_seconds() / 60
+                ) > 9
+            ):
+                db_con.close()
+                abort(400, help="Verification code has expired")
+
+            #
+            #   Get chat_id using verify_code
+            #   If returns None, abort(400, help="Couldn't find telegram user")
+            #
+
+        db_con.close()
+        return make_response("", 200)
 
 
 def read_announce(sessid):
@@ -1449,3 +1678,5 @@ api.add_resource(LogOut, "/api/logout")
 api.add_resource(Verify, "/api/verify")
 api.add_resource(StudPhoto, "/api/studphoto")
 api.add_resource(Bot, "/api/bot")
+api.add_resource(BotSubscribe, "/api/bot/subscribe")
+api.add_resource(BotVerify, "/api/bot/verify")

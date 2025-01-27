@@ -172,3 +172,4 @@ __pycache__
 *.html
 pyvenv.cfg
 todo.md
+beusp.db
