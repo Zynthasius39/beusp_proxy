@@ -18,7 +18,7 @@ CREATE TABLE Student_Sessions(
 	owner_id INTEGER,
 	session_id VARCHAR(32) NOT NULL,
 	login_date TEXT,
-	logged_out INTEGER(1) NOT NULL DEFAULT 0
+	logged_out BOOLEAN NOT NULL DEFAULT 0
 );
 
 CREATE TABLE Telegram_Subscribers(
@@ -45,9 +45,10 @@ CREATE TABLE Email_Subscribers(
 
 CREATE TABLE Verifications(
 	owner_id INTEGER NOT NULL,
-	verify_code T NOT NULL,
+	verify_code VARCHAR(9) NOT NULL,
 	verify_item TEXT NOT NULL,
 	verify_service INTEGER(3) NOT NULL,
 	verify_date TEXT,
+	verified BOOLEAN NOT NULL DEFAULT 0,
 	FOREIGN KEY(owner_id) REFERENCES Students(id)
 );

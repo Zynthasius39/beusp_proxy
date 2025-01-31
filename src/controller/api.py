@@ -8,14 +8,20 @@ import time
 from datetime import datetime
 
 import requests
-from flask import Flask, jsonify, make_response, g
+from flask import Flask, jsonify, make_response, request, g
 from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
 
-from controller.aioreq import wrapper, n_wrapper
-from config import HOST, ROOT, USER_AGENT
+from services.telegram import get_me
+from services.aioreq import wrapper, n_wrapper
+from config import (
+    BOT_EMAIL,
+    DATABASE,
+    HOST,
+    ROOT,
+    USER_AGENT
+)
 from middleman import parser
-
 
 app = Flask(__name__)
 api = Api(app)
@@ -31,11 +37,14 @@ tms_pages = {
 }
 
 def get_db():
-    """Get a SQLite database connection"""
-    if 'db' not in g:
-        g.db = sqlite3.connect("beusp.db")
-        g.db.row_factory = sqlite3.Row
-    return g.db
+    """Get a database connection.
+    Create one if doesn't exist in appcontext.
+    """
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.row_factory = sqlite3.Row
+    return db
 
 @app.teardown_appcontext
 def close_db(_):
@@ -1037,11 +1046,17 @@ class Bot(Resource):
             404:
                 description: Bot is not active
         """
+        bot = {}
 
-        return {
-            "bot_email": BOT_EMAIL,
-            "bot_telegram": TELEGRAM_USERNAME
-        }
+        if BOT_EMAIL:
+            bot["bot_email"] = BOT_EMAIL
+
+        telegram_bot = get_me()
+        if telegram_bot:
+            if telegram_bot["result"].get("username"):
+                bot["bot_telegram"] = telegram_bot["result"]["username"]
+
+        return bot
 
 
 class BotSubscribe(Resource):
@@ -1196,7 +1211,8 @@ class BotSubscribe(Resource):
         args = rp.parse_args()
 
         db_con = get_db()
-        db_res = db_con.cursor().execute("""
+        db_cur = db_con.cursor()
+        db_res = db_cur.execute("""
             SELECT ss.owner_id
             FROM Student_Sessions ss
             INNER JOIN Students s
@@ -1211,8 +1227,14 @@ class BotSubscribe(Resource):
 
         owner_id = db_res["owner_id"]
         if args.get("telegram_username") is not None:
+            db_cur.execute("""
+                UPDATE Verifications
+                SET verified = 1
+                WHERE owner_id = ? AND verified = 0 AND verify_service = 0;
+            """, (owner_id, ))
+            db_con.commit()
             code = verify_code_gen(6)
-            db_con.cursor().execute("""
+            db_cur.execute("""
                 INSERT INTO Verifications
                 (owner_id, verify_code, verify_item, verify_date, verify_service)
                 VALUES(?, ?, ?, ?, 0);
@@ -1220,9 +1242,9 @@ class BotSubscribe(Resource):
                   datetime.now().isoformat()))
             db_con.commit()
             db_con.close()
-            return {"telegram_code": code}, 204
+            return {"telegram_code": code}
         if args.get("discord_webhook_url") is not None:
-            db_sub_res = db_con.cursor().execute("""
+            db_sub_res = db_cur.execute("""
                 INSERT INTO Discord_Subscribers(owner_id, discord_webhook_url)
                 VALUES(?, ?)
                 RETURNING discord_id;
@@ -1232,7 +1254,7 @@ class BotSubscribe(Resource):
                 db_con.close()
                 abort(400, help="Unknown error")
             db_con.commit()
-            db_con.cursor().execute("""
+            db_cur.execute("""
                 UPDATE Students
                 SET active_discord_id = ?
                 WHERE id = ?;
@@ -1241,15 +1263,21 @@ class BotSubscribe(Resource):
             db_con.close()
             return make_response("", 201)
         if args.get("email") is not None:
+            db_cur.execute("""
+                UPDATE Verifications
+                SET verified = 1
+                WHERE owner_id = ? AND verified = 0 AND verify_service = 1;
+            """, (owner_id, ))
+            db_con.commit()
             code = verify_code_gen(6)
-            db_con.cursor().execute("""
+            db_cur.execute("""
                 INSERT INTO Verifications
                 (owner_id, verify_code, verify_item, verify_date, verify_service)
                 VALUES(?, ?, ?, ?, 1);
             """, (owner_id, code, args.get("email"), datetime.now().isoformat()))
             db_con.commit()
             db_con.close()
-            return make_response("", 204)
+            return "", 204
 
         db_con.close()
         return '', 200
@@ -1307,18 +1335,6 @@ class BotSubscribe(Resource):
             location="cookies",
             required=True,
         )
-        rp.add_argument(
-            "telegram_username",
-            type=str,
-        )
-        rp.add_argument(
-            "discord_webhook_url",
-            type=str,
-        )
-        rp.add_argument(
-            "email",
-            type=str,
-        )
         args = rp.parse_args()
 
         db_con = get_db()
@@ -1335,68 +1351,52 @@ class BotSubscribe(Resource):
         if db_res is None:
             db_con.close()
             abort(401, help="Session invalid or has expired")
-        owner_id = db_res["owner_id"]
 
-        if db_res["active_telegram_id"] is not None and args.get("telegram_username") is not None:
+        owner_id = db_res["owner_id"]
+        unsub_list = request.get_json().get("unsubscribe")
+        if unsub_list is None:
+            db_con.close()
+            abort(400, help="Missing unsubscribe array")
+
+        if "telegram" in unsub_list and db_res["active_telegram_id"]:
             db_sub_res = db_cur.execute("""
                 UPDATE Students
                 SET active_telegram_id = NULL
-                WHERE id = ? AND
-                active_telegram_id = (
-                    SELECT ts.telegram_id
-                    FROM Telegram_Subscribers ts
-                    WHERE ts.owner_id = ? AND ts.telegram_username = ?
-                    ORDER BY ts.telegram_id DESC
-                    LIMIT 1
-                );
-            """, (owner_id, owner_id, args.get("telegram_username")))
+                WHERE id = ?;
+            """, (owner_id, ))
             if not db_sub_res.rowcount > 0:
                 db_con.rollback()
                 db_con.close()
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
             db_con.close()
-            return make_response("", 204)
-        if db_res["active_discord_id"] is not None and args.get("discord_webhook_url") is not None:
+            return "", 204
+        if "discord" in unsub_list and db_res["active_discord_id"]:
             db_sub_res = db_cur.execute("""
                 UPDATE Students
                 SET active_discord_id = NULL
-                WHERE id = ? AND
-                active_discord_id = (
-                    SELECT ds.discord_id
-                    FROM Discord_Subscribers ds
-                    WHERE ds.owner_id = ? AND ds.discord_webhook_url = ?
-                    ORDER BY ds.discord_id DESC
-                    LIMIT 1
-                );
-            """, (owner_id, owner_id, args.get("discord_webhook_url")))
+                WHERE id = ?;
+            """, (owner_id, ))
             if not db_sub_res.rowcount > 0:
                 db_con.rollback()
                 db_con.close()
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
             db_con.close()
-            return make_response("", 204)
-        if db_res["active_email_id"] is not None and args.get("email") is not None:
+            return "", 204
+        if "email" in unsub_list and db_res["active_email_id"]:
             db_sub_res = db_cur.execute("""
                 UPDATE Students
                 SET active_email_id = NULL
-                WHERE id = ? AND
-                active_email_id = (
-                    SELECT es.email_id
-                    FROM Email_Subscribers es
-                    WHERE es.owner_id = ? AND es.email = ?
-                    ORDER BY es.email_id DESC
-                    LIMIT 1
-                );
-            """, (owner_id, owner_id, args.get("email")))
+                WHERE id = ?;
+            """, (owner_id, ))
             if not db_sub_res.rowcount > 0:
                 db_con.rollback()
                 db_con.close()
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
             db_con.close()
-            return make_response("", 204)
+            return "", 204
 
         if (args.get("telegram_username") is not None or
             args.get("discord_webhook_url") is not None or
@@ -1404,7 +1404,7 @@ class BotSubscribe(Resource):
             abort(400, help="Couldn't find the subscription")
 
         db_con.close()
-        return '', 202
+        return make_response("", 202)
 
 
 class BotVerify(Resource):
@@ -1566,41 +1566,6 @@ class BotVerify(Resource):
 
             db_con.close()
             return make_response("", 201)
-        elif args.get("service") == "telegram":
-            db_res = db_cur.execute("""
-                SELECT v.verify_code, v.verify_date, v.verify_item
-                FROM Verifications v
-                WHERE v.owner_id = ? AND v.verify_service = 0 AND v.verified = 0
-                ORDER BY v.verify_date DESC
-                LIMIT 1;
-            """, (owner_id, )).fetchone()
-            if not db_res:
-                db_con.close()
-                abort(406, help="No valid verification found for the user")
-            if (not db_res["verify_code"] or
-                not db_res["verify_date"]):
-                db_con.close()
-                abort(406, help="No valid verification found for the user")
-            if not db_res["verify_code"] == args.get("verify_code"):
-                db_con.close()
-                abort(400, help="Incorrect verification code")
-            if (
-                math.floor(
-                    (
-                        datetime.now() -
-                        datetime.fromisoformat(
-                            db_res["verify_date"]
-                        )
-                    ).total_seconds() / 60
-                ) > 9
-            ):
-                db_con.close()
-                abort(400, help="Verification code has expired")
-
-            #
-            #   Get chat_id using verify_code
-            #   If returns None, abort(400, help="Couldn't find telegram user")
-            #
 
         db_con.close()
         return make_response("", 200)

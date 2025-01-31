@@ -1,10 +1,8 @@
 import json
-import os
 
 from flask import Flask, make_response
 from flask_restful import Api, Resource, abort, reqparse
 from flask_cors import CORS
-from flasgger import Swagger
 
 from middleman import parser_offline
 
@@ -13,15 +11,6 @@ from middleman import parser_offline
 app = Flask(__name__)
 api = Api(app)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.0.10.75:5173"}})
-FLASGGER_ENABLED = os.getenv("SWAGGER_ENABLED", "false").lower() == "true"
-
-if FLASGGER_ENABLED:
-    app.config["SWAGGER"] = {
-        "title": "Baku Engineering University: TMS/PMS - Rest API",
-        "uiversion": 3,
-    }
-
-    swagger = Swagger(app)
 
 
 class Res(Resource):

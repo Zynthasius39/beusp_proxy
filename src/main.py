@@ -1,15 +1,30 @@
-import os
+import logging
+from threading import Thread
 
+from flask.logging import default_handler
 from flasgger import Swagger
+from werkzeug import serving
 
-from controller.api import app
+from services import telegram
+
+from config import (
+    APP_NAME,
+    BOT_ENABLED,
+    DEBUG,
+    FLASGGER_ENABLED,
+    TMSAPI_OFFLINE
+)
+
+TELEGRAM_THREAD = None
 
 if __name__ == '__main__':
-    FLASGGER_ENABLED = os.getenv("SWAGGER_ENABLED", "false").lower() == "true"
-    TMSAPI_OFFLINE = os.getenv("TMSAPI_OFFLINE", "false").lower() == "true"
-    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+    if TMSAPI_OFFLINE:
+        from controller.api_offline import app
+    else:
+        from controller.api import app
 
     if FLASGGER_ENABLED:
+        app.name = APP_NAME
         app.config["SWAGGER"] = {
             "title": "Baku Engineering University: TMS/PMS - Rest API",
             "uiversion": 3,
@@ -17,7 +32,22 @@ if __name__ == '__main__':
 
         swagger = Swagger(app)
 
-    if TMSAPI_OFFLINE:
-        app.run(debug = DEBUG, host="0.0.0.0")
-    else:
-        app.run(debug = DEBUG, host="0.0.0.0")
+    logging.basicConfig(level=logging.DEBUG)
+    for logger in (
+        logging.getLogger(app.name),
+        logging.getLogger("telegram")
+    ):
+        logger.addHandler(default_handler)
+
+    if (
+        BOT_ENABLED and
+        not serving.is_running_from_reloader()
+    ):
+        TELEGRAM_THREAD = Thread(
+            name="telegram_updates",
+            target=telegram.updates_thread,
+            daemon=True
+        )
+        TELEGRAM_THREAD.start()
+
+    app.run(debug = DEBUG, host="0.0.0.0")
