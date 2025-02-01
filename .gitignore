@@ -169,7 +169,6 @@ lib
 lib64
 __pycache__
 
-*.html
 pyvenv.cfg
 todo.md
 beusp.db

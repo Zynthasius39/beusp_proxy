@@ -5,14 +5,19 @@ import time
 from datetime import datetime
 
 import requests
+from jinja2 import Environment, FileSystemLoader
 
 from services.database import get_db
 from config import (
+    WEB_DOMAIN,
     BOT_TELEGRAM_HOSTNAME,
-    BOT_TELEGRAM_TEMPLATES,
     BOT_TELEGRAM_API_KEY,
     REQUEST_TIMEOUT,
     POLLING_TIMEOUT
+)
+
+jinja_env = Environment(
+    loader = FileSystemLoader("src/templates")
 )
 
 def get_me():
@@ -40,7 +45,7 @@ def send_message(text, chat_id):
     """
     res = requests.get(
         f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/sendMessage",
-        params={
+        params = {
             "chat_id": chat_id,
             "text": text
         },
@@ -63,9 +68,11 @@ def send_template(template, chat_id, username, *args):
     """
     logger = logging.getLogger(__name__)
 
-    if BOT_TELEGRAM_TEMPLATES and BOT_TELEGRAM_TEMPLATES.get(template):
-        logger.debug("Sent template %s  to '@%s'", template, username)
-        send_message(BOT_TELEGRAM_TEMPLATES[template] % (*args, ), chat_id)
+    logger.debug("Sent template %s  to '@%s'", template, username)
+    send_message(
+        jinja_env.get_template(f"{template}.txt").render(args=args),
+        chat_id
+    )
 
 def start_cmd(chat_id, username):
     """/start command logic.
@@ -91,7 +98,7 @@ def help_cmd(chat_id, username):
     logger = logging.getLogger(__name__)
 
     logger.debug("User '@%s' issued help command", username)
-    send_template("help", chat_id, username)
+    send_template("help", chat_id, username, WEB_DOMAIN)
 
 def verify_cmd(params, chat_id, username):
     """/verify command logic.
@@ -103,6 +110,7 @@ def verify_cmd(params, chat_id, username):
         username (str): Telegram Username
     """
     logger = logging.getLogger(__name__)
+
     m = re.match(r".*(\d{6})", params)
     if m is None:
         send_template("verify_empty", chat_id, username)
@@ -115,7 +123,7 @@ def verify_cmd(params, chat_id, username):
         WITH LatestVerification AS (
             SELECT owner_id, verify_date, verify_code, verify_item
             FROM Verifications
-            WHERE verified = 0
+            WHERE verified = 0 AND verify_service = 0
             ORDER BY verify_date DESC
         )
         SELECT
@@ -238,7 +246,7 @@ def unsubscribe(chat_id, username):
     if not db_res.rowcount > 0:
         db_con.rollback()
         db_con.close()
-        send_template("unsubscribe_nosub", chat_id, username)
+        send_template("unsubscribe_nosub", chat_id, username, WEB_DOMAIN)
         logger.info("Couldn't unsubscribe for telegram user '@%s'. No subscriptions", username)
         return
 
@@ -252,7 +260,6 @@ def process_update(u):
     Args:
         update (dict): Update object
     """
-    logger = logging.getLogger(__name__)
     if u.get("message"):
         if not u["message"]["chat"]["type"] == "private":
             return

@@ -1,10 +1,12 @@
 import os
 
-# Flask config
+# App config
 
 APP_NAME = "beusproxy"
+DATABASE = "beusp.db"
 REQUEST_TIMEOUT = 10
 POLLING_TIMEOUT = 30
+TEMPLATES_FOLDER = "src/templates"
 
 # Root server config
 
@@ -16,61 +18,22 @@ USER_AGENT = (
     "like Gecko Version/10.0 Mobile/19A346 Safari/602.1"
 )
 
-# SQLITE3 config
-
-DATABASE = "beusp.db"
 
 # BeuTMSBot config
 
+# Used by bot to generate
+# emails and telegram response
+WEB_DOMAIN = ""
+API_DOMAIN = ""
+API_OFFLINE_DOMAIN = ""
+
 BOT_EMAIL = ""
 BOT_EMAIL_PASSWORD = ""
-BOT_SMTP_HOSTNAME = ""
+BOT_SMTP_HOSTNAME = "smtp.gmail.com"
 # BOT_IMAP_HOSTNAME = "" # Not used
 # BOT_POP_HOSTNAME = "" # Not used
 BOT_TELEGRAM_API_KEY = ""
 BOT_TELEGRAM_HOSTNAME = "api.telegram.org"
-
-BOT_TELEGRAM_TEMPLATES = {
-    "start" : """
-    Welcome to 🤖 𝐁𝐞𝐮𝐓𝐌𝐒𝐁𝐨𝐭 🤖
-    You can subscribe using Telegram
-    to get notified about student portal.
-    Use /help to get started.
-    """,
-    "help" : """
-    I can help you managing your subscription, go to tms.beu.alakx.com to register before trying to verify.
-
-    Verify your subscription by providing 6-digit code
-    /verify XXXXXX
-
-    Unsubscribe all students connected to you Telegram
-    /unsubscribe
-    """,
-    "verify_success": """
-    Verification successful! You will now receive updates from student portal.
-    """,
-    "verify_invalid": """
-    Wrong verification code has been provided, or you are not registered yet.
-    """,
-    "verify_expired": """
-    Verification code has already expired. Please generated a new one
-    """,
-    "verify_notexist": """
-    No waiting verifications found on your Telegram. Register on: tms.beu.alakx.com
-    """,
-    "verify_empty": """
-    You haven't provided a verification code.
-    """,
-    "unsubscribe": """
-    Unsubscribed all students connected to your Telegram. You will not receive any updates from student portal.
-    """,
-    "unsubscribe_nosub": """
-    There is not students subscribed on this Telegram. Maybe consider subscribing ? tms.beu.alakx.com
-    """
-}
-
-BOT_VERIFY_TTL = 60
-BOT_VPOOL_CLEAN_TIME = 10
 
 #
 # Getting ENV
@@ -95,6 +58,16 @@ DEBUG = os.getenv(
     "DEBUG",
     "false"
 ).lower() == "true"
+
+API_DOMAIN = os.getenv(
+    "API_DOMAIN",
+    API_DOMAIN
+)
+
+WEB_DOMAIN = os.getenv(
+    "WEB_DOMAIN",
+    WEB_DOMAIN
+)
 
 BOT_ENABLED = os.getenv(
     "BOT_ENABLED",

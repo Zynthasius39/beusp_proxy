@@ -1,17 +1,18 @@
 import asyncio
 import json
-import math
 import random
 import secrets
 import sqlite3
 import time
 from datetime import datetime
+from smtplib import SMTPException
 
 import requests
 from flask import Flask, jsonify, make_response, request, g
 from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
 
+from services.email import is_email, send_verification, verify_email
 from services.telegram import get_me
 from services.aioreq import wrapper, n_wrapper
 from config import (
@@ -1263,13 +1264,16 @@ class BotSubscribe(Resource):
             db_con.close()
             return make_response("", 201)
         if args.get("email") is not None:
+            if not is_email(args.get("email")):
+                db_con.close()
+                abort(400, help="Invalid E-Mail address")
             db_cur.execute("""
                 UPDATE Verifications
                 SET verified = 1
                 WHERE owner_id = ? AND verified = 0 AND verify_service = 1;
             """, (owner_id, ))
             db_con.commit()
-            code = verify_code_gen(6)
+            code = verify_code_gen(9)
             db_cur.execute("""
                 INSERT INTO Verifications
                 (owner_id, verify_code, verify_item, verify_date, verify_service)
@@ -1277,6 +1281,10 @@ class BotSubscribe(Resource):
             """, (owner_id, code, args.get("email"), datetime.now().isoformat()))
             db_con.commit()
             db_con.close()
+            try:
+                send_verification(args.get("email"), code)
+            except SMTPException:
+                abort(500)
             return "", 204
 
         db_con.close()
@@ -1412,163 +1420,37 @@ class BotVerify(Resource):
     
     Flask-RESTFUL resource
     """
-    def post(self):
+    @api.representation('text/html')
+    def get(self, code):
         # pylint: disable=R0915
         """
         Bot Verify Endpoint
         ---
         summary: Verification step
         description: Validate code and complete subscription step.
+        produces:
+          - text/html
         parameters:
-          - name: subscribe_verify
-            in: body
-            required: yes
-            description: Subscription verifications
+          - name: code
+            in: path
+            required: true
+            example: home
             schema:
-                properties:
-                    verify_code:
-                        type: string
-                        description: Verification code
-                        example: 012345
-                    service:
-                        type: string
-                        description: Service
-                        example: telegram
+                type: string
         responses:
             200:
-                description: Nothing to do
-            201:
-                description: Subscribed
-            204:
-                description: Waiting for verification
-            401:
-                description: Session invalid or has expired
+                description: Return response in HTML
+                content:
+                    text/html:
+                        schema:
+                            type: string
             404:
                 description: Bot is not active
-            406:
-                description: Couldn't find verification
             500:
                 description: Problem with database
         """
-        rp = reqparse.RequestParser()
-        rp.add_argument(
-            "SessionID",
-            type=str,
-            help="Invalid sessionid",
-            location="cookies",
-            required=True,
-        )
-        rp.add_argument(
-            "StudentID",
-            type=str,
-            help="Invalid studentid",
-            location="cookies",
-            required=True,
-        )
-        rp.add_argument(
-            "verify_code",
-            type=int,
-        )
-        rp.add_argument(
-            "service",
-            type=str,
-        )
-        args = rp.parse_args()
-
-        if (not args.get("service") or
-            not args.get("verify_code")):
-            abort(400, help="Neither service, nor verify_code was specified.")
-
-        db_con = get_db()
-        db_cur = db_con.cursor()
-        db_res = db_cur.execute("""
-            SELECT ss.owner_id
-            FROM Student_Sessions ss
-            INNER JOIN Students s
-            ON ss.owner_id = s.id
-            WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
-            LIMIT 1;
-            """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
-
-        if db_res is None:
-            db_con.close()
-            abort(401, help="Session invalid or has expired")
-        owner_id = db_res["owner_id"]
-
-        if args.get("service") == "email":
-            db_res = db_cur.execute("""
-                SELECT v.verify_code, v.verify_date, v.verify_item
-                FROM Verifications v
-                WHERE v.owner_id = ? AND v.verify_service = 1 AND v.verified = 0
-                ORDER BY v.verify_date DESC
-                LIMIT 1;
-            """, (owner_id, )).fetchone()
-            if not db_res:
-                db_con.close()
-                abort(406, help="No valid verification found for the user")
-            if (not db_res["verify_code"] or
-                not db_res["verify_date"]):
-                db_con.close()
-                abort(406, help="No valid verification found for the user")
-            if not db_res["verify_code"] == args.get("verify_code"):
-                db_con.close()
-                abort(400, help="Incorrect verification code")
-            if (
-                math.floor(
-                    (
-                        datetime.now() -
-                        datetime.fromisoformat(
-                            db_res["verify_date"]
-                        )
-                    ).total_seconds() / 60
-                ) > 9
-            ):
-                db_con.close()
-                abort(400, help="Verification code has expired")
-
-            db_sub_res = db_cur.execute("""
-                UPDATE Verifications
-                SET verified = 1
-                WHERE owner_id = ?;
-            """, (owner_id, ))
-
-            if not db_sub_res.rowcount > 0:
-                db_con.rollback()
-                db_con.close()
-                abort(500)
-            db_con.commit()
-
-            db_sub_res = db_cur.execute("""
-                INSERT INTO Email_Subscribers
-                (owner_id, email)
-                VALUES (?, ?)
-                RETURNING email_id;
-            """, (owner_id, db_res["verify_item"])).fetchone()
-
-            if not db_sub_res:
-                db_con.rollback()
-                db_con.close()
-                abort(500)
-            db_con.commit()
-            new_email_id = db_sub_res["email_id"]
-
-            db_sub_res = db_cur.execute("""
-                UPDATE Students
-                SET active_email_id = ?
-                WHERE student_id = ?
-            """, (new_email_id, args.get("StudentID")))
-
-            if not db_sub_res.rowcount > 0:
-                db_con.rollback()
-                db_con.close()
-                abort(500)
-            db_con.commit()
-
-            db_con.close()
-            return make_response("", 201)
-
-        db_con.close()
-        return make_response("", 200)
+        res = make_response(verify_email(code))
+        return res
 
 
 def read_announce(sessid):
@@ -1644,4 +1526,4 @@ api.add_resource(Verify, "/api/verify")
 api.add_resource(StudPhoto, "/api/studphoto")
 api.add_resource(Bot, "/api/bot")
 api.add_resource(BotSubscribe, "/api/bot/subscribe")
-api.add_resource(BotVerify, "/api/bot/verify")
+api.add_resource(BotVerify, "/api/bot/verify/<code>")

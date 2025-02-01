@@ -1,0 +1,7 @@
+I can help you managing your subscription, go to {{ args[0] }} to register before trying to verify.
+
+Verify your subscription by providing 6-digit code
+/verify XXXXXX
+
+Unsubscribe all students connected to you Telegram
+/unsubscribe
