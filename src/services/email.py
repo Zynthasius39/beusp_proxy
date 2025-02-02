@@ -10,8 +10,8 @@ from jinja2 import Environment, FileSystemLoader
 
 from services.database import get_db
 from config import (
-    API_DOMAIN,
-    WEB_DOMAIN,
+    API_HOSTNAME,
+    WEB_HOSTNAME,
     BOT_EMAIL,
     BOT_EMAIL_PASSWORD,
     BOT_SMTP_HOSTNAME,
@@ -59,8 +59,8 @@ def send_verification(email, code):
             jinja_env
                 .get_template("verify.html")
                 .render(
-                    assets_link = f"{WEB_DOMAIN}",
-                    verify_link = f"{API_DOMAIN}/bot/verify/{code}",
+                    assets_link = f"{WEB_HOSTNAME}",
+                    verify_link = f"{API_HOSTNAME}/bot/verify/{code}",
                     verify_code = code
                 ),
             "html"
@@ -148,7 +148,7 @@ def verify_email(code):
         return (
             jinja_env
             .get_template("verify_failed.html")
-            .render(assets_link = WEB_DOMAIN)
+            .render(assets_link = WEB_HOSTNAME)
         )
 
     owner_id = db_res["owner_id"]
@@ -169,7 +169,7 @@ def verify_email(code):
         return (
             jinja_env
             .get_template("verify_failed.html")
-            .render(assets_link = WEB_DOMAIN)
+            .render(assets_link = WEB_HOSTNAME)
         )
 
     db_cur.execute("""
@@ -228,5 +228,5 @@ def verify_email(code):
     return (
         jinja_env
         .get_template("verify_success.html")
-        .render(assets_link = WEB_DOMAIN)
+        .render(assets_link = WEB_HOSTNAME)
     )

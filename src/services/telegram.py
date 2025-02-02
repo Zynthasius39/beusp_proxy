@@ -9,7 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from services.database import get_db
 from config import (
-    WEB_DOMAIN,
+    WEB_HOSTNAME,
     BOT_TELEGRAM_HOSTNAME,
     BOT_TELEGRAM_API_KEY,
     REQUEST_TIMEOUT,
@@ -98,7 +98,7 @@ def help_cmd(chat_id, username):
     logger = logging.getLogger(__name__)
 
     logger.debug("User '@%s' issued help command", username)
-    send_template("help", chat_id, username, WEB_DOMAIN)
+    send_template("help", chat_id, username, WEB_HOSTNAME)
 
 def verify_cmd(params, chat_id, username):
     """/verify command logic.
@@ -246,7 +246,7 @@ def unsubscribe(chat_id, username):
     if not db_res.rowcount > 0:
         db_con.rollback()
         db_con.close()
-        send_template("unsubscribe_nosub", chat_id, username, WEB_DOMAIN)
+        send_template("unsubscribe_nosub", chat_id, username, WEB_HOSTNAME)
         logger.info("Couldn't unsubscribe for telegram user '@%s'. No subscriptions", username)
         return
 

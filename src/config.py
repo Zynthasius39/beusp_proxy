@@ -22,9 +22,9 @@ USER_AGENT = (
 
 # Used by bot to generate
 # emails and telegram response
-WEB_DOMAIN = ""
-API_DOMAIN = ""
-API_OFFLINE_DOMAIN = ""
+WEB_HOSTNAME = ""
+API_HOSTNAME = ""
+API_OFFLINE_HOSTNAME = ""
 
 BOT_EMAIL = ""
 BOT_EMAIL_PASSWORD = ""
@@ -70,14 +70,14 @@ USER_AGENT = os.getenv(
     USER_AGENT
 )
 
-API_DOMAIN = os.getenv(
-    "API_DOMAIN",
-    API_DOMAIN
+API_HOSTNAME = os.getenv(
+    "API_HOSTNAME",
+    API_HOSTNAME
 )
 
-WEB_DOMAIN = os.getenv(
-    "WEB_DOMAIN",
-    WEB_DOMAIN
+WEB_HOSTNAME = os.getenv(
+    "WEB_HOSTNAME",
+    WEB_HOSTNAME
 )
 
 REQUEST_TIMEOUT = os.getenv(
