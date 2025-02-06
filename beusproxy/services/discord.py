@@ -1,7 +1,7 @@
 import re
 
-from config import BOT_DISCORD_USERNAME, BOT_DISCORD_AVATAR
-from services.httpclient import HTTPClient
+from beusproxy.config import BOT_DISCORD_USERNAME, BOT_DISCORD_AVATAR
+from beusproxy.services.httpclient import HTTPClient
 
 
 def is_webhook(url):

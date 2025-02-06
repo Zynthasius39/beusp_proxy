@@ -4,9 +4,7 @@ from flask import Flask, make_response
 from flask_restful import Api, Resource, abort, reqparse
 from flask_cors import CORS
 
-from middleman import parser_offline
-
-
+from beusproxy.middleman import parser_offline
 
 app = Flask(__name__)
 api = Api(app)
@@ -429,16 +427,3 @@ class Verify(Resource):
         rp.parse_args()
 
         return ""
-
-api.add_resource(Msg, "/api/resource/msg")
-api.add_resource(Res, "/api/resource/<resource>")
-api.add_resource(GradesAll, "/api/resource/grades/all")
-api.add_resource(Grades, "/api/resource/grades/<int:year>/<int:semester>")
-api.add_resource(AttendanceByCourse, "/api/resource/attendance/<int:course>")
-api.add_resource(AttendanceBySemester, "/api/resource/attendance/<int:year>/<int:semester>")
-api.add_resource(Deps, "/api/resource/deps/<code>")
-api.add_resource(Program, "/api/resource/program/<int:code>/<int:year>")
-api.add_resource(Auth, "/api/auth")
-api.add_resource(LogOut, "/api/logout")
-api.add_resource(Verify, "/api/verify")
-api.add_resource(StudPhoto, "/api/studphoto")

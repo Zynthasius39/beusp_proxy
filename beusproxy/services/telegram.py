@@ -10,9 +10,9 @@ from typing import Optional
 from aiohttp import ClientError
 from jinja2 import Environment
 
-from services.httpclient import HTTPClient
-from services.database import get_db
-from config import (
+from beusproxy.services.httpclient import HTTPClient
+from beusproxy.services.database import get_db
+from beusproxy.config import (
     WEB_HOSTNAME,
     BOT_TELEGRAM_HOSTNAME,
     BOT_TELEGRAM_API_KEY,

@@ -9,8 +9,8 @@ from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
 
-from services.database import get_db
-from config import (
+from beusproxy.services.database import get_db
+from beusproxy.config import (
     API_HOSTNAME,
     WEB_HOSTNAME,
     BOT_EMAIL,

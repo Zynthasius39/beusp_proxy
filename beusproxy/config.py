@@ -10,7 +10,7 @@ APP_NAME = "beusproxy"
 DATABASE = "beusp.db"
 REQUEST_TIMEOUT = 10
 POLLING_TIMEOUT = 30
-TEMPLATES_FOLDER = "src/templates"
+TEMPLATES_FOLDER = "beusproxy/templates"
 
 # Root server config
 

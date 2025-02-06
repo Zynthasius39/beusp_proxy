@@ -1,6 +1,6 @@
 import sqlite3
 
-from config import DATABASE
+from beusproxy.config import DATABASE
 
 def get_db():
     """Get a SQLite database connection"""

@@ -5,10 +5,10 @@ from smtplib import SMTPAuthenticationError
 
 from jinja2 import Environment, FileSystemLoader
 
-from config import TEMPLATES_FOLDER
-from services.email import EmailClient
-from services.httpclient import HTTPClient
-from services.telegram import TelegramClient
+from beusproxy.config import TEMPLATES_FOLDER
+from beusproxy.services.email import EmailClient
+from beusproxy.services.httpclient import HTTPClient
+from beusproxy.services.telegram import TelegramClient
 
 jinjaenv = Environment(loader=FileSystemLoader(TEMPLATES_FOLDER))
 
