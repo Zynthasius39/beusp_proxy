@@ -1,4 +1,8 @@
 import os
+import logging
+import sys
+
+logger = logging.getLogger(__name__)
 
 # App config
 
@@ -29,6 +33,7 @@ API_OFFLINE_HOSTNAME = ""
 BOT_EMAIL = ""
 BOT_EMAIL_PASSWORD = ""
 BOT_SMTP_HOSTNAME = "smtp.gmail.com"
+BOT_SMTP_IS_SSL = True
 # BOT_IMAP_HOSTNAME = "" # Not used
 # BOT_POP_HOSTNAME = "" # Not used
 BOT_TELEGRAM_API_KEY = ""
@@ -82,13 +87,25 @@ WEB_HOSTNAME = os.getenv(
 
 REQUEST_TIMEOUT = os.getenv(
     "REQUEST_TIMEOUT",
-    REQUEST_TIMEOUT
+    str(REQUEST_TIMEOUT)
 )
+
+if REQUEST_TIMEOUT.isdigit():
+    REQUEST_TIMEOUT = int(REQUEST_TIMEOUT)
+else:
+    logger.error("REQUEST_TIMEOUT should be a positive number!")
+    sys.exit(3)
 
 POLLING_TIMEOUT = os.getenv(
     "POLLING_TIMEOUT",
-    POLLING_TIMEOUT
+    str(POLLING_TIMEOUT)
 )
+
+if POLLING_TIMEOUT.isdigit():
+    POLLING_TIMEOUT = int(POLLING_TIMEOUT)
+else:
+    logger.error("POLLING_TIMEOUT should be a positive number!")
+    sys.exit(3)
 
 TEMPLATES_FOLDER = os.getenv(
     "TEMPLATES_FOLDER",

@@ -1,32 +1,55 @@
-import asyncio
 import json
 import random
 import secrets
 import sqlite3
 import time
+import logging
 from datetime import datetime
 from smtplib import SMTPException
 
-import requests
-from flask import Flask, jsonify, make_response, request, g
-from flask_restful import reqparse, abort, Api, Resource
+from aiohttp import ClientError, ClientResponseError
+from flasgger import Swagger
+from flask import Flask, current_app as app, jsonify, make_response, request, g
+from flask.logging import default_handler
+from flask_restful import Api, reqparse, abort, Resource
 from flask_cors import CORS
 
-from services.email import is_email, send_verification, verify_email
-from services.telegram import get_me
-from services.aioreq import wrapper, n_wrapper
 from config import (
+    APP_NAME,
     BOT_EMAIL,
     DATABASE,
     HOST,
     ROOT,
-    USER_AGENT
+    USER_AGENT,
+    FLASGGER_ENABLED,
 )
 from middleman import parser
+from context import httpc, emailc, tgc
+from services.httpclient import HTTPClient
+from services.discord import is_webhook
+from services.email import is_email, verify_email
+
 
 app = Flask(__name__)
 api = Api(app)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://10.0.10.75:5173"}})
+CORS(
+    app,
+    supports_credentials=True,
+    resources={r"/*": {"origins": "http://10.0.10.75:5173"}},
+)
+
+# logging.basicConfig(level=logging.DEBUG)
+for logger in (logging.getLogger(app.name), logging.getLogger("telegram")):
+    logger.addHandler(default_handler)
+
+if FLASGGER_ENABLED:
+    app.name = APP_NAME
+    app.config["SWAGGER"] = {
+        "title": "Baku Engineering University: TMS/PMS - Rest API",
+        "uiversion": 3,
+    }
+
+    swagger = Swagger(app)
 
 tms_pages = {
     "home": "home",
@@ -37,26 +60,29 @@ tms_pages = {
     "transcript": "transkript",
 }
 
+
 def get_db():
     """Get a database connection.
     Create one if doesn't exist in appcontext.
     """
-    db = getattr(g, '_database', None)
+    db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
         db.row_factory = sqlite3.Row
     return db
 
+
 @app.teardown_appcontext
 def close_db(_):
     """Close database connection"""
-    db = g.pop('db', None)
+    db = g.pop("db", None)
     if db is not None:
         db.close()
 
+
 class Res(Resource):
     """Resource
-    
+
     Flask-RESTFUL resource
     """
 
@@ -103,41 +129,39 @@ class Res(Resource):
         except AttributeError:
             abort(404)
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "POST",
-                "url": f"{ROOT}?mod={tms_pages[resource]}",
-                "headers": {
+        try:
+            mid_res = httpc.request(
+                "POST",
+                f"{ROOT}?mod={tms_pages[resource]}",
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
+            mid_res = httpc.cr_text(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
 
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from root server")
-
-        if parser.is_expired(mid_res.get("text")):
+        if parser.is_expired(mid_res):
             abort(401, help="Session invalid or has expired")
 
-        page = res_parser(mid_res.get("text"))
+        page = res_parser(mid_res)
         res = make_response(jsonify(page), 200)
 
         if resource == "home":
-            res.set_cookie("ImgID",
-                           page.get("home").get("image"),
-                           httponly=False,
-                           secure=False,
-                           samesite="Lax")
+            res.set_cookie(
+                "ImgID",
+                page.get("home").get("image"),
+                httponly=False,
+                secure=False,
+                samesite="Lax",
+            )
 
         return res
 
@@ -157,7 +181,7 @@ class GradesAll(Resource):
             200:
                 description: Success
             400:
-                description: Bad request
+                description: Bad response
             401:
                 description: Unauthorized
             412:
@@ -173,41 +197,45 @@ class GradesAll(Resource):
         )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "POST",
-                "url": ROOT,
-                "data": f"ajx=1&mod=grades&action=GetGrades&yt=1#1&{round(time.time())}",
-                "headers": {
+        try:
+            mid_res = httpc.request(
+                "POST",
+                ROOT,
+                data=f"ajx=1&mod=grades&action=GetGrades&yt=1#1&{round(time.time())}",
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
+            mid_res = httpc.cr_text(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
 
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from root server")
-
-        if parser.is_expired(mid_res.get("text")):
+        if parser.is_expired(mid_res):
             abort(401, help="Session invalid or has expired")
 
-        ajax = json.loads(mid_res.get("text"))
+        ajax = json.loads(mid_res)
         if int(ajax["CODE"]) < 1:
             abort(400, help=f"Proxy server returned CODE {ajax["CODE"]}")
 
         text = ajax["DATA"]
-        if not text.find("There aren't any registered section for the selected year-term.") == -1:
-            abort(400, help="There aren't any registered section for the selected year-term")
+        if (
+            not text.find(
+                "There aren't any registered section for the selected year-term."
+            )
+            == -1
+        ):
+            abort(
+                400,
+                help="There aren't any registered section for the selected year-term",
+            )
 
         page = jsonify(parser.grades2_parser(text))
         res = make_response(page, 200)
@@ -240,7 +268,7 @@ class Grades(Resource):
             200:
                 description: Success
             400:
-                description: Bad request
+                description: Bad response
             401:
                 description: Unauthorized
             412:
@@ -256,42 +284,45 @@ class Grades(Resource):
         )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "POST",
-                "url": ROOT,
-                "data": "ajx=1&mod=grades&action=GetGrades"
+        try:
+            mid_res = httpc.request(
+                "POST",
+                ROOT,
+                data="ajx=1&mod=grades&action=GetGrades"
                 f"&yt={year}#{semester}&{round(time.time())}",
-                "headers": {
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
-
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from root server")
-
-        if parser.is_expired(mid_res.get("text")):
+            mid_res = httpc.cr_text(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
+        if parser.is_expired(mid_res):
             abort(401, help="Session invalid or has expired")
 
-        ajax = json.loads(mid_res.get("text"))
+        ajax = json.loads(mid_res)
         if int(ajax["CODE"]) < 1:
             abort(400, help=f"Proxy server returned CODE {ajax["CODE"]}")
 
         text = ajax["DATA"]
-        if not text.find("There aren't any registered section for the selected year-term.") == -1:
-            abort(400, help="There aren't any registered section for the selected year-term")
+        if (
+            not text.find(
+                "There aren't any registered section for the selected year-term."
+            )
+            == -1
+        ):
+            abort(
+                400,
+                help="There aren't any registered section for the selected year-term",
+            )
 
         page = jsonify(parser.grades2_parser(text))
         res = make_response(page, 200)
@@ -324,7 +355,7 @@ class AttendanceBySemester(Resource):
             200:
                 description: Success
             400:
-                description: Bad request
+                description: Bad response
             401:
                 description: Unauthorized
             412:
@@ -340,38 +371,34 @@ class AttendanceBySemester(Resource):
         )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "POST",
-                "url": ROOT,
-                "data": f"ajx=1&mod=ejurnal&action=getCourses&ysem={year}#{semester}",
-                "headers": {
+        try:
+            mid_res = httpc.request(
+                "POST",
+                ROOT,
+                data=f"ajx=1&mod=ejurnal&action=getCourses&ysem={year}#{semester}",
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
+            mid_res = httpc.cr_text(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
 
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from root server")
-
-        if parser.is_expired(mid_res.get("text")):
+        if parser.is_expired(mid_res):
             abort(401, help="Session invalid or has expired")
 
-        if not mid_res.get("text").find("No section found.") == -1:
+        if not mid_res.find("No section found.") == -1:
             abort(400, help="No section found")
 
-        page = jsonify(parser.attendance2_parser(mid_res.get("text")))
+        page = jsonify(parser.attendance2_parser(mid_res))
         res = make_response(page, 200)
         return res
 
@@ -397,7 +424,7 @@ class AttendanceByCourse(Resource):
             200:
                 description: Success
             400:
-                description: Bad request
+                description: Bad response
             401:
                 description: Unauthorized
             412:
@@ -413,35 +440,30 @@ class AttendanceByCourse(Resource):
         )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "POST",
-                "url": ROOT,
-                "data": f"ajx=1&mod=ejurnal&action=viewCourse&derst={course}",
-                "headers": {
+        try:
+            mid_res = httpc.request(
+                "POST",
+                ROOT,
+                data=f"ajx=1&mod=ejurnal&action=viewCourse&derst={course}",
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
-
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from root server")
-
-        if parser.is_expired(mid_res.get("text")):
+            mid_res = httpc.cr_text(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
+        if parser.is_expired(mid_res):
             abort(401, help="Session invalid or has expired")
 
-        ajax = json.loads(mid_res.get("text"))
+        ajax = json.loads(mid_res)
         if int(ajax["CODE"]) < 1:
             abort(400, help=ajax["DATA"])
 
@@ -485,33 +507,28 @@ class Deps(Resource):
         )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "GET",
-                "url": f"{ROOT}?mod=viewdeps&d={code}",
-                "headers": {
+        try:
+            mid_res = httpc.request(
+                "GET",
+                f"{ROOT}?mod=viewdeps&d={code}",
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
-
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from gateway")
-
-        if parser.is_expired(mid_res.get("text")):
+            mid_res = httpc.cr_text(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
+        if parser.is_expired(mid_res):
             abort(401, help="Session invalid or has expired")
 
-        page = jsonify(parser.deps2_parser(mid_res.get("text")))
+        page = jsonify(parser.deps2_parser(mid_res))
         res = make_response(page, 200)
         return res
 
@@ -542,7 +559,7 @@ class Program(Resource):
             200:
                 description: Success
             400:
-                description: Bad request
+                description: Bad response
             401:
                 description: Unauthorized
             404:
@@ -560,33 +577,28 @@ class Program(Resource):
         )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "GET",
-                "url": f"{ROOT}?mod=progman&pc={code}&py={year}",
-                "headers": {
+        try:
+            mid_res = httpc.request(
+                "GET",
+                f"{ROOT}?mod=progman&pc={code}&py={year}",
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
-
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from root server")
-
-        if parser.is_expired(mid_res.get("text")):
+            mid_res = httpc.cr_text(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
+        if parser.is_expired(mid_res):
             abort(401, help="Session invalid or has expired")
 
-        page = parser.program2_parser(mid_res.get("text"))
+        page = parser.program2_parser(mid_res)
 
         if not page:
             abort(404, help="Not Found")
@@ -625,38 +637,36 @@ class Msg(Resource):
         )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "GET",
-                "url": f"{ROOT}?mod=msg",
-                "headers": {
+        try:
+            mid_res = httpc.request(
+                "GET",
+                f"{ROOT}?mod=msg",
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
+            mid_res = httpc.cr_text(mid_res)
 
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from gateway")
+            if parser.is_expired(mid_res):
+                abort(401, help="Session invalid or has expired")
 
-        if parser.is_expired(mid_res.get("text")):
-            abort(401, help="Session invalid or has expired")
+            results = read_msgs(
+                httpc, args.get("SessionID"), parser.msg_parser(mid_res)
+            )
 
-        results = read_msgs(args.get("SessionID"), parser.msg_parser(mid_res.get("text")))
-
-        msgs = []
-        for res in results:
-            if res["status"] == 200:
-                msgs.append(parser.msg2_parser(res.get("text")))
+            msgs = []
+            for res in results:
+                if res.status == 200:
+                    msgs.append(parser.msg2_parser(httpc.cr_text(res)))
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
 
         res = make_response(jsonify(msgs), 200)
         return res
@@ -699,23 +709,28 @@ class StudPhoto(Resource):
         )
         args = rp.parse_args()
 
-        mid_res = requests.get(
-            f"{ROOT}stud_photo.php?ses={args.get("ImgID")}",
-            headers = {
-                "Host": HOST,
-                "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
-                "User-Agent": USER_AGENT,
-            },
-            timeout = 10
-        )
+        try:
+            mid_res = httpc.request(
+                "GET",
+                f"{ROOT}stud_photo.php?ses={args.get("ImgID")}",
+                headers={
+                    "Host": HOST,
+                    "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
+                    "User-Agent": USER_AGENT,
+                },
+            )
 
-        if not mid_res.status_code == 200:
-            abort(412, help="Bad request from gateway")
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        res = make_response(mid_res.content)
+            mid_res = httpc.cr_read(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
+
+        res = make_response(mid_res)
         res.headers.set("Content-Type", "image/png")
-        res.headers.set("Content-Length", len(mid_res.content))
-
+        res.headers.set("Content-Length", len(mid_res))
         return res
 
 
@@ -788,28 +803,34 @@ class Auth(Resource):
         # Generate secure session_id
         sessid = secrets.token_hex(32)
 
-        # Authenticate the student_id with session_id
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "POST",
-                "url": f"{ROOT}auth.php",
-                "data": f"username={student_id}&password={password}&LogIn=",
-                "headers": {
+        try:
+            # Authenticate the student_id with session_id
+            mid_res = httpc.request(
+                "POST",
+                f"{ROOT}auth.php",
+                data=f"username={student_id}&password={password}&LogIn=",
+                headers={
                     "Host": HOST,
                     "Content-Type": "application/x-www-form-urlencoded",
                     "Cookie": f"PHPSESSID={sessid}; ",
                     "User-Agent": USER_AGENT,
-                }
-            }))
-        mid_res = request()
+                },
+                allow_redirects=False,
+            )
+
+        except ClientError as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
 
         # Respond with 400 if it was not redirected.
-        if not mid_res["status"] == 302:
+        if mid_res.status == 200:
             abort(400, help="Bad credentials")
 
+        if not mid_res.status == 302:
+            abort(502, help="Bad response from root server")
+
         app.logger.info("Student %s has logged in", student_id)
-        cookies = mid_res.get("headers").get("Set-Cookie")
+        cookies = mid_res.headers.get("Set-Cookie")
 
         # Preventing unusual behaviour of the root server.
         if not cookies:
@@ -825,14 +846,17 @@ class Auth(Resource):
 
         # Update student information, adding new student
         # if it's not present who hopefully read the ToS.
-        db_res = db_cur.execute("""
+        db_res = db_cur.execute(
+            """
             REPLACE INTO Students(id, student_id, password)
             VALUES ((
                 SELECT id FROM Students
                 WHERE student_id = ?
             ), ?, ?)
             RETURNING id;
-        """, (student_id, student_id, password)).fetchone()
+        """,
+            (student_id, student_id, password),
+        ).fetchone()
 
         if db_res is None:
             db_con.rollback()
@@ -841,27 +865,34 @@ class Auth(Resource):
         db_con.commit()
 
         # Pushing new session_id
-        db_cur.execute("""
+        db_cur.execute(
+            """
             INSERT INTO Student_Sessions(owner_id, session_id, login_date)
             VALUES (?, ?, ?);
-        """, (db_res["id"], sessid, datetime.now().isoformat()))
+        """,
+            (db_res["id"], sessid, datetime.now().isoformat()),
+        )
         db_con.commit()
         db_con.close()
 
         # Sending out freshly baked cookies
         mid_res = make_response("", 200)
-        mid_res.set_cookie("SessionID",
-                           sessid,
-                           httponly=False,
-                           secure=False,
-                           samesite="Lax",
-                           max_age=3600)
-        mid_res.set_cookie("StudentID",
-                           student_id,
-                           httponly=False,
-                           secure=False,
-                           samesite="Lax",
-                           max_age=3600)
+        mid_res.set_cookie(
+            "SessionID",
+            sessid,
+            httponly=False,
+            secure=False,
+            samesite="Lax",
+            max_age=3600,
+        )
+        mid_res.set_cookie(
+            "StudentID",
+            student_id,
+            httponly=False,
+            secure=False,
+            samesite="Lax",
+            max_age=3600,
+        )
 
         return mid_res
 
@@ -905,55 +936,70 @@ class LogOut(Resource):
         db_cur = db_con.cursor()
 
         # Querying current session to see if it exists
-        db_res = db_cur.execute("""
+        db_res = db_cur.execute(
+            """
             SELECT ss.owner_id FROM Student_Sessions ss
             INNER JOIN Students s
             ON ss.owner_id = s.id
             WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
             LIMIT 1;
-        """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+        """,
+            (args.get("StudentID"), args.get("SessionID")),
+        ).fetchone()
         if db_res is None:
             db_con.close()
             abort(400, help="Couldn't logout")
 
         # Querying all sessions with ids which are not logged out yet
         owner_id = db_res["owner_id"]
-        db_res = db_cur.execute("""
+        db_res = db_cur.execute(
+            """
             SELECT ss.session_id FROM Student_Sessions ss
             WHERE ss.owner_id = ? AND ss.logged_out = 0
             ORDER BY ss.login_date DESC;
-        """, (owner_id, )).fetchall()
+        """,
+            (owner_id,),
+        ).fetchall()
         if len(db_res) == 0:
             db_con.close()
             abort(400, help="Couldn't logout")
 
         # Updating database all sessions with fetched ids
-        db_cur.execute("""
+        db_cur.execute(
+            """
             UPDATE Student_Sessions
             SET logged_out = 1
             WHERE owner_id = ?
-        """, (owner_id, ))
+        """,
+            (owner_id,),
+        )
         db_con.commit()
         db_con.close()
 
-        # Logging out of all sessions with fetched session_ids
-        rqsts = [
-        {
-            "method": "GET",
-            "url": f"{ROOT}logout.php",
-            "headers": {
-                "Host": HOST,
-                "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
-                "User-Agent": USER_AGENT,
-            }
-        } for session_id in list(map(lambda row: row["session_id"], db_res))]
+        try:
+            ress = httpc.gather(
+                *[
+                    httpc.request_coro(
+                        "GET",
+                        f"{ROOT}logout.php",
+                        headers={
+                            "Host": HOST,
+                            "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
+                            "User-Agent": USER_AGENT,
+                        },
+                        allow_redirects=False,
+                    )
+                    for session_id in list(map(lambda row: row["session_id"], db_res))
+                ]
+            )
+        except ClientError as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        responses = loop.run_until_complete(n_wrapper(rqsts))
+        # Logging out of all sessions with fetched session_ids
 
         try:
-            if responses[0]["response"] != 302:
+            if ress[0].status != 302:
                 abort(400, help="Couldn't logout")
         except IndexError:
             abort(400, help="Couldn't logout")
@@ -962,8 +1008,12 @@ class LogOut(Resource):
 
         # Getting rid of spoiled cookies.
         mid_res = make_response("", 200)
-        mid_res.set_cookie("SessionID", "", httponly=False, secure=False, samesite="Lax")
-        mid_res.set_cookie("StudentID", "", httponly=False, secure=False, samesite="Lax")
+        mid_res.set_cookie(
+            "SessionID", "", httponly=False, secure=False, samesite="Lax"
+        )
+        mid_res.set_cookie(
+            "StudentID", "", httponly=False, secure=False, samesite="Lax"
+        )
 
         return mid_res
 
@@ -998,32 +1048,28 @@ class Verify(Resource):
         )
         args = rp.parse_args()
 
-        def request():
-            return asyncio.run(wrapper(
-            {
-                "method": "POST",
-                "url": ROOT,
-                "data": "ajx=1",
-                "headers": {
+        try:
+            mid_res = httpc.request(
+                "POST",
+                ROOT,
+                data="ajx=1",
+                headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                     "Content-Type": "application/x-www-form-urlencoded",
-                }
-            }))
-        mid_res = request()
+                },
+            )
 
-        if parser.is_there_msg(mid_res.get("text")):
-            read_msgs(args.get("SessionID"), parser.msg2_parser(mid_res.get("text")))
-            mid_res = request()
+            if not mid_res.status == 200:
+                abort(502, help="Bad response from root server")
 
-        if parser.is_there_msg(mid_res.get("text")):
-            abort(412, help="Bad request from root server")
+            mid_res = httpc.cr_text(mid_res)
+        except (ClientError, ClientResponseError) as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
 
-        if not mid_res["status"] == 200:
-            abort(412, help="Bad request from root server")
-
-        if parser.is_expired(mid_res.get("text")):
+        if parser.is_expired(mid_res):
             abort(401, help="Session invalid or has expired")
 
         return make_response("", 200)
@@ -1052,7 +1098,12 @@ class Bot(Resource):
         if BOT_EMAIL:
             bot["bot_email"] = BOT_EMAIL
 
-        telegram_bot = get_me()
+        try:
+            telegram_bot = tgc.get_me()
+        except (AssertionError, ClientError, ClientResponseError) as e:
+            app.logger.error(e)
+            abort(502, help="Bad response from root server")
+
         if telegram_bot:
             if telegram_bot["result"].get("username"):
                 bot["bot_telegram"] = telegram_bot["result"]["username"]
@@ -1099,14 +1150,17 @@ class BotSubscribe(Resource):
 
         db_con = get_db()
         db_cur = db_con.cursor()
-        db_res = db_cur.execute("""
+        db_res = db_cur.execute(
+            """
             SELECT ss.owner_id, s.active_telegram_id, s.active_discord_id, s.active_email_id
             FROM Student_Sessions ss
             INNER JOIN Students s
             ON ss.owner_id = s.id
             WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
             LIMIT 1;
-        """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+        """,
+            (args.get("StudentID"), args.get("SessionID")),
+        ).fetchone()
         if db_res is None:
             db_con.close()
             abort(401, help="Session invalid or has expired")
@@ -1116,34 +1170,52 @@ class BotSubscribe(Resource):
 
         if db_res is not None:
             if db_res["active_telegram_id"] is not None:
-                db_sub_res = db_cur.execute("""
-                    SELECT ts.telegram_username FROM Telegram_Subscribers ts
+                db_sub_res = db_cur.execute(
+                    """
+                    SELECT ts.telegram_user_id FROM Telegram_Subscribers ts
                     INNER JOIN Students s
                     ON ts.telegram_id = s.active_telegram_id
                     WHERE s.id = ?;
-                """, (owner_id, )).fetchone()
+                """,
+                    (owner_id,),
+                ).fetchone()
                 if db_sub_res is not None:
-                    subscriptions["telegram_username"] = db_sub_res["telegram_username"]
+                    subscriptions["telegram_user_id"] = db_sub_res["telegram_user_id"]
             if db_res["active_discord_id"] is not None:
-                db_sub_res = db_con.cursor().execute("""
+                db_sub_res = (
+                    db_con.cursor()
+                    .execute(
+                        """
                     SELECT ds.discord_webhook_url FROM Discord_Subscribers ds
                     INNER JOIN Students s ON ds.discord_id = s.active_discord_id 
                     WHERE s.id = ?;  
-                """, (owner_id, )).fetchone()
+                """,
+                        (owner_id,),
+                    )
+                    .fetchone()
+                )
                 if db_sub_res is not None:
-                    subscriptions["discord_webhook_url"] = db_sub_res["discord_webhook_url"]
+                    subscriptions["discord_webhook_url"] = db_sub_res[
+                        "discord_webhook_url"
+                    ]
             if db_res["active_email_id"] is not None:
-                db_sub_res = db_con.cursor().execute("""
+                db_sub_res = (
+                    db_con.cursor()
+                    .execute(
+                        """
                     SELECT es.email FROM Email_Subscribers es
                     INNER JOIN Students s ON es.email_id = s.active_email_id
                     WHERE s.id = ?;
-                """, (owner_id, )).fetchone()
+                """,
+                        (owner_id,),
+                    )
+                    .fetchone()
+                )
                 if db_sub_res is not None:
                     subscriptions["email"] = db_sub_res["email"]
 
         db_con.close()
         return {"subscriptions": subscriptions}
-
 
     def put(self):
         """
@@ -1158,7 +1230,7 @@ class BotSubscribe(Resource):
             description: Subscriptions to add.
             schema:
                 properties:
-                    telegram_username:
+                    telegram_user_id:
                         type: string
                         description: Telegram Username
                         example: slaffoe
@@ -1198,7 +1270,7 @@ class BotSubscribe(Resource):
             required=True,
         )
         rp.add_argument(
-            "telegram_username",
+            "telegram",
             type=str,
         )
         rp.add_argument(
@@ -1213,53 +1285,73 @@ class BotSubscribe(Resource):
 
         db_con = get_db()
         db_cur = db_con.cursor()
-        db_res = db_cur.execute("""
+        db_res = db_cur.execute(
+            """
             SELECT ss.owner_id
             FROM Student_Sessions ss
             INNER JOIN Students s
             ON ss.owner_id = s.id
             WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
             LIMIT 1;
-            """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+            """,
+            (args.get("StudentID"), args.get("SessionID")),
+        ).fetchone()
 
         if db_res is None:
             db_con.close()
             abort(401, help="Session invalid or has expired")
 
         owner_id = db_res["owner_id"]
-        if args.get("telegram_username") is not None:
-            db_cur.execute("""
+        if args.get("telegram") is not None:
+            db_cur.execute(
+                """
                 UPDATE Verifications
-                SET verified = 1
-                WHERE owner_id = ? AND verified = 0 AND verify_service = 0;
-            """, (owner_id, ))
+                SET verified = TRUE
+                WHERE owner_id = ? AND verified = FALSE AND verify_service = 0;
+            """,
+                (owner_id,),
+            )
             db_con.commit()
             code = verify_code_gen(6)
-            db_cur.execute("""
+            db_cur.execute(
+                """
                 INSERT INTO Verifications
-                (owner_id, verify_code, verify_item, verify_date, verify_service)
-                VALUES(?, ?, ?, ?, 0);
-            """, (owner_id, code, args.get("telegram_username"),
-                  datetime.now().isoformat()))
+                (owner_id, verify_code, verify_date, verify_service)
+                VALUES(?, ?, ?, 0);
+            """,
+                (
+                    owner_id,
+                    code,
+                    datetime.now().isoformat(),
+                ),
+            )
             db_con.commit()
             db_con.close()
             return {"telegram_code": code}
         if args.get("discord_webhook_url") is not None:
-            db_sub_res = db_cur.execute("""
+            if not is_webhook(args.get("discord_webhook_url")):
+                abort(400, help="Invalid Discord Webhook URL")
+            db_sub_res = db_cur.execute(
+                """
                 INSERT INTO Discord_Subscribers(owner_id, discord_webhook_url)
                 VALUES(?, ?)
                 RETURNING discord_id;
-            """, (owner_id, args.get("discord_webhook_url"))).fetchone()
+            """,
+                (owner_id, args.get("discord_webhook_url")),
+            ).fetchone()
             if db_sub_res is None:
                 db_con.rollback()
                 db_con.close()
                 abort(400, help="Unknown error")
             db_con.commit()
-            db_cur.execute("""
+            db_cur.execute(
+                """
                 UPDATE Students
                 SET active_discord_id = ?
                 WHERE id = ?;
-            """, (db_sub_res["discord_id"], owner_id))
+            """,
+                (db_sub_res["discord_id"], owner_id),
+            )
             db_con.commit()
             db_con.close()
             return make_response("", 201)
@@ -1267,29 +1359,34 @@ class BotSubscribe(Resource):
             if not is_email(args.get("email")):
                 db_con.close()
                 abort(400, help="Invalid E-Mail address")
-            db_cur.execute("""
+            db_cur.execute(
+                """
                 UPDATE Verifications
-                SET verified = 1
-                WHERE owner_id = ? AND verified = 0 AND verify_service = 1;
-            """, (owner_id, ))
+                SET verified = TRUE
+                WHERE owner_id = ? AND verified = FALSE AND verify_service = 1;
+            """,
+                (owner_id,),
+            )
             db_con.commit()
             code = verify_code_gen(9)
-            db_cur.execute("""
+            db_cur.execute(
+                """
                 INSERT INTO Verifications
                 (owner_id, verify_code, verify_item, verify_date, verify_service)
                 VALUES(?, ?, ?, ?, 1);
-            """, (owner_id, code, args.get("email"), datetime.now().isoformat()))
+            """,
+                (owner_id, code, args.get("email"), datetime.now().isoformat()),
+            )
             db_con.commit()
             db_con.close()
             try:
-                send_verification(args.get("email"), code)
+                emailc.send_verification(args.get("email"), code)
             except SMTPException:
                 abort(500)
             return "", 204
 
         db_con.close()
-        return '', 200
-
+        return make_response("", 200)
 
     def delete(self):
         """
@@ -1304,7 +1401,7 @@ class BotSubscribe(Resource):
             description: Subscriptions to cancel.
             schema:
                 properties:
-                    telegram_username:
+                    telegram_user_id:
                         type: string
                         description: Telegram Username
                         example: slaffoe
@@ -1347,80 +1444,98 @@ class BotSubscribe(Resource):
 
         db_con = get_db()
         db_cur = db_con.cursor()
-        db_res = db_cur.execute("""
+        db_res = db_cur.execute(
+            """
             SELECT ss.owner_id, s.active_telegram_id, s.active_discord_id, s.active_email_id
             FROM Student_Sessions ss
             INNER JOIN Students s
             ON ss.owner_id = s.id
             WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
             LIMIT 1;
-            """, (args.get("StudentID"), args.get("SessionID"))).fetchone()
+            """,
+            (args.get("StudentID"), args.get("SessionID")),
+        ).fetchone()
+
+        res = make_response("", 202)
 
         if db_res is None:
             db_con.close()
             abort(401, help="Session invalid or has expired")
 
         owner_id = db_res["owner_id"]
-        unsub_list = request.get_json().get("unsubscribe")
+        unsub_list = (
+            request.get_json().get("unsubscribe")
+            if isinstance(request.get_json(), dict)
+            else None
+        )
         if unsub_list is None:
             db_con.close()
             abort(400, help="Missing unsubscribe array")
 
         if "telegram" in unsub_list and db_res["active_telegram_id"]:
-            db_sub_res = db_cur.execute("""
+            db_sub_res = db_cur.execute(
+                """
                 UPDATE Students
                 SET active_telegram_id = NULL
                 WHERE id = ?;
-            """, (owner_id, ))
+            """,
+                (owner_id,),
+            )
             if not db_sub_res.rowcount > 0:
                 db_con.rollback()
                 db_con.close()
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
-            db_con.close()
-            return "", 204
+            res = make_response("", 204)
         if "discord" in unsub_list and db_res["active_discord_id"]:
-            db_sub_res = db_cur.execute("""
+            db_sub_res = db_cur.execute(
+                """
                 UPDATE Students
                 SET active_discord_id = NULL
                 WHERE id = ?;
-            """, (owner_id, ))
+            """,
+                (owner_id,),
+            )
             if not db_sub_res.rowcount > 0:
                 db_con.rollback()
                 db_con.close()
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
-            db_con.close()
-            return "", 204
+            res = make_response("", 204)
         if "email" in unsub_list and db_res["active_email_id"]:
-            db_sub_res = db_cur.execute("""
+            db_sub_res = db_cur.execute(
+                """
                 UPDATE Students
                 SET active_email_id = NULL
                 WHERE id = ?;
-            """, (owner_id, ))
+            """,
+                (owner_id,),
+            )
             if not db_sub_res.rowcount > 0:
                 db_con.rollback()
                 db_con.close()
                 abort(400, help="Couldn't find the subscription")
             db_con.commit()
-            db_con.close()
-            return "", 204
+            res = make_response("", 204)
+        db_con.close()
 
-        if (args.get("telegram_username") is not None or
-            args.get("discord_webhook_url") is not None or
-            args.get("email") is not None):
+        if (
+            args.get("telegram_user_id") is not None
+            or args.get("discord_webhook_url") is not None
+            or args.get("email") is not None
+        ):
             abort(400, help="Couldn't find the subscription")
 
-        db_con.close()
-        return make_response("", 202)
+        return res
 
 
 class BotVerify(Resource):
     """BeuTMSBot Verification
-    
+
     Flask-RESTFUL resource
     """
-    @api.representation('text/html')
+
+    # @api.representation("text/html")
     def get(self, code):
         # pylint: disable=R0915
         """
@@ -1453,26 +1568,25 @@ class BotVerify(Resource):
         return res
 
 
-def read_announce(sessid):
+def read_announce(http_client: HTTPClient, sessid):
     """Read announces of student
 
     Args:
         sessid (str): Student session_id
     """
-    asyncio.run(wrapper(
-    {
-        "method": "POST",
-        "url": f"{ROOT}stud_announce.php",
-        "data": "btnRead=Oxudum",
-        "headers": {
+    http_client.request(
+        "POST",
+        f"{ROOT}stud_announce.php",
+        data="btnRead=Oxudum",
+        headers={
             "Host": HOST,
             "Cookie": f"PHPSESSID={sessid}; ",
             "User-Agent": USER_AGENT,
-        }
-    }))
+        },
+    )
 
 
-def read_msgs(sessid, msg_ids):
+def read_msgs(http_client: HTTPClient, sessid, msg_ids):
     """Read messages of student
 
     Args:
@@ -1482,22 +1596,23 @@ def read_msgs(sessid, msg_ids):
     Returns:
         list: List of responses
     """
-    rqsts = [
-    {
-        "method": "POST",
-        "url": ROOT,
-        "data": f"ajx=1&mod=msg&action=ShowReceivedMessage&sm_id={id}",
-        "headers": {
-            "Host": HOST,
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Cookie": f"PHPSESSID={sessid}; ",
-            "User-Agent": USER_AGENT,
-        }
-    } for id in msg_ids]
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    return loop.run_until_complete(n_wrapper(rqsts))
+    return http_client.gather(
+        *[
+            http_client.request_coro(
+                "POST",
+                ROOT,
+                data=f"ajx=1&mod=msg&action=ShowReceivedMessage&sm_id={id}",
+                headers={
+                    "Host": HOST,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Cookie": f"PHPSESSID={sessid}; ",
+                    "User-Agent": USER_AGENT,
+                },
+            )
+            for id in msg_ids
+        ]
+    )
 
 
 def verify_code_gen(length):
@@ -1509,7 +1624,7 @@ def verify_code_gen(length):
     Returns:
         str: Randomly generated code in given length
     """
-    return ''.join(str(random.randint(0, 9)) for _ in range(length))
+    return "".join(str(random.randint(0, 9)) for _ in range(length))
 
 
 api.add_resource(Msg, "/api/resource/msg")
@@ -1517,7 +1632,9 @@ api.add_resource(Res, "/api/resource/<resource>")
 api.add_resource(GradesAll, "/api/resource/grades/all")
 api.add_resource(Grades, "/api/resource/grades/<int:year>/<int:semester>")
 api.add_resource(AttendanceByCourse, "/api/resource/attendance/<int:course>")
-api.add_resource(AttendanceBySemester, "/api/resource/attendance/<int:year>/<int:semester>")
+api.add_resource(
+    AttendanceBySemester, "/api/resource/attendance/<int:year>/<int:semester>"
+)
 api.add_resource(Deps, "/api/resource/deps/<code>")
 api.add_resource(Program, "/api/resource/program/<int:code>/<int:year>")
 api.add_resource(Auth, "/api/auth")

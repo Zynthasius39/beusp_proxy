@@ -24,7 +24,7 @@ CREATE TABLE Student_Sessions(
 CREATE TABLE Telegram_Subscribers(
 	owner_id INTEGER,
 	telegram_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	telegram_username TEXT NOT NULL,
+	telegram_user_id TEXT NOT NULL,
 	telegram_chat_id INTEGER NOT NULL,
 	FOREIGN KEY(owner_id) REFERENCES Students(id)
 );
@@ -46,7 +46,7 @@ CREATE TABLE Email_Subscribers(
 CREATE TABLE Verifications(
 	owner_id INTEGER NOT NULL,
 	verify_code VARCHAR(9) NOT NULL,
-	verify_item TEXT NOT NULL,
+	verify_item TEXT,
 	verify_service INTEGER(3) NOT NULL,
 	verify_date TEXT,
 	verified BOOLEAN NOT NULL DEFAULT 0,

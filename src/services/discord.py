@@ -1,10 +1,8 @@
 import re
-import requests
 
-from config import (
-    BOT_DISCORD_USERNAME,
-    BOT_DISCORD_AVATAR
-)
+from config import BOT_DISCORD_USERNAME, BOT_DISCORD_AVATAR
+from services.httpclient import HTTPClient
+
 
 def is_webhook(url):
     """Checks if it is a valid discord webhook URL
@@ -15,16 +13,13 @@ def is_webhook(url):
     Returns:
         bool: If it is valid
     """
-    m = re.match(
-        r"https:\/\/discord.com\/api\/webhooks\/(\d{19})\/([-a-zA-Z0-9()@:%_+.~#?&=]*)",
-        url
-    )
-    
-    return m is not None
+    return re.match(
+        r"https://discord.com/api/webhooks/\d{19}/[-_a-zA-Z0-9]{68}/?",
+        url,
+    ) is not None
 
 
-
-def send_message(webhook, msg = None, embeds = []):
+def send_message(http_client: HTTPClient, webhook, *, msg=None, embeds=None):
     """Discord Webhook: send_message
     Sends a message with embeds
 
@@ -36,17 +31,21 @@ def send_message(webhook, msg = None, embeds = []):
     Returns:
         bool: Result
     """
+    if embeds is None:
+        embeds = []
+
     if not is_webhook(webhook):
         return False
 
-    res = requests.post(
+    res = http_client.request(
+        "POST",
         webhook,
-        json = {
+        json={
             "username": BOT_DISCORD_USERNAME,
             "avatar_url": BOT_DISCORD_AVATAR,
             "content": msg,
-            "embeds": embeds
-        }
+            "embeds": embeds,
+        },
     )
-    
+
     return res.status_code == 204

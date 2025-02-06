@@ -3,311 +3,356 @@ import math
 import re
 import time
 from datetime import datetime
+from sqlite3 import Error
+from threading import Thread, Event
+from typing import Optional
 
-import requests
-from jinja2 import Environment, FileSystemLoader
+from aiohttp import ClientError
+from jinja2 import Environment
 
+from services.httpclient import HTTPClient
 from services.database import get_db
 from config import (
     WEB_HOSTNAME,
     BOT_TELEGRAM_HOSTNAME,
     BOT_TELEGRAM_API_KEY,
     REQUEST_TIMEOUT,
-    POLLING_TIMEOUT
+    POLLING_TIMEOUT,
 )
 
-jinja_env = Environment(
-    loader = FileSystemLoader("src/templates")
-)
+logger = logging.getLogger(__name__)
 
-def get_me():
-    """Telegram API: getMe
-
-    Returns:
-        dict: JSON response
+class TelegramClient:
+    # pylint: disable=R0902
+    # pylint: disable=R0913
+    """Telegram base class.
+    Getting updates, sending messages
     """
-    res = requests.get(
-        f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/getMe",
-        timeout = REQUEST_TIMEOUT
-    )
 
-    if not res.status_code == 200:
-        return None
-
-    return res.json()
-
-def send_message(text, chat_id):
-    """Telegram API: sendMessage
-
-    Args:
-        text (str): Text message
-        chat_id (int): Telegram Chat ID
-    """
-    res = requests.get(
-        f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/sendMessage",
-        params = {
-            "chat_id": chat_id,
-            "text": text
-        },
-        timeout = REQUEST_TIMEOUT
-    )
-
-    if not res.status_code == 200:
-        return None
-
-    return res.json()
-
-def send_template(template, chat_id, username, *args):
-    """Telegram API Wrapper.
-    Send template messages
-
-    Args:
-        template (str): Template key
-        chat_id (int): Telegram Chat ID
-        username (str): Telegram Username
-    """
-    logger = logging.getLogger(__name__)
-
-    logger.debug("Sent template %s  to '@%s'", template, username)
-    send_message(
-        jinja_env.get_template(f"{template}.txt").render(args=args),
-        chat_id
-    )
-
-def start_cmd(chat_id, username):
-    """/start command logic.
-    Shows welcome message.
-    
-    Args:
-        chat_id (int): Telegram Chat ID
-        username (str): Telegram Username
-    """
-    logger = logging.getLogger(__name__)
-
-    logger.debug("User '@%s' issued start command", username)
-    send_template("start", chat_id, username)
-
-def help_cmd(chat_id, username):
-    """/help command logic.
-    Shows help message.
-    
-    Args:
-        chat_id (int): Telegram Chat ID
-        username (str): Telegram Username
-    """
-    logger = logging.getLogger(__name__)
-
-    logger.debug("User '@%s' issued help command", username)
-    send_template("help", chat_id, username, WEB_HOSTNAME)
-
-def verify_cmd(params, chat_id, username):
-    """/verify command logic.
-    Verifies 6-digit code.
-
-    Args:
-        params (str): Parameters after the command
-        chat_id (int): Telegram Chat ID
-        username (str): Telegram Username
-    """
-    logger = logging.getLogger(__name__)
-
-    m = re.match(r".*(\d{6})", params)
-    if m is None:
-        send_template("verify_empty", chat_id, username)
-        return
-    logger.info("User '@%s' tried to verify code: %s", username, m.group(1))
-
-    db_con = get_db()
-    db_cur = db_con.cursor()
-    db_res = db_cur.execute("""
-        WITH LatestVerification AS (
-            SELECT owner_id, verify_date, verify_code, verify_item
-            FROM Verifications
-            WHERE verified = 0 AND verify_service = 0
-            ORDER BY verify_date DESC
-        )
-        SELECT
-            owner_id,
-            verify_date,
-            CASE
-                WHEN verify_code = ? AND verify_item = ?
-                THEN 1
-                ELSE 0
-            END AS verifiable
-        FROM LatestVerification
-        ORDER BY verifiable DESC;
-    """, (m.group(1), username)).fetchone()
-    if not db_res or db_res["verifiable"] == 0:
-        db_con.close()
-        send_template("verify_invalid", chat_id, username)
-        logger.info("User '@%s' is not registered or sent an invalid code.", username)
-        return
-
-    owner_id = db_res["owner_id"]
-
-    if (
-        math.floor(
-            (
-                datetime.now() -
-                datetime.fromisoformat(
-                    db_res["verify_date"]
-                )
-            ).total_seconds() / 60
-        ) > 9
+    def __init__(
+        self,
+        http_client: HTTPClient,
+        jinja_env: Environment,
+        *,
+        request_timeout=REQUEST_TIMEOUT,
+        polling_timeout=POLLING_TIMEOUT,
+        api_hostname=BOT_TELEGRAM_HOSTNAME,
+        api_key=BOT_TELEGRAM_API_KEY,
+        worker_name: Optional[str] = None,
     ):
-        db_con.close()
-        send_template("verify_expired", chat_id, username)
-        logger.info("User '@%s'`s verification code has been expired")
-        return
+        self._jinja_env = jinja_env
+        self._httpc = http_client
+        self._request_timeout = request_timeout
+        self._polling_timeout = polling_timeout
+        self._api_hostname = api_hostname
+        self._api_key = api_key
+        self._offset = None
 
-    db_cur.execute("""
-        UPDATE
-            Verifications
-        SET
-            verified = 1
-        WHERE
-            verify_code = ? AND
-            verify_item = ? AND
-            verify_service = 0 AND
-            verified = 0;
-    """, (m.group(1), username))
-    db_con.commit()
+        def updates_thread():
+            # pylint: disable=W3101
+            """Telegram Updates Thread"""
+            while not self._shevent.is_set():
+                res = self._httpc.request(
+                    "GET",
+                    f"https://{api_hostname}/bot{api_key}/getUpdates",
+                    params={
+                        k: v
+                        for k, v in {
+                            "offset": self._offset,
+                            "timeout": self._polling_timeout,
+                        }.items()
+                        if v is not None
+                    },
+                    timeout=None,
+                )
+                if res.status == 200:
+                    for u in self._httpc.cr_json(res)["result"]:
+                        self._offset = u["update_id"] + 1
+                        self.process_update(u)
+                else:
+                    logger.error("Error while getting updates")
+                    time.sleep(self._request_timeout)
+            logger.info("TelegramClient shutting down...")
 
-    db_res = db_cur.execute("""
-        INSERT INTO
-            Telegram_Subscribers
-        (owner_id, telegram_username, telegram_chat_id)
-        VALUES
-            (?, ?, ?)
-        RETURNING
-            telegram_id;
-    """, (owner_id, username, chat_id)).fetchone()
+        self._shevent = Event()
+        self._worker = Thread(name=worker_name, target=updates_thread, daemon=True)
+        self._worker.start()
 
-    if not db_res:
-        db_con.rollback()
-        db_con.close()
-        logger.error(
-            "Couldn't insert a telegram subscription: (%d, %d, %s)",
-            owner_id,
-            chat_id,
-            username
+    def close(self):
+        """Close TelegramClient"""
+        self._shevent.set()
+
+    def get_me(self):
+        """Telegram API: getMe
+
+        Returns:
+            dict: JSON response
+        """
+        res = self._httpc.request(
+            "GET", f"https://{self._api_hostname}/bot{self._api_key}/getMe"
         )
 
-    telegram_id = db_res["telegram_id"]
-    db_con.commit()
+        if not res.status == 200:
+            raise ClientError(res.status)
 
-    db_res = db_cur.execute("""
-        UPDATE Students
-        SET active_telegram_id = ?
-        WHERE id = ?
-    """, (telegram_id, owner_id))
+        return self._httpc.cr_json(res)
 
-    if not db_res.rowcount > 0:
-        db_con.rollback()
-        db_con.close()
-        logger.error(
-            "Couldn't update student's active telegram subscription: (%d, %d)",
-            owner_id,
-            telegram_id
+    def send_message(self, text, chat_id):
+        """Telegram API: sendMessage
+
+        Args:
+            text (str): Text message
+            chat_id (int): Telegram Chat ID
+        """
+        res = self._httpc.request(
+            "GET",
+            f"https://{self._api_hostname}/bot{self._api_key}/sendMessage",
+            params={"chat_id": chat_id, "text": text},
+            timeout=self._request_timeout,
         )
 
-    send_template("verify_success", chat_id, username)
-    db_con.commit()
-    db_con.close()
+        if not res.status == 200:
+            raise ClientError(res.status)
 
-def unsubscribe(chat_id, username):
-    """Unsubscribes user
+        return self._httpc.cr_json(res)
 
-    Args:
-        chat_id (int): Telegram Chat ID
-        username (str): Telegram Username
-    """
-    logger = logging.getLogger(__name__)
-    db_con = get_db()
-    db_cur = db_con.cursor()
+    def send_template(self, template, chat_id, user_id, *args):
+        """Telegram API Wrapper.
+        Send template messages
 
-    db_res = db_cur.execute("""
-        UPDATE
-            Students
-        SET
-            active_telegram_id = NULL
-        WHERE 
-            active_telegram_id IN (
-                SELECT
-                    ts.telegram_id
-                FROM
-                    Telegram_Subscribers ts
-                WHERE
-                    ts.telegram_username = ? AND
-                    ts.telegram_chat_id = ?
-            );
-    """, (username, chat_id))
+        Args:
+            template (str): Template key
+            chat_id (int): Telegram Chat ID
+            user_id (str): Telegram user_id
+        """
+        logger.debug("Sent template %s  to '@%s'", template, user_id)
+        self.send_message(
+            self._jinja_env.get_template(f"{template}.txt").render(args=args), chat_id
+        )
 
-    if not db_res.rowcount > 0:
-        db_con.rollback()
-        db_con.close()
-        send_template("unsubscribe_nosub", chat_id, username, WEB_HOSTNAME)
-        logger.info("Couldn't unsubscribe for telegram user '@%s'. No subscriptions", username)
-        return
+    def start_cmd(self, chat_id, user_id):
+        """/start command logic.
+        Shows welcome message.
 
-    db_con.commit()
-    send_template("unsubscribe", chat_id, username)
-    logger.info("Telegram user '@%s' unsubscribed", username)
+        Args:
+            chat_id (int): Telegram Chat ID
+            user_id (str): Telegram user_id
+        """
+        logger.debug("User '@%s' issued start command", user_id)
+        self.send_template("start", chat_id, user_id)
 
-def process_update(u):
-    """Process verifications queue
+    def help_cmd(self, chat_id, user_id):
+        """/help command logic.
+        Shows help message.
 
-    Args:
-        update (dict): Update object
-    """
-    if u.get("message"):
-        if not u["message"]["chat"]["type"] == "private":
+        Args:
+            chat_id (int): Telegram Chat ID
+            user_id (str): Telegram user_id
+        """
+        logger.debug("User '@%s' issued help command", user_id)
+        self.send_template("help", chat_id, user_id, WEB_HOSTNAME)
+
+    def verify_cmd(self, params, user_id, chat_id):
+        """/verify command logic.
+        Verifies 6-digit code.
+
+        Args:
+            params (str): Parameters after the command
+            user_id (str): Telegram User ID
+            chat_id (int): Telegram Chat ID
+        """
+        m = re.match(r".*(\d{6})", params)
+        if m is None:
+            self.send_template("verify_empty", chat_id, user_id)
             return
-        if (
-            u["message"].get("text") and
-            u["message"].get("entities")
-        ):
-            inx = None
-            for i, e in enumerate(u["message"]["entities"]):
-                if (
-                    e["type"] == "bot_command" or
-                    not e.get("url", "").find("bot_command") == -1
-                ):
-                    inx = i
-            if inx is None:
-                return
-            m = re.match(r"/(\w+)(.*)", u["message"].get("text", ""))
-            if m is None:
-                return
-            chat_id = u["message"]["chat"]["id"]
-            username = u["message"]["chat"]["username"]
-            match m.group(1):
-                case "start":
-                    start_cmd(chat_id, username)
-                case "help":
-                    help_cmd(chat_id, username)
-                case "verify":
-                    verify_cmd(m.group(2), chat_id, username)
-                case "unsubscribe":
-                    unsubscribe(chat_id, username)
+        logger.info("User '@%s' tried to verify code: %s", user_id, m.group(1))
 
-def updates_thread():
-    # pylint: disable=W3101
-    """Telegram Updates Thread"""
-    params = {
-        "offset": None,
-        "timeout": POLLING_TIMEOUT
-    }
-    logger = logging.getLogger(__name__)
-    while True:
-        res = requests.get(
-            f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/getUpdates",
-            params = {k: v for k, v in params.items() if v is not None}
+        db_con = get_db()
+        db_cur = db_con.cursor()
+        db_res = db_cur.execute(
+            """
+            SELECT
+                owner_id,
+                verify_date
+            FROM
+                Verifications
+            WHERE
+                verified = FALSE AND
+                verify_service = 0 AND
+                verify_code = ?
+            ORDER BY verify_date DESC;
+        """,
+            (m.group(1),),
+        ).fetchone()
+        if not db_res:
+            db_con.close()
+            self.send_template("verify_invalid", chat_id, user_id)
+            logger.info(
+                "User '@%s' is not registered or sent an invalid code.", user_id
+            )
+            return
+
+        owner_id = db_res["owner_id"]
+
+        if (
+            math.floor(
+                (
+                    datetime.now() - datetime.fromisoformat(db_res["verify_date"])
+                ).total_seconds()
+                / 60
+            )
+            > 9
+        ):
+            db_con.close()
+            self.send_template("verify_expired", chat_id, user_id)
+            logger.info("User '@%s'`s verification code has been expired")
+            return
+
+        db_cur.execute(
+            """
+            UPDATE
+                Verifications
+            SET
+                verified = TRUE,
+                verify_item = ?
+            WHERE
+                verify_code = ? AND
+                verify_service = 0 AND
+                verified = FALSE;
+        """,
+            (user_id, m.group(1)),
         )
-        if res.status_code == 200:
-            for u in res.json()["result"]:
-                params["offset"] = u["update_id"] + 1
-                process_update(u)
-        else:
-            logger.error("Error while getting updates")
-            time.sleep(REQUEST_TIMEOUT)
+        db_con.commit()
+
+        db_res = db_cur.execute(
+            """
+            INSERT INTO
+                Telegram_Subscribers
+            (owner_id, telegram_user_id, telegram_chat_id)
+            VALUES
+                (?, ?, ?)
+            RETURNING
+                telegram_id;
+        """,
+            (owner_id, user_id, chat_id),
+        ).fetchone()
+
+        if not db_res:
+            db_con.rollback()
+            db_con.close()
+            logger.error(
+                "Couldn't insert a telegram subscription: (%d, %d, %s)",
+                owner_id,
+                chat_id,
+                user_id,
+            )
+
+        telegram_id = db_res["telegram_id"]
+        db_con.commit()
+
+        db_res = db_cur.execute(
+            """
+            UPDATE Students
+            SET active_telegram_id = ?
+            WHERE id = ?
+        """,
+            (telegram_id, owner_id),
+        )
+
+        if not db_res.rowcount > 0:
+            db_con.rollback()
+            db_con.close()
+            logger.error(
+                "Couldn't update student's active telegram subscription: (%d, %d)",
+                owner_id,
+                telegram_id,
+            )
+
+        self.send_template("verify_success", chat_id, user_id)
+        db_con.commit()
+        db_con.close()
+
+    def unsubscribe(self, chat_id, user_id):
+        """Unsubscribes user
+
+        Args:
+            chat_id (int): Telegram Chat ID
+            user_id (str): Telegram user_id
+        """
+        db_con = get_db()
+        db_cur = db_con.cursor()
+
+        db_res = db_cur.execute(
+            """
+            UPDATE
+                Students
+            SET
+                active_telegram_id = NULL
+            WHERE 
+                active_telegram_id IN (
+                    SELECT
+                        ts.telegram_id
+                    FROM
+                        Telegram_Subscribers ts
+                    WHERE
+                        ts.telegram_user_id = ? AND
+                        ts.telegram_chat_id = ?
+                );
+        """,
+            (user_id, chat_id),
+        )
+
+        if not db_res.rowcount > 0:
+            db_con.rollback()
+            db_con.close()
+            self.send_template("unsubscribe_nosub", chat_id, user_id, WEB_HOSTNAME)
+            logger.info(
+                "Couldn't unsubscribe for telegram user '@%s'. No subscriptions",
+                user_id,
+            )
+            return
+
+        db_con.commit()
+        self.send_template("unsubscribe", chat_id, user_id)
+        logger.info("Telegram user '@%s' unsubscribed", user_id)
+
+    def process_update(self, u):
+        """Process verifications queue
+
+        Args:
+            update (dict): Update object
+        """
+        if u.get("message"):
+            if not u["message"]["chat"]["type"] == "private":
+                return
+            if (
+                u["message"].get("text")
+                and u["message"].get("entities")
+                and u["message"].get("from")
+            ):
+                inx = None
+                for i, e in enumerate(u["message"]["entities"]):
+                    if (
+                        e["type"] == "bot_command"
+                        or not e.get("url", "").find("bot_command") == -1
+                    ):
+                        inx = i
+                if inx is None:
+                    return
+                m = re.match(r"/(\w+)(.*)", u["message"].get("text", ""))
+                if m is None:
+                    return
+                chat_id = u["message"]["chat"]["id"]
+                user_id = u["message"]["from"]["id"]
+                try:
+                    match m.group(1):
+                        case "start":
+                            self.start_cmd(chat_id, user_id)
+                        case "help":
+                            self.help_cmd(chat_id, user_id)
+                        case "verify":
+                            self.verify_cmd(m.group(2), user_id, chat_id)
+                        case "unsubscribe":
+                            self.unsubscribe(chat_id, user_id)
+                except Error as e:
+                    logger.error(e)
