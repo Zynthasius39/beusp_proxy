@@ -1,0 +1,47 @@
+from aiohttp import ClientError, ClientResponseError
+from flask import current_app as app
+from flask_restful import Resource, abort
+
+from ...config import BOT_EMAIL
+from ...context import c
+from .subscribe import BotSubscribe
+from .verify import BotVerify
+
+
+class Bot(Resource):
+    """BeuTMSBot
+
+    Flask-RESTFUL resource
+    """
+
+    def get(self):
+        """
+        Bot Endpoint
+        ---
+        summary: Bot status
+        description: Gets telegram bot and the email used by bot
+        responses:
+            200:
+                description: Bot status
+            404:
+                description: Bot is not active
+        """
+        bot = {}
+
+        if BOT_EMAIL:
+            bot["bot_email"] = BOT_EMAIL
+
+        try:
+            telegram_bot = c.get("tgc").get_me()
+        except (AssertionError, ClientError, ClientResponseError) as e:
+            app.logger.error(e)
+            abort(502, help="Bad response from root server")
+
+        if telegram_bot:
+            if telegram_bot["result"].get("username"):
+                bot["bot_telegram"] = telegram_bot["result"]["username"]
+
+        return bot
+
+
+__all__ = ["Bot", "BotSubscribe", "BotVerify"]

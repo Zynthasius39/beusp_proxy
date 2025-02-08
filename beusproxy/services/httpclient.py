@@ -8,7 +8,7 @@ from typing import Optional
 
 from aiohttp import ClientSession, ClientResponse, ClientTimeout, ClientError
 
-from beusproxy.config import REQUEST_TIMEOUT
+from ..config import REQUEST_TIMEOUT
 
 class HTTPClient:
     """HTTPClient base class.

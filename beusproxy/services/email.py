@@ -9,10 +9,11 @@ from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
 
-from beusproxy.services.database import get_db
-from beusproxy.config import (
+from .database import get_db
+from ..config import (
     API_HOSTNAME,
     WEB_HOSTNAME,
+    EMAIL_REGEX,
     BOT_EMAIL,
     BOT_EMAIL_PASSWORD,
     BOT_SMTP_HOSTNAME,
@@ -81,7 +82,7 @@ def is_email(email):
         bool: If it is a correct email address
     """
     return (
-        re.match(r"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$", email) is not None
+        re.match(EMAIL_REGEX, email) is not None
     )
 
 
