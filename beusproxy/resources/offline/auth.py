@@ -43,7 +43,7 @@ class Auth(Resource):
                 description: Bad credentials
             403:
                 description: Not implemented
-            412:
+            502:
                 description: Bad response from root server
         """
         res = make_response("You entered a blackhole", 200)

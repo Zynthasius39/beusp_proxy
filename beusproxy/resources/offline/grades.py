@@ -32,7 +32,7 @@ class Grades(Resource):
                 description: Bad request
             401:
                 description: Unauthorized
-            412:
+            502:
                 description: Bad response from root server
         """
         return demo_response("grades2")
@@ -56,7 +56,7 @@ class GradesAll(Resource):
                 description: Bad request
             401:
                 description: Unauthorized
-            412:
+            502:
                 description: Bad response from root server
         """
         return demo_response("grades_all")

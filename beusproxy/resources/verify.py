@@ -24,7 +24,7 @@ class Verify(Resource):
                 description: Verify successful
             401:
                 description: Couldn't verify
-            412:
+            502:
                 description: Bad response from root server
         """
         httpc = c.get("httpc")

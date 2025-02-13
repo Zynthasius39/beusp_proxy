@@ -37,7 +37,7 @@ class Res(Resource):
                 description: Invalid Page
             401:
                 description: Unauthorized
-            412:
+            502:
                 description: Bad response from root server
         """
         demo_file = os.path.join(DEMO_FOLDER, f"{resource}.json")

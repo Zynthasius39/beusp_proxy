@@ -54,7 +54,7 @@ class Auth(Resource):
                 description: Bad credentials
             403:
                 description: Not implemented
-            412:
+            502:
                 description: Bad response from root server
         """
         httpc = c.get("httpc")
@@ -111,7 +111,8 @@ class Auth(Resource):
 
         # Preventing unusual behaviour of the root server.
         if not cookies:
-            abort(412, help="Couldn't get the cookies")
+            app.logger.error("Couldn't get the cookies")
+            abort(502, help="Bad response from root server")
 
         # Eating cookies...
         for header in cookies.replace(" ", "").split(";"):

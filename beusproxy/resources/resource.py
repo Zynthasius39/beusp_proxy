@@ -39,7 +39,7 @@ class Res(Resource):
                 description: Invalid Page
             401:
                 description: Unauthorized
-            412:
+            502:
                 description: Bad response from root server
         """
         httpc = c.get("httpc")

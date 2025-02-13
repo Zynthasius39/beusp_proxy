@@ -24,7 +24,7 @@ class Settings(Resource):
         responses:
             200:
                 description: Success
-            412:
+            502:
                 description: Bad response from root server
         """
         return "I definitely saved your changes (wupheli)."

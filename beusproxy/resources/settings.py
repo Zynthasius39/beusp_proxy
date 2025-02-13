@@ -28,8 +28,8 @@ class Settings(Resource):
         responses:
             200:
                 description: Success
-            412:
-                description: Bad response from root server
+            400:
+                description: Invalid Language
         """
         rp = reqparse.RequestParser()
         rp.add_argument(

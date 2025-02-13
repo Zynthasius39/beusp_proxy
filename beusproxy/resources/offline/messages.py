@@ -21,7 +21,7 @@ class Msg(Resource):
                 description: Unauthorized
             404:
                 description: Not Found
-            412:
+            502:
                 description: Bad response from root server
         """
         return demo_response("msg")

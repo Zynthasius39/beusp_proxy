@@ -32,7 +32,7 @@ class AttendanceBySemester(Resource):
                 description: Bad request
             401:
                 description: Unauthorized
-            412:
+            502:
                 description: Bad response from root server
         """
         return demo_response("attendance3")
@@ -62,7 +62,7 @@ class AttendanceByCourse(Resource):
                 description: Bad request
             401:
                 description: Unauthorized
-            412:
+            502:
                 description: Bad response from root server
         """
         return demo_response("attendance2")
