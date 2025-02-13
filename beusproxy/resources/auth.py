@@ -1,13 +1,13 @@
 import secrets
 from datetime import datetime
 
-from aiohttp import ClientError
 from flask import current_app as app, make_response
 from flask_restful import Resource, abort, reqparse
 
 from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import get_db
 from ..context import c
+from ..services.httpclient import HTTPClientError
 
 
 class Auth(Resource):
@@ -95,7 +95,7 @@ class Auth(Resource):
                 allow_redirects=False,
             )
 
-        except ClientError as ce:
+        except HTTPClientError as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 
@@ -118,39 +118,37 @@ class Auth(Resource):
             if not header.find("PHPSESSID") == -1:
                 sessid = header.split("=")[1]
 
-        db_con = get_db()
-        db_cur = db_con.cursor()
+        with get_db() as db_con:
+            db_cur = db_con.cursor()
 
-        # Update student information, adding new student
-        # if it's not present who hopefully read the ToS.
-        db_res = db_cur.execute(
-            """
-            REPLACE INTO Students(id, student_id, password)
-            VALUES ((
-                SELECT id FROM Students
-                WHERE student_id = ?
-            ), ?, ?)
-            RETURNING id;
-        """,
-            (student_id, student_id, password),
-        ).fetchone()
+            # Update student information, adding new student
+            # if it's not present who hopefully read the ToS.
+            db_res = db_cur.execute(
+                """
+                REPLACE INTO Students(id, student_id, password)
+                VALUES ((
+                    SELECT id FROM Students
+                    WHERE student_id = ?
+                ), ?, ?)
+                RETURNING id;
+            """,
+                (student_id, student_id, password),
+            ).fetchone()
 
-        if db_res is None:
-            db_con.rollback()
-            db_con.close()
-            abort(400, help="Unknown error")
-        db_con.commit()
+            if db_res is None:
+                db_con.rollback()
+                abort(400, help="Unknown error")
+            db_con.commit()
 
-        # Pushing new session_id
-        db_cur.execute(
-            """
-            INSERT INTO Student_Sessions(owner_id, session_id, login_date)
-            VALUES (?, ?, ?);
-        """,
-            (db_res["id"], sessid, datetime.now().isoformat()),
-        )
-        db_con.commit()
-        db_con.close()
+            # Pushing new session_id
+            db_cur.execute(
+                """
+                INSERT INTO Student_Sessions(owner_id, session_id, login_date)
+                VALUES (?, ?, ?);
+            """,
+                (db_res["id"], sessid, datetime.now().isoformat()),
+            )
+            db_con.commit()
 
         # Sending out freshly baked cookies
         mid_res = make_response("", 200)
@@ -160,7 +158,6 @@ class Auth(Resource):
             httponly=False,
             secure=False,
             samesite="Lax",
-            max_age=3600,
         )
         mid_res.set_cookie(
             "StudentID",
@@ -168,7 +165,6 @@ class Auth(Resource):
             httponly=False,
             secure=False,
             samesite="Lax",
-            max_age=3600,
         )
 
         return mid_res

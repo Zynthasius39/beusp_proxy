@@ -1,10 +1,10 @@
-from aiohttp import ClientError, ClientResponseError
 from flask import current_app as app, make_response
 from flask_restful import Resource, abort, reqparse
 
 from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import is_expired
 from ..context import c
+from ..services.httpclient import HTTPClientError
 
 
 class Verify(Resource):
@@ -17,8 +17,8 @@ class Verify(Resource):
         """
         Session Verify Endpoint
         ---
-        summary: Logs out given SessionID.
-        description: Logs out the SessionID used in API.
+        summary: Verify session
+        description: Check if session is still valid.
         responses:
             200:
                 description: Verify successful
@@ -55,7 +55,7 @@ class Verify(Resource):
                 abort(502, help="Bad response from root server")
 
             mid_res = httpc.cr_text(mid_res)
-        except (ClientError, ClientResponseError) as ce:
+        except HTTPClientError as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 

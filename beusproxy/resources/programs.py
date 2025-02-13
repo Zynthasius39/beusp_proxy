@@ -1,4 +1,4 @@
-from aiohttp import ClientError, ClientResponseError
+
 from flask import current_app as app, jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
@@ -6,6 +6,7 @@ from .. import parser
 from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import is_expired
 from ..context import c
+from ..services.httpclient import HTTPClientError
 
 
 class Program(Resource):
@@ -68,7 +69,7 @@ class Program(Resource):
                 abort(502, help="Bad response from root server")
 
             mid_res = httpc.cr_text(mid_res)
-        except (ClientError, ClientResponseError) as ce:
+        except HTTPClientError as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
         if is_expired(mid_res):

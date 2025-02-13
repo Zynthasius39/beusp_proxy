@@ -1,9 +1,9 @@
-from aiohttp import ClientError, ClientResponseError
 from flask import current_app as app
 from flask_restful import Resource, abort
 
 from ...config import BOT_EMAIL
 from ...context import c
+from ...services.httpclient import HTTPClientError
 from .subscribe import BotSubscribe
 from .verify import BotVerify
 
@@ -33,7 +33,7 @@ class Bot(Resource):
 
         try:
             telegram_bot = c.get("tgc").get_me()
-        except (AssertionError, ClientError, ClientResponseError) as e:
+        except (AssertionError, HTTPClientError) as e:
             app.logger.error(e)
             abort(502, help="Bad response from root server")
 

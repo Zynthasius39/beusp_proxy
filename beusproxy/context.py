@@ -5,7 +5,7 @@ from smtplib import SMTPAuthenticationError
 
 from jinja2 import Environment, FileSystemLoader
 
-from .config import TEMPLATES_FOLDER
+from .config import TEMPLATES_FOLDER, BOT_ENABLED
 from .services.email import EmailClient
 from .services.httpclient import HTTPClient
 from .services.telegram import TelegramClient
@@ -37,9 +37,10 @@ def init_context():
 
     try:
         c.set("jinjaenv", Environment(loader=FileSystemLoader(TEMPLATES_FOLDER)))
-        c.set("emailc", EmailClient())
         c.set("httpc", HTTPClient(trust_env=True))
-        c.set("tgc", TelegramClient(c.get("httpc"), c.get("jinjaenv")))
+        if BOT_ENABLED:
+            c.set("tgc", TelegramClient(c.get("httpc"), c.get("jinjaenv")))
+            c.set("emailc", EmailClient())
     except SMTPAuthenticationError as e:
         logger.error(e)
         sys.exit(1)
@@ -49,6 +50,7 @@ def init_context():
     @atexit.register
     def cleanup():
         """Cleanup resources"""
-        c.get("tgc").close()
-        c.get("emailc").close()
+        if BOT_ENABLED:
+            c.get("tgc").close()
+            c.get("emailc").close()
         c.get("httpc").close()

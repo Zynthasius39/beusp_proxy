@@ -167,110 +167,105 @@ class TelegramClient:
             return
         logger.info("User '@%s' tried to verify code: %s", user_id, m.group(1))
 
-        db_con = get_db()
-        db_cur = db_con.cursor()
-        db_res = db_cur.execute(
-            """
-            SELECT
-                owner_id,
-                verify_date
-            FROM
-                Verifications
-            WHERE
-                verified = FALSE AND
-                verify_service = 0 AND
-                verify_code = ?
-            ORDER BY verify_date DESC;
-        """,
-            (m.group(1),),
-        ).fetchone()
-        if not db_res:
-            db_con.close()
-            self.send_template("verify_invalid", chat_id, user_id)
-            logger.info(
-                "User '@%s' is not registered or sent an invalid code.", user_id
+        with get_db() as db_con:
+            db_cur = db_con.cursor()
+            db_res = db_cur.execute(
+                """
+                SELECT
+                    owner_id,
+                    verify_date
+                FROM
+                    Verifications
+                WHERE
+                    verified = FALSE AND
+                    verify_service = 0 AND
+                    verify_code = ?
+                ORDER BY verify_date DESC;
+            """,
+                (m.group(1),),
+            ).fetchone()
+            if not db_res:
+                self.send_template("verify_invalid", chat_id, user_id)
+                logger.info(
+                    "User '@%s' is not registered or sent an invalid code.", user_id
+                )
+                return
+
+            owner_id = db_res["owner_id"]
+
+            if (
+                math.floor(
+                    (
+                        datetime.now() - datetime.fromisoformat(db_res["verify_date"])
+                    ).total_seconds()
+                    / 60
+                )
+                > 9
+            ):
+                self.send_template("verify_expired", chat_id, user_id)
+                logger.info("User '@%s'`s verification code has been expired")
+                return
+
+            db_cur.execute(
+                """
+                UPDATE
+                    Verifications
+                SET
+                    verified = TRUE,
+                    verify_item = ?
+                WHERE
+                    verify_code = ? AND
+                    verify_service = 0 AND
+                    verified = FALSE;
+            """,
+                (user_id, m.group(1)),
             )
-            return
+            db_con.commit()
 
-        owner_id = db_res["owner_id"]
+            db_res = db_cur.execute(
+                """
+                INSERT INTO
+                    Telegram_Subscribers
+                (owner_id, telegram_user_id, telegram_chat_id)
+                VALUES
+                    (?, ?, ?)
+                RETURNING
+                    telegram_id;
+            """,
+                (owner_id, user_id, chat_id),
+            ).fetchone()
 
-        if (
-            math.floor(
-                (
-                    datetime.now() - datetime.fromisoformat(db_res["verify_date"])
-                ).total_seconds()
-                / 60
-            )
-            > 9
-        ):
-            db_con.close()
-            self.send_template("verify_expired", chat_id, user_id)
-            logger.info("User '@%s'`s verification code has been expired")
-            return
+            if not db_res:
+                db_con.rollback()
+                logger.error(
+                    "Couldn't insert a telegram subscription: (%d, %d, %s)",
+                    owner_id,
+                    chat_id,
+                    user_id,
+                )
 
-        db_cur.execute(
-            """
-            UPDATE
-                Verifications
-            SET
-                verified = TRUE,
-                verify_item = ?
-            WHERE
-                verify_code = ? AND
-                verify_service = 0 AND
-                verified = FALSE;
-        """,
-            (user_id, m.group(1)),
-        )
-        db_con.commit()
+            telegram_id = db_res["telegram_id"]
+            db_con.commit()
 
-        db_res = db_cur.execute(
-            """
-            INSERT INTO
-                Telegram_Subscribers
-            (owner_id, telegram_user_id, telegram_chat_id)
-            VALUES
-                (?, ?, ?)
-            RETURNING
-                telegram_id;
-        """,
-            (owner_id, user_id, chat_id),
-        ).fetchone()
-
-        if not db_res:
-            db_con.rollback()
-            db_con.close()
-            logger.error(
-                "Couldn't insert a telegram subscription: (%d, %d, %s)",
-                owner_id,
-                chat_id,
-                user_id,
-            )
-
-        telegram_id = db_res["telegram_id"]
-        db_con.commit()
-
-        db_res = db_cur.execute(
-            """
-            UPDATE Students
-            SET active_telegram_id = ?
-            WHERE id = ?
-        """,
-            (telegram_id, owner_id),
-        )
-
-        if not db_res.rowcount > 0:
-            db_con.rollback()
-            db_con.close()
-            logger.error(
-                "Couldn't update student's active telegram subscription: (%d, %d)",
-                owner_id,
-                telegram_id,
+            db_res = db_cur.execute(
+                """
+                UPDATE Students
+                SET active_telegram_id = ?
+                WHERE id = ?
+            """,
+                (telegram_id, owner_id),
             )
 
-        self.send_template("verify_success", chat_id, user_id)
-        db_con.commit()
-        db_con.close()
+            if not db_res.rowcount > 0:
+                db_con.rollback()
+                logger.error(
+                    "Couldn't update student's active telegram subscription: (%d, %d)",
+                    owner_id,
+                    telegram_id,
+                )
+
+            self.send_template("verify_success", chat_id, user_id)
+            db_con.commit()
 
     def unsubscribe(self, chat_id, user_id):
         """Unsubscribes user
@@ -304,7 +299,6 @@ class TelegramClient:
 
         if not db_res.rowcount > 0:
             db_con.rollback()
-            db_con.close()
             self.send_template("unsubscribe_nosub", chat_id, user_id, WEB_HOSTNAME)
             logger.info(
                 "Couldn't unsubscribe for telegram user '@%s'. No subscriptions",

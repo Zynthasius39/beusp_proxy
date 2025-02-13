@@ -116,113 +116,108 @@ def verify_email(code):
     """
     logger = logging.getLogger(__name__)
 
-    db_con = get_db()
-    db_cur = db_con.cursor()
-    db_res = db_cur.execute(
-        """
-        SELECT
-            owner_id,
-            verify_date,
-            verify_item
-        FROM
-            Verifications
-        WHERE
-            verified = FALSE AND
-            verify_service = 1 AND
-            verify_code = ?
-        ORDER BY verify_date DESC;
-    """,
-        (code,),
-    ).fetchone()
-    if not db_res:
-        db_con.close()
-        return jinja_env.get_template("verify_failed.html").render(
-            assets_link=WEB_HOSTNAME
+    with get_db() as db_con:
+        db_cur = db_con.cursor()
+        db_res = db_cur.execute(
+            """
+            SELECT
+                owner_id,
+                verify_date,
+                verify_item
+            FROM
+                Verifications
+            WHERE
+                verified = FALSE AND
+                verify_service = 1 AND
+                verify_code = ?
+            ORDER BY verify_date DESC;
+        """,
+            (code,),
+        ).fetchone()
+        if not db_res:
+            return jinja_env.get_template("verify_failed.html").render(
+                assets_link=WEB_HOSTNAME
+            )
+
+        owner_id = db_res["owner_id"]
+        email = db_res["verify_item"]
+
+        if (
+            math.floor(
+                (
+                    datetime.now() - datetime.fromisoformat(db_res["verify_date"])
+                ).total_seconds()
+                / 60
+            )
+            > 29
+        ):
+            logger.info("%s - verification code has been expired", email)
+            return jinja_env.get_template("verify_failed.html").render(
+                assets_link=WEB_HOSTNAME
+            )
+
+        db_res = db_cur.execute(
+            """
+            UPDATE
+                Verifications
+            SET
+                verified = TRUE
+            WHERE
+                verify_code = ? AND
+                verify_item = ? AND
+                verify_service = 1 AND
+                verified = FALSE;
+        """,
+            (code, email),
+        )
+        db_con.commit()
+        if not db_res.rowcount > 0:
+            db_con.rollback()
+            logger.info("%s - couldn't find the email, even though found a matching code", email)
+            return jinja_env.get_template("verify_failed.html").render(
+                assets_link=WEB_HOSTNAME
+            )
+
+        db_res = db_cur.execute(
+            """
+            INSERT INTO
+                Email_Subscribers
+            (owner_id, email)
+            VALUES
+                (?, ?)
+            RETURNING
+                email_id;
+        """,
+            (owner_id, email),
+        ).fetchone()
+
+        if not db_res:
+            db_con.rollback()
+            logger.error("Couldn't insert a email subscription: (%d, %s)", owner_id, email)
+
+        email_id = db_res["email_id"]
+        db_con.commit()
+
+        db_res = db_cur.execute(
+            """
+            UPDATE Students
+            SET active_email_id = ?
+            WHERE id = ?
+        """,
+            (email_id, owner_id),
         )
 
-    owner_id = db_res["owner_id"]
-    email = db_res["verify_item"]
+        if not db_res.rowcount > 0:
+            db_con.rollback()
+            logger.error(
+                "Couldn't update student's active email subscription: (%d, %d, %s)",
+                owner_id,
+                email_id,
+                email,
+            )
 
-    if (
-        math.floor(
-            (
-                datetime.now() - datetime.fromisoformat(db_res["verify_date"])
-            ).total_seconds()
-            / 60
-        )
-        > 29
-    ):
-        db_con.close()
-        logger.info("%s - verification code has been expired", email)
-        return jinja_env.get_template("verify_failed.html").render(
-            assets_link=WEB_HOSTNAME
-        )
+        db_con.commit()
 
-    db_res = db_cur.execute(
-        """
-        UPDATE
-            Verifications
-        SET
-            verified = TRUE
-        WHERE
-            verify_code = ? AND
-            verify_item = ? AND
-            verify_service = 1 AND
-            verified = FALSE;
-    """,
-        (code, email),
-    )
-    db_con.commit()
-    if not db_res.rowcount > 0:
-        db_con.rollback()
-        db_con.close()
-        logger.info("%s - couldn't find the email, even though found a matching code", email)
-        return jinja_env.get_template("verify_failed.html").render(
-            assets_link=WEB_HOSTNAME
-        )
-
-    db_res = db_cur.execute(
-        """
-        INSERT INTO
-            Email_Subscribers
-        (owner_id, email)
-        VALUES
-            (?, ?)
-        RETURNING
-            email_id;
-    """,
-        (owner_id, email),
-    ).fetchone()
-
-    if not db_res:
-        db_con.rollback()
-        db_con.close()
-        logger.error("Couldn't insert a email subscription: (%d, %s)", owner_id, email)
-
-    email_id = db_res["email_id"]
-    db_con.commit()
-
-    db_res = db_cur.execute(
-        """
-        UPDATE Students
-        SET active_email_id = ?
-        WHERE id = ?
-    """,
-        (email_id, owner_id),
-    )
-
-    if not db_res.rowcount > 0:
-        db_con.rollback()
-        db_con.close()
-        logger.error(
-            "Couldn't update student's active email subscription: (%d, %d, %s)",
-            owner_id,
-            email_id,
-            email,
-        )
-
-    db_con.commit()
-    db_con.close()
     return jinja_env.get_template("verify_success.html").render(
         assets_link=WEB_HOSTNAME
     )

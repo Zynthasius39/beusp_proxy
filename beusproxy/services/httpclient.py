@@ -28,6 +28,7 @@ class HTTPClient:
         proxy=None,
         **kwargs
     ):
+        # pylint: disable=R0913
         self._loop = asyncio.new_event_loop() if not loop else loop
         self._ssl = ssl
 
@@ -60,6 +61,9 @@ class HTTPClient:
             res = self.submit_coro(
                 self.request_coro, method, url, allow_redirects=allow_redirects, **kwargs
             ).result()
+        except TimeoutError as e:
+            logging.getLogger(__name__).error(e)
+            raise HTTPClientError(e) from e
         except ClientError as e:
             logging.getLogger(__name__).error(e)
             sys.exit(1)
@@ -145,3 +149,6 @@ class HTTPClient:
         return await self._session.request(
             method, url, allow_redirects=allow_redirects, ssl=self._ssl, **kwargs
         )
+
+class HTTPClientError(ClientError):
+    """HTTPClient Error Base Exception"""

@@ -60,12 +60,14 @@ def grades2(html):
     rename_table = {
         "ABS.": "absents",
         "AVG": "sum",
+        "ORT": "sum",
         "IGB": "calc",
         "SDF1": "act1",
         "SDF2": "act2",
         "SDF3": "act3",
         "TSI": "iw",
         "DVM": "att",
+        "Dav": "att",
         "SSI": "final",
         "ƏI": "addfinal",
         "TI": "refinal",
@@ -73,8 +75,11 @@ def grades2(html):
         "M": "m",
         "L": "l",
         "Course code": "course_code",
+        "Dərs kodu": "course_code",
         "Course name": "course_name",
+        "Dərsin adı": "course_name",
         "ECTS": "ects",
+        "AKTS": "ects",
     }
 
     # New grade scale
@@ -119,7 +124,7 @@ def grades2(html):
                     row.append(td.text.strip())
             table.append(row)
 
-        m = re.search(r"(\d{4})-\d{4} ([12]). term", table_ys[ys_count].text.strip())
+        m = re.search(r"(\d{4})-\d{4} ([12]). (term|semester)", table_ys[ys_count].text.strip())
         ys_cur = f"{m.group(1)}#{m.group(2)}"
         ys_count += 1
         # Checking if SDF3 exists in header row.

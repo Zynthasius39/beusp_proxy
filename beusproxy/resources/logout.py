@@ -1,10 +1,10 @@
-from aiohttp import ClientError
 from flask import current_app as app, make_response
 from flask_restful import Resource, abort, reqparse
 
 from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import get_db
 from ..context import c
+from ..services.httpclient import HTTPClientError
 
 
 class LogOut(Resource):
@@ -43,49 +43,46 @@ class LogOut(Resource):
         )
         args = rp.parse_args()
 
-        db_con = get_db()
-        db_cur = db_con.cursor()
+        with get_db() as db_con:
+            db_cur = db_con.cursor()
 
-        # Querying current session to see if it exists
-        db_res = db_cur.execute(
-            """
-            SELECT ss.owner_id FROM Student_Sessions ss
-            INNER JOIN Students s
-            ON ss.owner_id = s.id
-            WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
-            LIMIT 1;
-        """,
-            (args.get("StudentID"), args.get("SessionID")),
-        ).fetchone()
-        if db_res is None:
-            db_con.close()
-            abort(400, help="Couldn't logout")
+            # Querying current session to see if it exists
+            db_res = db_cur.execute(
+                """
+                SELECT ss.owner_id FROM Student_Sessions ss
+                INNER JOIN Students s
+                ON ss.owner_id = s.id
+                WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
+                LIMIT 1;
+            """,
+                (args.get("StudentID"), args.get("SessionID")),
+            ).fetchone()
+            if db_res is None:
+                abort(400, help="Couldn't logout")
 
-        # Querying all sessions with ids which are not logged out yet
-        owner_id = db_res["owner_id"]
-        db_res = db_cur.execute(
-            """
-            SELECT ss.session_id FROM Student_Sessions ss
-            WHERE ss.owner_id = ? AND ss.logged_out = 0
-            ORDER BY ss.login_date DESC;
-        """,
-            (owner_id,),
-        ).fetchall()
-        if len(db_res) == 0:
-            db_con.close()
-            abort(400, help="Couldn't logout")
+            # Querying all sessions with ids which are not logged out yet
+            owner_id = db_res["owner_id"]
+            db_res = db_cur.execute(
+                """
+                SELECT ss.session_id FROM Student_Sessions ss
+                WHERE ss.owner_id = ? AND ss.logged_out = 0
+                ORDER BY ss.login_date DESC;
+            """,
+                (owner_id,),
+            ).fetchall()
+            if len(db_res) == 0:
+                abort(400, help="Couldn't logout")
 
-        # Updating database all sessions with fetched ids
-        db_cur.execute(
-            """
-            UPDATE Student_Sessions
-            SET logged_out = 1
-            WHERE owner_id = ?
-        """,
-            (owner_id,),
-        )
-        db_con.commit()
-        db_con.close()
+            # Updating database all sessions with fetched ids
+            db_cur.execute(
+                """
+                UPDATE Student_Sessions
+                SET logged_out = 1
+                WHERE owner_id = ?
+            """,
+                (owner_id,),
+            )
+            db_con.commit()
 
         try:
             ress = httpc.gather(
@@ -103,7 +100,7 @@ class LogOut(Resource):
                     for session_id in list(map(lambda row: row["session_id"], db_res))
                 ]
             )
-        except ClientError as ce:
+        except HTTPClientError as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 

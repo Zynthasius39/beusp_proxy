@@ -164,8 +164,6 @@ if BOT_ENABLED:
 
 # Export config constants
 
-print(REQUEST_TIMEOUT)
-
 attrs = [*locals()]
 __all__ = []
 for attr in attrs:

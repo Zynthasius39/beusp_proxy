@@ -35,24 +35,24 @@ def msg2(text):
     # Why would you even do that?
     soup = BeautifulSoup(json.loads(text)["DATA"], "html.parser")
 
-    msg = {}
+    msg_table = {}
     header = soup.find_all("tr")
     body = soup.find("div", class_="mailbox-read-message")
 
-    # If all fields exist, append them to msg.
+    # If all fields exist, append them to msg_table.
     if header[0] and header[1] and header[2] and body:
-        msg["from"] = re.sub(
+        msg_table["from"] = re.sub(
             r"\s\s+", " ", header[0].find_all("td")[1].text.strip().replace("\n", "")
         )
-        msg["date"] = re.sub(
+        msg_table["date"] = re.sub(
             r"\s\s+", " ", header[1].find_all("td")[1].text.strip().replace("\n", "")
         )
-        msg["subject"] = re.sub(
+        msg_table["subject"] = re.sub(
             r"\s\s+", " ", header[2].find_all("td")[1].text.strip().replace("\n", "")
         )
-        msg["body"] = re.sub(r"\s\s+", " ", body.text.strip())
+        msg_table["body"] = re.sub(r"\s\s+", " ", body.text.strip())
 
-    return msg
+    return msg_table
 
 
 def msg_id(html):

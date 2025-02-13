@@ -71,7 +71,9 @@ def program2(html):
     ae_table = {}
     # Find AE tr tags.
     ae_bs = soup.find(
-        lambda tag: (tag.name == "div" and tag.text == " AE - Area Elective Courses")
+        lambda tag: tag.name == "div"
+        and tag.text
+        in {"\xa0AE - Area Elective Courses", "\xa0AE - İxtisas seçməli dərslər"}
     ).parent.parent.parent.parent.find_all("tr")
 
     if ae_bs:
@@ -97,7 +99,12 @@ def program2(html):
     nae_table = {}
     # Find NAE tr tags.
     nae_bs = soup.find(
-        lambda tag: tag.name == "div" and tag.text == " NAE - Non-Area Elective Courses"
+        lambda tag: tag.name == "div"
+        and tag.text
+        in {
+            "\xa0NAE - Non-Area Elective Courses",
+            "\xa0NAE - Qeyri ixtisas seçməli dərslər",
+        }
     ).parent.parent.parent.parent.find_all("tr")
     if nae_bs:
         # Iterating through tr tags while ignoring header and last two empty rows.

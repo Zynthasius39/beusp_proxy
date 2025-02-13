@@ -1,9 +1,9 @@
-from aiohttp import ClientError, ClientResponseError
 from flask import current_app as app, make_response
 from flask_restful import Resource, abort, reqparse
 
 from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
+from ..services.httpclient import HTTPClientError
 
 
 class StudPhoto(Resource):
@@ -59,7 +59,7 @@ class StudPhoto(Resource):
                 abort(502, help="Bad response from root server")
 
             mid_res = httpc.cr_read(mid_res)
-        except (ClientError, ClientResponseError) as ce:
+        except HTTPClientError as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 
