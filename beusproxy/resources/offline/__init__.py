@@ -6,6 +6,8 @@ from .logout import LogOut
 from .messages import Msg
 from .programs import Program
 from .resource import Res
+from .status import Status
+from .settings import Settings
 from .studphoto import StudPhoto
 from .verify import Verify
 
@@ -20,6 +22,8 @@ __all__ = [
     "Msg",
     "Program",
     "Res",
+    "Status",
+    "Settings",
     "StudPhoto",
     "Verify",
 ]

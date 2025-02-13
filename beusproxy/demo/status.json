@@ -1,0 +1,16 @@
+{
+  "status": {
+    "students_registered": 1,
+    "subscriptions": 0,
+    "root_server_is_up": true,
+    "sha256sums": [
+      "59c9e46c08bb238d212c02aafc016b7ade2ae034d141e297be053578a8e66da9 index.php",
+      "1d750059806e36fa731f0b045e2844bf52e150a404ab01ac5224dc7e10bbf040 general.js",
+      "4eb37bb3b4f806a89aeddb2567c56d19c8f6ac8b2d998c2694dd044e6754a1a7 adminlte.js",
+      "78422f24b57a5ce35b44a1cfc46ce4e914dacab15188f99452a8c76f9c4a434c demo.js",
+      "f17cd532806a7f2b55bbc8b8ad6b9a7b60d6d2d9b9cfc9b8e2351fceb05c1b0c datepicker-simple.js",
+      "87083882cc6015984eb0411a99d3981817f5dc5c90ba24f0940420c5548d82de jquery.min.js",
+      "53964478a7c634e8dad34ecc303dd8048d00dce4993906de1bacf67f663486ef bootstrap.min.js"
+    ]
+  }
+}
