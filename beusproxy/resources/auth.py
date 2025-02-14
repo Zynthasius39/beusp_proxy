@@ -57,6 +57,7 @@ class Auth(Resource):
             502:
                 description: Bad response from root server
         """
+        # TODO: OpenAPI rewrite
         httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
@@ -85,10 +86,13 @@ class Auth(Resource):
             mid_res = httpc.request(
                 "POST",
                 f"{ROOT}auth.php",
-                data=f"username={student_id}&password={password}&LogIn=",
+                data={
+                    "username": student_id,
+                    "password": password,
+                    "LogIn": "",
+                },
                 headers={
                     "Host": HOST,
-                    "Content-Type": "application/x-www-form-urlencoded",
                     "Cookie": f"PHPSESSID={sessid}; ",
                     "User-Agent": USER_AGENT,
                 },

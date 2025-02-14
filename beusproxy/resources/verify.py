@@ -42,12 +42,13 @@ class Verify(Resource):
             mid_res = httpc.request(
                 "POST",
                 ROOT,
-                data="ajx=1",
+                data={
+                    "ajx": 1
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                    "Content-Type": "application/x-www-form-urlencoded",
                 },
             )
 

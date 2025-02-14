@@ -59,13 +59,17 @@ class Grades(Resource):
             mid_res = httpc.request(
                 "POST",
                 ROOT,
-                data="ajx=1&mod=grades&action=GetGrades"
-                f"&yt={year}#{semester}&{round(time.time())}",
+                data={
+                    "ajx": 1,
+                    "mod": "grades",
+                    "action": "GetGrades",
+                    "yt": f"{year}#{semester}",
+                    round(time.time()): "",
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                    "Content-Type": "application/x-www-form-urlencoded",
                 },
             )
 
@@ -136,12 +140,17 @@ class GradesAll(Resource):
             mid_res = httpc.request(
                 "POST",
                 ROOT,
-                data=f"ajx=1&mod=grades&action=GetGrades&yt=1#1&{round(time.time())}",
+                data={
+                    "ajx": 1,
+                    "mod": "grades",
+                    "action": "GetGrades",
+                    "yt": "1#1",
+                    round(time.time()): "",
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                    "Content-Type": "application/x-www-form-urlencoded",
                 },
             )
 

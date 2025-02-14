@@ -48,7 +48,11 @@ class Deps(Resource):
         try:
             mid_res = httpc.request(
                 "GET",
-                f"{ROOT}?mod=viewdeps&d={code}",
+                ROOT,
+                params={
+                    "mod": "viewdeps",
+                    "d": code,
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",

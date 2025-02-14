@@ -48,12 +48,16 @@ class Settings(Resource):
         if args.get("lang") and args.get("lang").upper() in langs:
             mid_res = c.get("httpc").request(
                 "GET",
-                f"{ROOT}?mod=setting&a=update_interface_lang&lang={args.get("lang")}",
+                ROOT,
+                params={
+                    "mod": "setting",
+                    "a": "update_interface_lang",
+                    "lang": args.get("lang"),
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                    "Content-Type": "application/x-www-form-urlencoded",
                 },
             )
             if not mid_res.status:

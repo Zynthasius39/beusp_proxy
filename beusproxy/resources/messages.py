@@ -44,7 +44,10 @@ class Msg(Resource):
         try:
             mid_res = httpc.request(
                 "GET",
-                f"{ROOT}?mod=msg",
+                ROOT,
+                params={
+                    "mod": msg,
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",

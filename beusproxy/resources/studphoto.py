@@ -47,7 +47,10 @@ class StudPhoto(Resource):
         try:
             mid_res = httpc.request(
                 "GET",
-                f"{ROOT}stud_photo.php?ses={args.get("ImgID")}",
+                f"{ROOT}stud_photo.php",
+                params={
+                    "ses": args.get("ImgID"),
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",

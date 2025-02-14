@@ -57,7 +57,11 @@ class Program(Resource):
         try:
             mid_res = httpc.request(
                 "GET",
-                f"{ROOT}?mod=progman&pc={code}&py={year}",
+                ROOT,
+                params={
+                    "mod": "progman",
+                    "pc": f"{code}&py={year}",
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",

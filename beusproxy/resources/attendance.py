@@ -57,12 +57,16 @@ class AttendanceBySemester(Resource):
             mid_res = httpc.request(
                 "POST",
                 ROOT,
-                data=f"ajx=1&mod=ejurnal&action=getCourses&ysem={year}#{semester}",
+                data={
+                    "ajx": 1,
+                    "mod": "ejurnal",
+                    "action": "getCourses",
+                    "ysem": f"{year}#{semester}",
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                    "Content-Type": "application/x-www-form-urlencoded",
                 },
             )
 
@@ -127,12 +131,16 @@ class AttendanceByCourse(Resource):
             mid_res = httpc.request(
                 "POST",
                 ROOT,
-                data=f"ajx=1&mod=ejurnal&action=viewCourse&derst={course}",
+                data={
+                    "ajx": 1,
+                    "mod": "ejurnal",
+                    "action": "viewCourse",
+                    "derst": course,
+                },
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
-                    "Content-Type": "application/x-www-form-urlencoded",
                 },
             )
 

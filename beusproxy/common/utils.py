@@ -55,10 +55,14 @@ def read_msgs(http_client: HTTPClient, sessid, msg_ids):
             http_client.request_coro(
                 "POST",
                 ROOT,
-                data=f"ajx=1&mod=msg&action=ShowReceivedMessage&sm_id={id}",
+                data={
+                    "ajx": 1,
+                    "mod": "msg",
+                    "action": "ShowReceivedMessage",
+                    "sm_id": id,
+                },
                 headers={
                     "Host": HOST,
-                    "Content-Type": "application/x-www-form-urlencoded",
                     "Cookie": f"PHPSESSID={sessid}; ",
                     "User-Agent": USER_AGENT,
                 },
