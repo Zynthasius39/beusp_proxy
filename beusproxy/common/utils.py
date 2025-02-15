@@ -2,6 +2,8 @@ import json
 import os
 import random
 import sqlite3
+from datetime import datetime
+from dateutil import parser
 
 from bs4 import BeautifulSoup
 from flask import g, abort
@@ -179,6 +181,31 @@ def is_invalid(html):
     Returns:
         dict: JSON output
     """
-    if not html.find("<html>") == -1:
+    if html.find("<html>") != -1:
         return True
     return False
+
+def parse_date(date, frmt=None, *, default=datetime(1970, 1, 1)):
+    """Parse weirdly formatted date into readable format
+    Returns same date, if format is not recognized.
+
+    Args:
+        format (str): Input format
+        date (str): Input date
+
+    Returns:
+        str: Output date
+    """
+    date = date.replace(" PM", "").replace("AM", "")
+    try:
+        date = parser.parse(date, default=default)
+        if not frmt:
+            dt = date.isoformat()
+        else:
+            dt = date.strftime(frmt)
+    except ValueError:
+        dt = date
+
+    # Clear unnecessary segments.
+    dt = dt.replace("T00:00:00", "").replace("1970-", "")
+    return dt

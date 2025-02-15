@@ -1,0 +1,388 @@
+openapi: 3.0.3
+swagger: 2.0
+info:
+  title: "Baku Engineering University: TMS/PMS - Rest API"
+  contact:
+    email: super.alekberov+beusp@proton.me
+  license:
+    name: GPL3 # TODO: License
+    url: https://alakx.com
+  version: 1.0.1
+  # TODO: ToS and Author
+servers:
+  - url: /
+    description: Production server (uses root server)
+  - url: http://localhost:5001/
+    description: Offline server (uses demo data)
+components:
+  schemas:
+    AttendanceEntry:
+      type: object
+      properties:
+        datetime:
+          type: string
+          example: 20-02T11:10
+        place:
+          type: integer
+          example: 238
+        present:
+          type: boolean
+          example: true
+    CourseAttendanceDetailed:
+      type: object
+      properties:
+        courseCode:
+          type: string
+          example: IT254
+        courseName:
+          type: string
+          example: Data structure and algorithms
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceEntry"
+    CourseAttendance:
+      type: object
+      properties:
+        absent:
+          type: integer
+          example: 1
+        absentPercent:
+          type: integer
+          example: 7
+        atds:
+          type: integer
+          example: 13
+        courseEducator:
+          type: string
+          example: John Doe
+        courseName:
+          type: string
+          example: Principles of Entrepreneurship and Introduction to Business
+        credit:
+          type: string
+          example: 1+1+0
+        hours:
+          type: integer
+          example: 15
+        limit:
+          type: number
+          format: float
+          example: 3.75
+    Department:
+      type: object
+      properties:
+        depCode:
+          type: string
+          example: DEP_IT_PROG
+        depName:
+          type: string
+          example: Information technologies and programming
+        depPrefixes:
+          type: array
+          items:
+            type: string
+            example: IT
+    Program:
+      type: object
+      properties:
+        faculty:
+          type: string
+          example: Faculty of Computer and Information Technologies
+        lang:
+          type: string
+          example: az
+        progCode:
+          type: integer
+          example: 10106
+        progName:
+          type: string
+          example: Information Technologies (Bachelor)
+        year:
+          type: integer
+          example: 2022
+    SemesterTable:
+      type: object
+      properties:
+        canRequestAll:
+          type: boolean
+          example: true
+        entries:
+          type: array
+          items:
+            type: object
+            parameters:
+              semester:
+                type: integer
+                example: 1
+              year:
+                type: integer
+                example: 2024
+    HomeTable:
+      type: object
+      properties:
+        documents:
+          type: object
+          additionalParameters:
+            document: path
+          example:
+            documents:
+              İntizam qaydaları: İntizam qaydaları.pdf
+        image:
+          type: string
+          example: 290bfdbca904e59e4566ca862be9bf50
+        studentInfo:
+          fullName:
+            type: string
+            example: Sekiro Wolf Owl
+          advisor:
+            type: string
+            example: Ülviyyə Quliyeva
+          beuEmail:
+            type: string
+            example: sekiro@std.beu.edu.az
+          birthDate:
+            type: string
+            example: 2025-01-09
+          eduDebt:
+            type: object
+            parameters:
+              year:
+                type: integer
+                example: 2022
+              semester:
+                type: integer
+                example: 1
+              amount:
+                type: integer
+                example: 5000
+              paymentAnnual:
+                type: integer
+                example: 2500
+              paymentType:
+                type: string
+                example: DS
+          dissTopic:
+            type: string
+            example: Why should I be shura?
+          dormDebt:
+            type: integer
+            example: 250
+          lastLogin:
+            type: object
+            parameters:
+              datetime:
+                type: string
+                example: 2025-02-15T16:50:00
+              ip:
+                type: string
+                example: 172.20.1.1
+          presidentialScholar:
+            type: boolean
+            example: false
+          speciality:
+            program:
+              type: string
+              example: İnformasiya Texnologiyaları
+            lang:
+              type: string
+              example: en
+            year:
+              type: integer
+              example: 2022
+          groupCode:
+            type: string
+            example: 1162i
+          registerDate:
+            type: string
+            example: 2022-07-09
+          dimScore:
+            type: number
+            format: float
+            example: 628.6
+          stateFunded:
+            type: boolean
+            example: true
+          status:
+            type: string
+            example: studying
+    FaqItem:
+      type: object
+      properties:
+        question:
+          type: string
+          example: Təhsil haqqı borcu nə vaxt ödənilməlidir?
+        answer:
+          type: string
+          example: Yeni qəbul olan tələbə ilk tədris ili üçün illik təhsil haqqını tam həcmdə müqavilə imzalandığı gün ödəyir.
+    Message:
+      type: object
+      properties:
+        date:
+          type: string
+          example: 2024-12-12T15:03:00
+        from:
+          type: string
+          example: Leyla Zeynallı-Hüseynzadə
+        subject:
+          type: string
+          example: ATL Seminar
+        body:
+          type: string
+          example: A big ahh message to be ignored
+    Course:
+      type: object
+      properties:
+        courseType:
+          type: string
+          enum: [def, ae, nae, lang]
+        ects:
+          type: integer
+          example: 7
+        theory:
+          type: integer
+          example: 2
+        pr:
+          type: string
+          example: 2+0
+      additionalParameters:
+        courseCode:
+          type: string
+          example: IT205
+        courseName:
+          type: string
+          example: Object oriented programming
+    CourseRef:
+      type: object
+      properties:
+        newCourseCode:
+          type: string
+          example: COMP304
+        newCourseName:
+          type: string
+          example: Introduction to Artificial Intelligence
+        oldCourseCode:
+          type: string
+          example: 01010803
+        oldCourseName:
+          type: string
+          example: Introduction to Artificial Intelligence
+        year:
+          type: integer
+          example: 2013
+    ProgramDetailed:
+      type: object
+      properties:
+        areaCourses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Course"
+        nonAreaCourses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Course"
+        courses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Course"
+        courseRefs:
+          type: array
+          items:
+            $ref: "#/components/schemas/CourseRef"
+    Announce:
+      type: object
+      properties:
+        body:
+          type: string
+          example: A big ahh announcement to be ignored
+        date:
+          type: string
+          example: 2025-01-06T00:00:00
+        name:
+          type: string
+          example: Ders Qeydiyyatı
+    TranscriptEntry:
+      type: object
+      properties:
+        credit:
+          type: integer
+          example: 3
+        grade:
+          type: integer
+          example: 3
+        hours:
+          type: integer
+          example: 3
+        gradeLetter:
+          type: string
+          enum: ["A", "B", "C", "D", "E", "F", "ip"]
+          example: "ip" #In progress
+        repeat:
+          type: string
+          example: ""
+    Transcript:
+      type: object
+      properties:
+        entryDate:
+          type: string
+          example: 2022-09-07
+        faculty:
+          type: string
+          example: Faculty of Computer and Information Technologies
+        graduateDate:
+          type: string
+          example: 2026-09-07
+        studentId:
+          type: integer
+          example: 000000000
+        level:
+          type: string
+          example: Bachelor
+        fullName:
+          type: string
+          example: Sekiro Wolf
+        program:
+          type: string
+          example: Information Technologies (EN)
+        body:
+          type: object
+          properties:
+            totalEarnedCredits:
+              type: integer
+              example: 150
+            totalEarnedEcts:
+              type: integer
+              example: 150
+            totalGpa:
+              type: number
+              format: float
+              example: 94.54
+          additionalParameters:
+            yearAndSemester:
+              type: object
+              properties:
+                gpa:
+                  type: number
+                  format: float
+                  example: 94.54
+                sac:
+                  type: string
+                  example: 0t
+                spa:
+                  type: integer
+                  example: 0
+                tacc:
+                  type: integer
+                  example: 150
+                tatc:
+                  type: integer
+                  example: 150
+                totalCredits:
+                  type: integer
+                  example: 30
+                totalHours:
+                  type: integer
+                  example: 19
+              additionalParameters:
+                courseCode:
+                  $ref: "#/components/schemas/TranscriptEntry"

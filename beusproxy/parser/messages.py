@@ -3,6 +3,8 @@ import re
 
 from bs4 import BeautifulSoup
 
+from ..common.utils import parse_date
+
 
 def msg(html):
     """Message IDs parser
@@ -31,7 +33,7 @@ def msg2(text):
         dict: JSON output
     """
     # Seperate HTML from JSON
-    # It is designed to also
+    # It is designed to keep DATA and CODE together.
     # Why would you even do that?
     soup = BeautifulSoup(json.loads(text)["DATA"], "html.parser")
 
@@ -44,9 +46,11 @@ def msg2(text):
         msg_table["from"] = re.sub(
             r"\s\s+", " ", header[0].find_all("td")[1].text.strip().replace("\n", "")
         )
-        msg_table["date"] = re.sub(
+        # Parse insane date formats to iso format
+        # e.g. 15:03 PM ? Really ?
+        msg_table["date"] = parse_date(re.sub(
             r"\s\s+", " ", header[1].find_all("td")[1].text.strip().replace("\n", "")
-        )
+        ))
         msg_table["subject"] = re.sub(
             r"\s\s+", " ", header[2].find_all("td")[1].text.strip().replace("\n", "")
         )

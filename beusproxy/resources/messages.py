@@ -46,7 +46,7 @@ class Msg(Resource):
                 "GET",
                 ROOT,
                 params={
-                    "mod": msg,
+                    "mod": "msg",
                 },
                 headers={
                     "Host": HOST,

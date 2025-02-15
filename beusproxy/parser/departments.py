@@ -10,13 +10,19 @@ def deps(text):
     Returns:
         dict: parsed JSON output
     """
-    # Translate fields.
-    text = text.replace("Code of the department", "dep_code")
-    text = text.replace("Department name", "dep_name")
-    text = text.replace("Department specific course code prefixes", "dep_prefix")
+    # New headers
+    headers = {
+        "Code of the department": "depCode",
+        "Department name": "depName",
+        "Department specific course code prefixes": "depPrefixes",
+        "Bölmə kodu": "depCode",
+        "Bölmənin adı": "depName",
+        "Bölməyə məxsus dərs kodu prefiksləri": "depPrefixes",
+    }
 
     soup = BeautifulSoup(text, "html.parser")
 
+    is_header_row = True
     # Collect table cells in a list for further processing.
     table = []
     # Find departments table with given class name.
@@ -24,25 +30,29 @@ def deps(text):
         row = []
         for td in tr.find_all("td")[:-1]:
             # Append striped cells.
-            row.append(td.text.strip())
+            if is_header_row and len(row) != 0:
+                # Translate header.
+                row.append(headers[td.text.strip()])
+            else:
+                row.append(td.text.strip())
         # Finally append the row to the list.
+        is_header_row = False
         table.append(row)
 
-    deps_table = {}
-    # Iterating through rows while ignoring header row.
-    for i in table[1:]:
-        row_name = ""
+    deps_list = []
+    # Iterating through rows while ignoring header and last empty row.
+    for i in table[1:-1]:
         row = {}
         # Iterating through cells with index.
         for inx, j in enumerate(i):
-            # If it is the number cell, assign it to be row key.
             if table[0][inx] == "№":
-                row_name = j
                 continue
+            if table[0][inx] == "depPrefixes":
+                j = j.split(", ")
             row[table[0][inx]] = j
-        deps_table[row_name] = row
+        deps_list.append(row)
 
-    return {"deps": deps_table}
+    return deps_list
 
 
 def deps2(text):
@@ -54,6 +64,19 @@ def deps2(text):
     Returns:
         dict: parsed JSON output
     """
+    headers = {
+        "Code": "progCode",
+        "Language": "lang",
+        "Program name (Specialty name)": "progName",
+        "Year": "year",
+        "Faculty": "faculty",
+        "Kodu": "progCode",
+        "Dil": "lang",
+        "Proqramın adı (İxtisasın adı)": "progName",
+        "İli": "year",
+        "Aid olduğu fakültə": "faculty"
+    }
+
     soup = BeautifulSoup(text, "html.parser")
 
     # Collect table cells in a list for further processing.
@@ -65,18 +88,20 @@ def deps2(text):
             row.append(td.text.strip())
         table.append(row)
 
-    deps_table = {}
+    deps_list = []
     # Iterating through rows in table while ignoring header row.
     for i in table[1:]:
-        row_name = ""
         row = {}
         # Iterating through cells with index.
-        for inx, j in enumerate(i):
-            # If it is the number cell, assign it to be row key.
-            if table[0][inx] == "№":
-                row_name = j
-                continue
-            row[table[0][inx]] = j
-        deps_table[row_name] = row
+        for inx, j in enumerate(i[1:]):
+            # Match and translate header.
+            header = headers[table[0][inx + 1]]
+            match header:
+                case "progCode" | "year":
+                    j = int(j)
+                case "lang":
+                    j = j.lower()
+            row[header] = j
+        deps_list.append(row)
 
-    return {"dep": deps_table}
+    return deps_list

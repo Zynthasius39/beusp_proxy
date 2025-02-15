@@ -12,6 +12,7 @@ def grades(text):
     Returns:
         dict: parsed JSON output
     """
+    # TODO: New specs
     soup = BeautifulSoup(text, "html.parser")
 
     grades_ops = []
@@ -27,12 +28,12 @@ def grades(text):
         else:
             grades_ops.append(
                 {
-                    "year": m.group(1),
-                    "semester": m.group(2),
+                    "year": int(m.group(1)),
+                    "semester": int(m.group(2)),
                 }
             )
 
-    return {"grade_options": grades_ops, "can_request_all": all_enabled}
+    return {"entries": grades_ops, "canRequestAll": all_enabled}
 
 
 def grades2(html):
@@ -74,10 +75,10 @@ def grades2(html):
         "N": "n",
         "M": "m",
         "L": "l",
-        "Course code": "course_code",
-        "Dərs kodu": "course_code",
-        "Course name": "course_name",
-        "Dərsin adı": "course_name",
+        "Course code": "courseCode",
+        "Dərs kodu": "courseCode",
+        "Course name": "courseName",
+        "Dərsin adı": "courseName",
         "ECTS": "ects",
         "AKTS": "ects",
     }
@@ -156,10 +157,10 @@ def grades2(html):
                 if table[0][inx] == "calc":
                     continue
                 # Remove whitespace in all cells except course name.
-                if not table[0][inx] == "course_name":
+                if not table[0][inx] == "courseName":
                     j = j.replace(" ", "")
                 # Set course key
-                if table[0][inx] == "course_code":
+                if table[0][inx] == "courseCode":
                     row_name = j
                     continue
                 # If grade is empty, set it to -1.
@@ -182,4 +183,4 @@ def grades2(html):
             row["ys"] = ys_cur
             grades_table[row_name] = row
 
-    return {"grades": grades_table}
+    return grades_table

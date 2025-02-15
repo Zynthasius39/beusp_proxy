@@ -11,6 +11,7 @@ def transcript(html):
     Returns:
         dict: JSON output
     """
+    # TODO: New scheme
     soup = BeautifulSoup(html, "html.parser")
 
     transcript_table = {}

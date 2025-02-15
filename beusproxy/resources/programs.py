@@ -34,6 +34,10 @@ class Program(Resource):
         responses:
             200:
                 description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ProgramDetailed"
             400:
                 description: Bad response
             401:
@@ -60,7 +64,8 @@ class Program(Resource):
                 ROOT,
                 params={
                     "mod": "progman",
-                    "pc": f"{code}&py={year}",
+                    "pc": code,
+                    "py": year,
                 },
                 headers={
                     "Host": HOST,

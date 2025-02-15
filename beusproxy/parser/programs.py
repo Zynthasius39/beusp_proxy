@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
 
+from .common import course_code_parser, courses_parser, references_parser
+
 
 def program2(html):
     # pylint: disable=R0912
@@ -39,44 +41,17 @@ def program2(html):
 
     course_table = {}
     # Iterating through semesters.
-    for isemester, semester in enumerate(courses):
-        semester_table = {}
-        # Iterating through subjects while ignoring header.
-        for subject in semester[1:]:
-            row_name = ""
-            row = {}
-            # Iterating through fields of the subject with index.
-            for i, j in enumerate(subject):
-                # Skip if empty
-                if not semester[0][i].strip() and not j.strip():
-                    continue
-                # If it is the number cell, assign it to be row key.
-                if semester[0][i] == "№":
-                    row_name = j
-                    continue
-                # Translate fields
-                if j == "XXX XXX":
-                    j = ""
-                if "Non-area lective subject" in j:
-                    j = "nae"
-                elif "Area Elective Course" in j or "Area elective subject" in j:
-                    j = "ae"
-                elif "Foreign language" in j:
-                    j = "nae_language"
-                row[semester[0][i]] = j
-            semester_table[row_name] = row
-        course_table[str(isemester)] = semester_table
+    for inx, semester in enumerate(courses):
+        course_table[inx + 1] = courses_parser(semester)
 
-    ae = []
-    ae_table = {}
+    ae_list = []
     # Find AE tr tags.
-    ae_bs = soup.find(
+    if ae_bs := soup.find(
         lambda tag: tag.name == "div"
         and tag.text
         in {"\xa0AE - Area Elective Courses", "\xa0AE - İxtisas seçməli dərslər"}
-    ).parent.parent.parent.parent.find_all("tr")
-
-    if ae_bs:
+    ).parent.parent.parent.parent.find_all("tr"):
+        ae = []
         # Iterating through tr tags while ignoring header and last two empty rows.
         for tr in ae_bs[1:-2]:
             row = []
@@ -84,29 +59,20 @@ def program2(html):
                 row.append(td.text.strip())
             ae.append(row)
 
-        # Generate ae_table using collected cells.
-        for i, j in enumerate(ae[1:]):
-            row_name = ""
-            row = {}
-            for k, o in enumerate(j):
-                if ae[0][k] == "№":
-                    row_name = o
-                    continue
-                row[ae[0][k]] = o
-            ae_table[row_name] = row
+        # Generate ae_list using collected cells.
+        ae_list = courses_parser(ae)
 
-    nae = []
-    nae_table = {}
+    nae_list = []
     # Find NAE tr tags.
-    nae_bs = soup.find(
+    if nae_bs := soup.find(
         lambda tag: tag.name == "div"
         and tag.text
         in {
             "\xa0NAE - Non-Area Elective Courses",
             "\xa0NAE - Qeyri ixtisas seçməli dərslər",
         }
-    ).parent.parent.parent.parent.find_all("tr")
-    if nae_bs:
+    ).parent.parent.parent.parent.find_all("tr"):
+        nae = []
         # Iterating through tr tags while ignoring header and last two empty rows.
         for tr in nae_bs[1:-2]:
             row = []
@@ -114,27 +80,18 @@ def program2(html):
                 row.append(td.text.strip())
             nae.append(row)
 
-        # Generate nae_table using collected cells.
-        for i, j in enumerate(nae[1:]):
-            row_name = ""
-            row = {}
-            for k, o in enumerate(j):
-                if nae[0][k] == "№":
-                    row_name = o
-                    continue
-                row[nae[0][k]] = o
-            nae_table[row_name] = row
+        # Generate nae_list using collected cells.
+        nae_list = courses_parser(nae)
 
-    references = []
-    reference_table = {}
+    reference_list = []
     # Find References div tag.
-    reference_bs = soup.find(
+    if reference_bs := soup.find(
         lambda tag: (
             tag.name == "div"
             and tag.text == " Courses with normal (one-to-one ) reference"
         )
-    )
-    if reference_bs:
+    ):
+        references = []
         # Iterating through tr tags while ignoring header and last empty row.
         for tr in reference_bs.parent.parent.parent.parent.find_all("tr")[1:-1]:
             row = []
@@ -142,20 +99,12 @@ def program2(html):
                 row.append(td.text.strip())
             references.append(row)
 
-        # Generate reference_table using collected cells.
-        for i, j in enumerate(references[1:]):
-            row_name = ""
-            row = {}
-            for k, o in enumerate(j):
-                if references[0][k] == "№":
-                    row_name = o
-                    continue
-                row[references[0][k]] = o
-            reference_table[row_name] = row
+        # Generate reference_list using collected cells.
+        reference_list = references_parser(references)
 
     return {
-        "program": course_table,
-        "ae": ae_table,
-        "nae": nae_table,
-        "references": reference_table,
+        "areaCourses": ae_list,
+        "nonAreaCourses": nae_list,
+        "courses": course_table,
+        "courseRefs": reference_list,
     }

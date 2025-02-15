@@ -12,6 +12,7 @@ def home(text):
     Returns:
         dict: parsed JSON output
     """
+    # TODO: Convert to schema
     soup = BeautifulSoup(text, "html.parser")
 
     student_info_table = {}

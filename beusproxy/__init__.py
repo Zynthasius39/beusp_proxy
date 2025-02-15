@@ -1,4 +1,5 @@
 import logging
+import os
 
 from flasgger import Swagger
 from flask import Flask, jsonify, make_response, logging as flogging, request, g
@@ -24,17 +25,15 @@ def create_app():
     for logger in (APP_NAME, "telegram", "email", "httpclient"):
         logging.getLogger(logger).addHandler(flogging.default_handler)
 
+    curdir = os.path.dirname(os.path.abspath(__file__))
+
     init_context()
 
     app = Flask(__name__)
 
     if FLASGGER_ENABLED:
         app.name = APP_NAME
-        app.config["SWAGGER"] = {
-            "title": "Baku Engineering University: TMS/PMS - Rest API",
-            "uiversion": 3,
-        }
-        Swagger(app)
+        Swagger(app=app, template_file=os.path.join(curdir, "swagger.yml"))
 
     @app.teardown_appcontext
     def close_db(_):
@@ -61,7 +60,7 @@ def create_app():
         resources.AttendanceBySemester,
         "/api/resource/attendance/<int:year>/<int:semester>",
     )
-    api.add_resource(resources.Deps, "/api/resource/deps/<code>")
+    api.add_resource(resources.Deps, "/api/resource/deps/<depCode>")
     api.add_resource(resources.Program, "/api/resource/program/<int:code>/<int:year>")
     api.add_resource(resources.Auth, "/api/auth")
     api.add_resource(resources.LogOut, "/api/logout")

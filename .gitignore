@@ -163,6 +163,7 @@ cython_debug/
 
 # Additional
 .vscode
+.idea
 bin
 include
 lib

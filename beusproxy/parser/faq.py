@@ -12,15 +12,15 @@ def faq(text):
     """
     soup = BeautifulSoup(text, "html.parser")
 
-    faq_table = []
+    faq_list = []
     # Find FAQ sitting in ul element with given class name.
     for li in soup.find("ul", class_="timeline").find_all("li"):
         # Append FAQ item and body into a list.
-        faq_table.append(
+        faq_list.append(
             {
-                "item": li.find(class_="timeline-item").text.strip(),
-                "body": li.find(class_="timeline-body").text.strip(),
+                "question": li.find(class_="timeline-item").text.strip(),
+                "answer": li.find(class_="timeline-body").text.strip(),
             }
         )
 
-    return {"faq": faq_table}
+    return faq_list

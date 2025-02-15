@@ -11,35 +11,34 @@ from ..services.httpclient import HTTPClientError
 
 
 class Auth(Resource):
-    """Authenticate
+    """Authentication Endpoint
 
-    Flask-RESTFUL resource
+    Flask-RESTful resource
     """
 
-    def post(self):
-        """
-        Auth Endpoint
+    def get(self):
+        """Bakes cookies for students
+        Authenticates and returns a SessionID to be used in API.
+        If there is no record of the student/educator in the database,
+        StudentID gets registered, assuming user has agreed the ToS
+        which is usually shown in the login page.
         ---
-        summary: Returns Set-Cookie header.
-        description: Authenticates and returns a SessionID to be used in API. \
-            If there is no record of the student/educator in the database, \
-            StudentID gets registered, assuming user has agreed the ToS \
-            which is usually shown in the login page.
         parameters:
-          - name: body
-            in: body
-            required: yes
-            description: JSON parameters.
-            schema:
-                properties:
-                    student_id:
-                        type: string
-                        description: Student ID to login as
-                        example: 220987654
-                    password:
-                        type: string
-                        description: Password of the Student
-                        example: S3CR3T_P4SSW0RD
+        - name: studentId
+          in: query
+          description: Student ID to login as
+          required: true
+          schema:
+            type: string
+          example: "000000000"
+        - name: password
+          in: query
+          description: Password of the Student
+          required: true
+          schema:
+            type: string
+            format: password
+          example: demostudent
         responses:
             200:
                 description: Authenticated
@@ -47,32 +46,31 @@ class Auth(Resource):
                     Set-Cookie:
                         schema:
                             type: string
-                            example: SessionID=8c3589030a3854d... (32 char);
+                            example: SessionID=8c3589030a3854d8c3589030a38548c3;
             400:
                 description: Invalid credentials
             401:
                 description: Bad credentials
-            403:
-                description: Not implemented
             502:
                 description: Bad response from root server
         """
-        # TODO: OpenAPI rewrite
         httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
-            "student_id",
+            "studentId",
             required=True,
             help="Missing the credential parameter in the JSON body",
+            location="args",
         )
         rp.add_argument(
             "password",
             required=True,
             help="Missing the credential parameter in the JSON body",
+            location="args",
         )
         args = rp.parse_args()
 
-        student_id = args.get("student_id")
+        student_id = args.get("studentId")
         password = args.get("password")
 
         if not student_id or not password:
@@ -103,9 +101,9 @@ class Auth(Resource):
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 
-        # Respond with 400 if it was not redirected.
+        # Respond with 401 if it was not redirected.
         if mid_res.status == 200:
-            abort(400, help="Bad credentials")
+            abort(401, help="Bad credentials")
 
         if not mid_res.status == 302:
             abort(502, help="Bad response from root server")

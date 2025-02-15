@@ -1,4 +1,3 @@
-
 from flask import current_app as app, jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
@@ -24,17 +23,32 @@ class Res(Resource):
           - name: resource
             in: path
             required: true
-            example: home
+            description: home, faq, deps, grades, announces, transcript
+            example: deps
             schema:
                 type: string
         responses:
-            201:
+            200:
                 description: Success
-                headers:
-                    Cookie:
+                content:
+                    application/json:
                         schema:
-                            type: string
-                            example: SessionID=8c3589030a3854d... (32 char);
+                            oneOf:
+                              - $ref: "#/components/schemas/HomeTable"
+                              - $ref: "#/components/schemas/SemesterTable"
+                              - $ref: "#/components/schemas/Transcript"
+                              - type: array
+                                items:
+                                    $ref: "#/components/schemas/FaqItem"
+                              - type: array
+                                items:
+                                    $ref: "#/components/schemas/Message"
+                              - type: array
+                                items:
+                                    $ref: "#/components/schemas/Department"
+                              - type: array
+                                items:
+                                    $ref: "#/components/schemas/Announce"
             400:
                 description: Invalid Page
             401:
@@ -42,6 +56,7 @@ class Res(Resource):
             502:
                 description: Bad response from root server
         """
+        # TODO: Add grades
         httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
