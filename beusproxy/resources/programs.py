@@ -37,7 +37,7 @@ class Program(Resource):
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/ProgramDetailed"
+                            $ref: "#/components/schemas/Program"
             400:
                 description: Bad response
             401:

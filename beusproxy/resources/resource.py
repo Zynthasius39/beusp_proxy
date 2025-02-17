@@ -68,6 +68,11 @@ class Res(Resource):
         )
         args = rp.parse_args()
 
+        # Prevent accessing not assigned resources.
+        if not tms_pages.get(resource):
+            abort(404)
+
+        # Trying to get respective parser function.
         res = None
         try:
             res = getattr(parser, resource)
@@ -99,6 +104,7 @@ class Res(Resource):
         page = res(mid_res)
         res = make_response(jsonify(page), 200)
 
+        # Bake ImgID cookie if accessing home resource.
         if resource == "home":
             res.set_cookie(
                 "ImgID",

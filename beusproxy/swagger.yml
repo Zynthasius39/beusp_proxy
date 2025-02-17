@@ -18,6 +18,10 @@ components:
   schemas:
     AttendanceEntry:
       type: object
+      required:
+        - datetime
+        - place
+        - present
       properties:
         datetime:
           type: string
@@ -30,6 +34,10 @@ components:
           example: true
     CourseAttendanceDetailed:
       type: object
+      required:
+        - courseCode
+        - courseName
+        - entries
       properties:
         courseCode:
           type: string
@@ -43,6 +51,15 @@ components:
             $ref: "#/components/schemas/AttendanceEntry"
     CourseAttendance:
       type: object
+      required:
+        - absent
+        - absentPercent
+        - atds
+        - courseEducator
+        - courseName
+        - credit
+        - hours
+        - limit
       properties:
         absent:
           type: integer
@@ -71,6 +88,10 @@ components:
           example: 3.75
     Department:
       type: object
+      required:
+        - depCode
+        - depName
+        - depPrefixes
       properties:
         depCode:
           type: string
@@ -83,8 +104,14 @@ components:
           items:
             type: string
             example: IT
-    Program:
+    DepartmentPrograms:
       type: object
+      required:
+        - faculty
+        - lang
+        - progCode
+        - progName
+        - year
       properties:
         faculty:
           type: string
@@ -103,6 +130,9 @@ components:
           example: 2022
     SemesterTable:
       type: object
+      required:
+        - canRequestAll
+        - entries
       properties:
         canRequestAll:
           type: boolean
@@ -111,6 +141,9 @@ components:
           type: array
           items:
             type: object
+            required:
+              - semester
+              - year
             parameters:
               semester:
                 type: integer
@@ -120,94 +153,133 @@ components:
                 example: 2024
     HomeTable:
       type: object
+      required:
+        - documents
+        - image
+        - studentInfo
       properties:
         documents:
           type: object
-          additionalParameters:
-            document: path
+          additionalProperties:
+            type: string
           example:
-            documents:
-              İntizam qaydaları: İntizam qaydaları.pdf
+            BoringDocument1: documents/boring_document.pdf
+            BoringDocument2: another_boring_doc.docx
         image:
           type: string
           example: 290bfdbca904e59e4566ca862be9bf50
         studentInfo:
-          fullName:
-            type: string
-            example: Sekiro Wolf Owl
-          advisor:
-            type: string
-            example: Ülviyyə Quliyeva
-          beuEmail:
-            type: string
-            example: sekiro@std.beu.edu.az
-          birthDate:
-            type: string
-            example: 2025-01-09
-          eduDebt:
-            type: object
-            parameters:
-              year:
-                type: integer
-                example: 2022
-              semester:
-                type: integer
-                example: 1
-              amount:
-                type: integer
-                example: 5000
-              paymentAnnual:
-                type: integer
-                example: 2500
-              paymentType:
-                type: string
-                example: DS
-          dissTopic:
-            type: string
-            example: Why should I be shura?
-          dormDebt:
-            type: integer
-            example: 250
-          lastLogin:
-            type: object
-            parameters:
-              datetime:
-                type: string
-                example: 2025-02-15T16:50:00
-              ip:
-                type: string
-                example: 172.20.1.1
-          presidentialScholar:
-            type: boolean
-            example: false
-          speciality:
-            program:
+          type: object
+          required:
+            - fullName
+            - advisor
+            - beuEmail
+            - birthDate
+            - eduDebt
+            - dissTopic
+            - dormDebt
+            - lastLogin
+            - presidentScholar
+            - speciality
+            - groupCode
+            - registerDate
+            - dimScore
+            - stateFunded
+            - status
+          properties:
+            fullName:
               type: string
-              example: İnformasiya Texnologiyaları
-            lang:
+              example: Sekiro Wolf Owl
+            advisor:
               type: string
-              example: en
-            year:
+              example: Ülviyyə Quliyeva
+            beuEmail:
+              type: string
+              example: sekiro@std.beu.edu.az
+            birthDate:
+              type: string
+              example: 2025-01-09
+            eduDebt:
+              type: object
+              required:
+                - year
+                - semester
+                - amount
+                - paymentAnnual
+                - paymentType
+              properties:
+                year:
+                  type: integer
+                  example: 2022
+                semester:
+                  type: integer
+                  example: 1
+                amount:
+                  type: integer
+                  example: 5000
+                paymentAnnual:
+                  type: integer
+                  example: 2500
+                paymentType:
+                  type: string
+                  example: DS
+            dissTopic:
+              type: string
+              example: Why should I be shura?
+            dormDebt:
               type: integer
-              example: 2022
-          groupCode:
-            type: string
-            example: 1162i
-          registerDate:
-            type: string
-            example: 2022-07-09
-          dimScore:
-            type: number
-            format: float
-            example: 628.6
-          stateFunded:
-            type: boolean
-            example: true
-          status:
-            type: string
-            example: studying
+              example: 250
+            lastLogin:
+              type: object
+              required:
+                - datetime
+                - ip
+              properties:
+                datetime:
+                  type: string
+                  example: 2025-02-15T16:50:00
+                ip:
+                  type: string
+                  example: 172.20.1.1
+            presidentialScholar:
+              type: boolean
+              example: false
+            speciality:
+              type: object
+              required:
+                - program
+                - lang
+                - year
+              properties:
+                program:
+                  type: string
+                  example: İnformasiya Texnologiyaları
+                lang:
+                  type: string
+                  example: en
+                year:
+                  type: integer
+                  example: 2022
+            groupCode:
+              type: string
+              example: 1162i
+            registerDate:
+              type: string
+              example: 2022-07-09
+            dimScore:
+              type: number
+              format: float
+              example: 628.6
+            stateFunded:
+              type: boolean
+              example: true
+            status:
+              type: string
+              enum: [studying, graduated] # Add if any missing, PRs accepted
+              example: studying
     FaqItem:
       type: object
+      required: [question, answer]
       properties:
         question:
           type: string
@@ -217,6 +289,7 @@ components:
           example: Yeni qəbul olan tələbə ilk tədris ili üçün illik təhsil haqqını tam həcmdə müqavilə imzalandığı gün ödəyir.
     Message:
       type: object
+      required: [date, from, subject, body]
       properties:
         date:
           type: string
@@ -232,6 +305,7 @@ components:
           example: A big ahh message to be ignored
     Course:
       type: object
+      required: [courseType, ects, theory, pr]
       properties:
         courseType:
           type: string
@@ -245,7 +319,6 @@ components:
         pr:
           type: string
           example: 2+0
-      additionalParameters:
         courseCode:
           type: string
           example: IT205
@@ -254,6 +327,12 @@ components:
           example: Object oriented programming
     CourseRef:
       type: object
+      required:
+        - newCourseCode
+        - newCourseName
+        - oldCourseCode
+        - oldCourseName
+        - year
       properties:
         newCourseCode:
           type: string
@@ -270,8 +349,13 @@ components:
         year:
           type: integer
           example: 2013
-    ProgramDetailed:
+    Program:
       type: object
+      required:
+        - areaCourses
+        - nonAreaCourses
+        - courses
+        - courseRefs
       properties:
         areaCourses:
           type: array
@@ -282,8 +366,8 @@ components:
           items:
             $ref: "#/components/schemas/Course"
         courses:
-          type: array
-          items:
+          type: object
+          additionalProperties:
             $ref: "#/components/schemas/Course"
         courseRefs:
           type: array
@@ -291,6 +375,10 @@ components:
             $ref: "#/components/schemas/CourseRef"
     Announce:
       type: object
+      required:
+        - body
+        - date
+        - name
       properties:
         body:
           type: string
@@ -303,6 +391,12 @@ components:
           example: Ders Qeydiyyatı
     TranscriptEntry:
       type: object
+      required:
+        - credit
+        - grade
+        - hours
+        - gradeLetter
+        - repeat
       properties:
         credit:
           type: integer
@@ -316,12 +410,21 @@ components:
         gradeLetter:
           type: string
           enum: ["A", "B", "C", "D", "E", "F", "ip"]
-          example: "ip" #In progress
+          example: "ip" # In progress
         repeat:
-          type: string
-          example: ""
+          type: boolean
+          example: false # Empty = false
     Transcript:
       type: object
+      required:
+        - entryDate
+        - faculty
+        - graduateDate
+        - studentId
+        - level
+        - fullName
+        - program
+        - body
       properties:
         entryDate:
           type: string
@@ -357,7 +460,6 @@ components:
               type: number
               format: float
               example: 94.54
-          additionalParameters:
             yearAndSemester:
               type: object
               properties:
@@ -383,6 +485,17 @@ components:
                 totalHours:
                   type: integer
                   example: 19
-              additionalParameters:
                 courseCode:
                   $ref: "#/components/schemas/TranscriptEntry"
+              required:
+                - gpa
+                - sac
+                - spa
+                - tacc
+                - tatc
+                - totalCredits
+                - totalHours
+          required:
+            - totalEarnedCredits
+            - totalEarnedEcts
+            - totalGpa

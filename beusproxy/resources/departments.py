@@ -15,13 +15,13 @@ class Deps(Resource):
     Flask-RESTFUL resource
     """
 
-    def get(self, depCode):
+    def get(self, dep_code):
         """
         Departments Endpoint
         ---
         summary: Returns the given department.
         parameters:
-          - name: depCode
+          - name: dep_code
             description: Department Code
             in: path
             required: true
@@ -35,13 +35,12 @@ class Deps(Resource):
                         schema:
                             type: array
                             items:
-                                $ref: "#/components/schemas/Program"
+                                $ref: "#/components/schemas/DepartmentPrograms"
             401:
                 description: Unauthorized
             502:
                 description: Bad response from root server
         """
-        # TODO: Fix all deps, programs, courses
         httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
@@ -59,7 +58,7 @@ class Deps(Resource):
                 ROOT,
                 params={
                     "mod": "viewdeps",
-                    "d": depCode,
+                    "d": dep_code,
                 },
                 headers={
                     "Host": HOST,

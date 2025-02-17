@@ -60,7 +60,7 @@ def create_app():
         resources.AttendanceBySemester,
         "/api/resource/attendance/<int:year>/<int:semester>",
     )
-    api.add_resource(resources.Deps, "/api/resource/deps/<depCode>")
+    api.add_resource(resources.Deps, "/api/resource/deps/<dep_code>")
     api.add_resource(resources.Program, "/api/resource/program/<int:code>/<int:year>")
     api.add_resource(resources.Auth, "/api/auth")
     api.add_resource(resources.LogOut, "/api/logout")
