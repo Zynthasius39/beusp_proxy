@@ -171,7 +171,7 @@ components:
         studentInfo:
           type: object
           required:
-            - fullName
+            - fullNamePatronymic
             - advisor
             - beuEmail
             - birthDate
@@ -187,7 +187,7 @@ components:
             - stateFunded
             - status
           properties:
-            fullName:
+            fullNamePatronymic:
               type: string
               example: Sekiro Wolf Owl
             advisor:
@@ -241,25 +241,12 @@ components:
                 ip:
                   type: string
                   example: 172.20.1.1
-            presidentialScholar:
+            presidentScholar:
               type: boolean
               example: false
-            speciality:
-              type: object
-              required:
-                - program
-                - lang
-                - year
-              properties:
-                program:
-                  type: string
-                  example: İnformasiya Texnologiyaları
-                lang:
-                  type: string
-                  example: en
-                year:
-                  type: integer
-                  example: 2022
+            studentId:
+              type: integer
+              example: 220106000
             groupCode:
               type: string
               example: 1162i
@@ -277,6 +264,8 @@ components:
               type: string
               enum: [studying, graduated] # Add if any missing, PRs accepted
               example: studying
+            speciality:
+              $ref: "#/components/schemas/speciality"
     FaqItem:
       type: object
       required: [question, answer]
@@ -392,6 +381,7 @@ components:
     TranscriptEntry:
       type: object
       required:
+        - courseName
         - credit
         - grade
         - hours
@@ -423,8 +413,11 @@ components:
         - studentId
         - level
         - fullName
-        - program
-        - body
+        - speciality
+        - semesters
+        - totalEarnedCredits
+        - totalEarnedEcts
+        - totalGpa
       properties:
         entryDate:
           type: string
@@ -437,42 +430,43 @@ components:
           example: 2026-09-07
         studentId:
           type: integer
-          example: 000000000
+          example: 220106000
         level:
           type: string
           example: Bachelor
         fullName:
           type: string
           example: Sekiro Wolf
-        program:
-          type: string
-          example: Information Technologies (EN)
-        body:
+        speciality:
+          $ref: "#/components/schemas/speciality"
+        totalEarnedCredits:
+          type: integer
+          example: 150
+        totalEarnedEcts:
+          type: integer
+          example: 150
+        totalGpa:
+          type: number
+          format: float
+          example: 94.54
+        semesters:
           type: object
-          properties:
-            totalEarnedCredits:
-              type: integer
-              example: 150
-            totalEarnedEcts:
-              type: integer
-              example: 150
-            totalGpa:
-              type: number
-              format: float
-              example: 94.54
-            yearAndSemester:
+          additionalProperties:
+            type: object
+            additionalProperties:
               type: object
               properties:
                 gpa:
                   type: number
                   format: float
-                  example: 94.54
+                  example: 93.4
                 sac:
                   type: string
                   example: 0t
                 spa:
-                  type: integer
-                  example: 0
+                  type: number
+                  format: float
+                  example: 94.33
                 tacc:
                   type: integer
                   example: 150
@@ -485,8 +479,10 @@ components:
                 totalHours:
                   type: integer
                   example: 19
-                courseCode:
-                  $ref: "#/components/schemas/TranscriptEntry"
+                courses:
+                  type: object
+                  additionalProperties:
+                    $ref: "#/components/schemas/TranscriptEntry"
               required:
                 - gpa
                 - sac
@@ -495,7 +491,20 @@ components:
                 - tatc
                 - totalCredits
                 - totalHours
-          required:
-            - totalEarnedCredits
-            - totalEarnedEcts
-            - totalGpa
+                - courses
+    speciality:
+      type: object
+      required:
+        - program
+        - lang
+        - year
+      properties:
+        program:
+          type: string
+          example: İnformasiya Texnologiyaları
+        lang:
+          type: string
+          example: en
+        year:
+          type: integer
+          example: 2022

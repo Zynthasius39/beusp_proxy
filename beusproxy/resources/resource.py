@@ -108,7 +108,7 @@ class Res(Resource):
         if resource == "home":
             res.set_cookie(
                 "ImgID",
-                page.get("home").get("image"),
+                page.get("image"),
                 httponly=False,
                 secure=False,
                 samesite="Lax",

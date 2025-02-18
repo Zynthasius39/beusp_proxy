@@ -37,8 +37,7 @@ def init_context():
 
     try:
         c.set("jinjaenv", Environment(loader=FileSystemLoader(TEMPLATES_FOLDER)))
-        # c.set("httpc", HTTPClient(trust_env=True))
-        c.set("httpc", HTTPClient(trust_env=True, proxy="http://127.0.0.1:8081", ssl=False))
+        c.set("httpc", HTTPClient(trust_env=True))
         if BOT_ENABLED:
             c.set("tgc", TelegramClient(c.get("httpc"), c.get("jinjaenv")))
             c.set("emailc", EmailClient())

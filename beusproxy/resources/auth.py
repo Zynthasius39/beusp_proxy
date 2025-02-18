@@ -29,8 +29,8 @@ class Auth(Resource):
           description: Student ID to login as
           required: true
           schema:
-            type: string
-          example: "000000000"
+            type: integer
+          example: 220106000
         - name: password
           in: query
           description: Password of the Student

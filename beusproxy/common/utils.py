@@ -185,25 +185,32 @@ def is_invalid(html):
         return True
     return False
 
-def parse_date(date, frmt=None, *, default=datetime(1970, 1, 1)):
+def parse_date(date, frmt=None, *, default=datetime(1970, 1, 1), no_format=False) -> str | datetime:
     """Parse weirdly formatted date into readable format
     Returns same date, if format is not recognized.
 
     Args:
-        format (str): Input format
         date (str): Input date
+        frmt (str): Input format
+        default (datetime): Default date to add on top of
+        no_format (bool): Return datetime instead if true
 
     Returns:
-        str: Output date
+        str: Output date in isoformat or given format
+        datetime: Output datetime
     """
     date = date.replace(" PM", "").replace("AM", "")
     try:
         date = parser.parse(date, default=default)
+        if no_format:
+            return date
         if not frmt:
             dt = date.isoformat()
         else:
             dt = date.strftime(frmt)
     except ValueError:
+        if no_format:
+            return default
         dt = date
 
     # Clear unnecessary segments.

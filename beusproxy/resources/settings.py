@@ -13,18 +13,18 @@ class Settings(Resource):
         Settings Endpoint
         ---
         summary: Changes settings.
-        parameters:
-        - name: body
-          in: body
+        requestBody:
           description: Language
           required: true
-          schema:
-            properties:
-                lang:
-                    type: string
-                    description: Language
-                    example: EN
-                    required: false
+          content:
+            application/json:
+              schema:
+                properties:
+                    lang:
+                        type: string
+                        description: Language
+                        example: en
+                        required: false
         responses:
             200:
                 description: Success
@@ -45,14 +45,14 @@ class Settings(Resource):
         )
         args = rp.parse_args()
 
-        if args.get("lang") and args.get("lang").upper() in langs:
+        if args.get("lang") and args.get("lang").lower() in langs:
             mid_res = c.get("httpc").request(
                 "GET",
                 ROOT,
                 params={
                     "mod": "setting",
                     "a": "update_interface_lang",
-                    "lang": args.get("lang"),
+                    "lang": args.get("lang").upper(),
                 },
                 headers={
                     "Host": HOST,
@@ -66,4 +66,4 @@ class Settings(Resource):
         return make_response("", 200)
 
 
-langs = ["AZ", "EN"]
+langs = ["az", "en"]
