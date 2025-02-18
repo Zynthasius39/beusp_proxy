@@ -23,6 +23,17 @@ class Bot(Resource):
         responses:
             200:
                 description: Bot status
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                bot_email:
+                                    type: string
+                                    example: example@std.beu.edu.az
+                                bot_telegram:
+                                    type: string
+                                    example: example_telegram_bot
             404:
                 description: Bot is not active
         """

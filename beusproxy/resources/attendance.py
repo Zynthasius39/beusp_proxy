@@ -46,7 +46,7 @@ class AttendanceBySemester(Resource):
                                     absentPercent: 7
                                     atds: 13
                                     courseEducator: John Doe
-                                    courseName: Principles of Entrepreneurship and Introduction to Business
+                                    courseName: Principles of Entrepreneurship
                                     credit: 1+1+0
                                     hours: 15
                                     limit: 3.75

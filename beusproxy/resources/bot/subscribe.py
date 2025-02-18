@@ -25,6 +25,21 @@ class BotSubscribe(Resource):
         responses:
             200:
                 description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                telegram_user_id:
+                                    type: integer
+                                    format: int64
+                                    example: 1220173140
+                                discord_webhook_url:
+                                    type: string
+                                    example: https://discord.com/api/webhooks/...
+                                email:
+                                    type: string
+                                    example: admin@alakx.com
             401:
                 description: Session invalid or has expired
             404:
@@ -78,7 +93,9 @@ class BotSubscribe(Resource):
                         (owner_id,),
                     ).fetchone()
                     if db_sub_res is not None:
-                        subscriptions["telegram_user_id"] = db_sub_res["telegram_user_id"]
+                        subscriptions["telegram_user_id"] = db_sub_res[
+                            "telegram_user_id"
+                        ]
                 if db_res["active_discord_id"] is not None:
                     db_sub_res = (
                         db_con.cursor()
@@ -112,7 +129,7 @@ class BotSubscribe(Resource):
                     if db_sub_res is not None:
                         subscriptions["email"] = db_sub_res["email"]
 
-        return {"subscriptions": subscriptions}
+        return subscriptions
 
     def put(self):
         """
@@ -120,32 +137,52 @@ class BotSubscribe(Resource):
         ---
         summary: Subscribe to Bot
         description: Subscribes the current user.
-        parameters:
-          - name: subscribe
-            in: body
-            required: yes
+        requestBody:
             description: Subscriptions to add.
-            schema:
-                properties:
-                    telegram_user_id:
-                        type: string
-                        description: Telegram Username
-                        example: slaffoe
-                    discord_webhook_url:
-                        type: string
-                        description: Discord Webhook
-                        example: https://discord.com/api/webhooks/{token}
-                    email:
-                        type: string
-                        description: E-Mail
-                        example: admin@alakx.com
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            telegram:
+                                type: string
+                                description: Telegram
+                                example: ""
+                            discord_webhook_url:
+                                type: string
+                                description: Discord Webhook
+                                example: https://discord.com/api/webhooks/...
+                            email:
+                                type: string
+                                description: E-Mail
+                                example: admin@alakx.com
+            required: yes
         responses:
             200:
                 description: Nothing to do
             201:
                 description: Subscribed
-            204:
+            202:
                 description: Waiting for verification
+                content:
+                    application/json:
+                        schema:
+                            oneOf:
+                              - type: object
+                                properties:
+                                    telegram_code:
+                                        type: integer
+                                        format: int32
+                                        example: 411001
+                                required:
+                                  - telegram_code
+                              - type: object
+                                properties:
+                                    email_sent:
+                                        type: boolean
+                                        example: true
+                            example:
+                                telegram_code: 411001
             401:
                 description: Session invalid or has expired
             404:
@@ -222,7 +259,7 @@ class BotSubscribe(Resource):
                     ),
                 )
                 db_con.commit()
-                return {"telegram_code": code}
+                return {"telegram_code": code}, 202
             if args.get("discord_webhook_url") is not None:
                 if not is_webhook(args.get("discord_webhook_url")):
                     abort(400, help="Invalid Discord Webhook URL")
@@ -274,7 +311,7 @@ class BotSubscribe(Resource):
                     c.get("emailc").send_verification(args.get("email"), code)
                 except SMTPException:
                     abort(500)
-                return "", 204
+                return {"email_sent": True}, 202
 
         return make_response("", 200)
 
@@ -290,19 +327,13 @@ class BotSubscribe(Resource):
             required: yes
             description: Subscriptions to cancel.
             schema:
-                properties:
-                    telegram_user_id:
-                        type: string
-                        description: Telegram Username
-                        example: slaffoe
-                    discord_webhook_url:
-                        type: string
-                        description: Discord Webhook
-                        example: https://discord.com/webhook/{token}
-                    email:
-                        type: string
-                        description: E-Mail
-                        example: admin@alakx.com
+                type: array
+                items:
+                    type: string
+                example:
+                  - telegram
+                  - discord
+                  - email
         responses:
             202:
                 description: Nothing to do
@@ -332,7 +363,7 @@ class BotSubscribe(Resource):
         )
         rp.add_argument(
             "unsubscribe",
-            action='append',
+            action="append",
             required=True,
         )
         args = rp.parse_args()

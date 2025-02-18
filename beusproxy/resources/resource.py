@@ -35,7 +35,7 @@ class Res(Resource):
                         schema:
                             oneOf:
                               - $ref: "#/components/schemas/HomeTable"
-                              - $ref: "#/components/schemas/SemesterTable"
+                              - $ref: "#/components/schemas/Semesters"
                               - $ref: "#/components/schemas/Transcript"
                               - type: array
                                 items:
@@ -56,7 +56,6 @@ class Res(Resource):
             502:
                 description: Bad response from root server
         """
-        # TODO: Add grades
         httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(

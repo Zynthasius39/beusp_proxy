@@ -1,4 +1,3 @@
-
 from flask import current_app as app, jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
@@ -23,6 +22,12 @@ class Msg(Resource):
         responses:
             200:
                 description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/Message"
             401:
                 description: Unauthorized
             404:
@@ -41,6 +46,7 @@ class Msg(Resource):
         )
         args = rp.parse_args()
 
+        msgs = []
         try:
             mid_res = httpc.request(
                 "GET",
@@ -65,7 +71,6 @@ class Msg(Resource):
 
             results = read_msgs(httpc, args.get("SessionID"), parser.msg(mid_res))
 
-            msgs = []
             for res in results:
                 if res.status == 200:
                     msgs.append(parser.msg2(httpc.cr_text(res)))

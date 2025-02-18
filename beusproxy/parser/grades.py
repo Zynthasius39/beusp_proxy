@@ -12,7 +12,6 @@ def grades(text):
     Returns:
         dict: parsed JSON output
     """
-    # TODO: New specs
     soup = BeautifulSoup(text, "html.parser")
 
     grades_ops = []
@@ -67,11 +66,11 @@ def grades2(html):
         "SDF2": "act2",
         "SDF3": "act3",
         "TSI": "iw",
-        "DVM": "att",
-        "Dav": "att",
+        "DVM": "attendance",
+        "Dav": "attendance",
         "SSI": "final",
-        "ƏI": "addfinal",
-        "TI": "refinal",
+        "ƏI": "addFinal",
+        "TI": "reFinal",
         "N": "n",
         "M": "m",
         "L": "l",

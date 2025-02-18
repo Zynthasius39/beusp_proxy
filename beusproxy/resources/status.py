@@ -38,6 +38,31 @@ class Status(Resource):
         responses:
             200:
                 description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                students_registered:
+                                    type: integer
+                                    format: int32
+                                    example: 2
+                                subscriptions:
+                                    type: integer
+                                    format: int32
+                                    example: 5
+                                root_server_is_up:
+                                    type: boolean
+                                    example: true
+                                sha256sums:
+                                    type: array
+                                    items:
+                                        type: string
+                                        example: 1d750059806e36fa731f0b045e2844bf52e150a404ab01ac5224dc7e10bbf040 general.js
+                            required:
+                             - students_registered
+                             - subscriptions
+                             - root_server_is_up
             502:
                 description: Bad response from root server
         """
@@ -103,7 +128,7 @@ class Status(Resource):
                                             "Host": HOST,
                                             "User-Agent": USER_AGENT,
                                         },
-                                        allow_redirects=False
+                                        allow_redirects=False,
                                     )
                                     for hash_file in hash_files
                                 ]
@@ -123,4 +148,4 @@ class Status(Resource):
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 
-        return {"status": status_table}
+        return status_table

@@ -2,11 +2,11 @@ import logging
 import os
 
 from flasgger import Swagger
-from flask import Flask, jsonify, make_response, logging as flogging, request, g
+from flask import Flask, make_response, logging as flogging, request, g
 from flask_restful import Api
 from flask_cors import CORS
 
-from .config import APP_NAME, FLASGGER_ENABLED, TMSAPI_OFFLINE
+from .config import APP_NAME, BOT_ENABLED, FLASGGER_ENABLED, TMSAPI_OFFLINE
 from .context import init_context
 from .services.telegram import TelegramClient
 from .services.httpclient import HTTPClient
@@ -68,8 +68,10 @@ def create_app():
     api.add_resource(resources.Settings, "/api/settings")
     api.add_resource(resources.StudPhoto, "/api/studphoto")
     api.add_resource(resources.Status, "/api/status")
-    api.add_resource(bot_resources.Bot, "/api/bot")
-    api.add_resource(bot_resources.BotSubscribe, "/api/bot/subscribe")
-    api.add_resource(bot_resources.BotVerify, "/api/bot/verify/<code>")
+
+    if BOT_ENABLED:
+        api.add_resource(bot_resources.Bot, "/api/bot")
+        api.add_resource(bot_resources.BotSubscribe, "/api/bot/subscribe")
+        api.add_resource(bot_resources.BotVerify, "/api/bot/verify/<code>")
 
     return app

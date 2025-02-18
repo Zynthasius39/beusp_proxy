@@ -2,13 +2,14 @@ openapi: 3.0.3
 swagger: 2.0
 info:
   title: "Baku Engineering University: TMS/PMS - Rest API"
+  description:
+    Student Portal API for students of Baku Engineering University. Written in Flask-RESTful, acts as middleman. Parses incoming HTML, JSON responses to more friendly format and provides documentation for it. Includes notifying bot and subscription services.
   contact:
     email: super.alekberov+beusp@proton.me
   license:
-    name: GPL3 # TODO: License
-    url: https://alakx.com
-  version: 1.0.1
-  # TODO: ToS and Author
+    name: GPL3
+    url: https://www.gnu.org/licenses/gpl-3.0.en.html
+  version: 1.0.4
 servers:
   - url: /
     description: Production server (uses root server)
@@ -128,29 +129,6 @@ components:
         year:
           type: integer
           example: 2022
-    SemesterTable:
-      type: object
-      required:
-        - canRequestAll
-        - entries
-      properties:
-        canRequestAll:
-          type: boolean
-          example: true
-        entries:
-          type: array
-          items:
-            type: object
-            required:
-              - semester
-              - year
-            parameters:
-              semester:
-                type: integer
-                example: 1
-              year:
-                type: integer
-                example: 2024
     HomeTable:
       type: object
       required:
@@ -492,6 +470,89 @@ components:
                 - totalCredits
                 - totalHours
                 - courses
+    Semesters:
+      type: object
+      required:
+        - canRequstAll
+        - entries
+      properties:
+        canRequestAll:
+          type: boolean
+          example: true
+        entries:
+          type: array
+          items:
+            type: object
+            required:
+              - semester
+              - year
+            properties:
+              semester:
+                type: integer
+                example: 1
+              year:
+                type: integer
+                example: 2022
+    CourseGrade:
+      type: object
+      properties:
+        absents:
+          type: integer
+          example: 2
+        act1:
+          type: number
+          format: float
+          example: 15
+        act2:
+          type: number
+          format: float
+          example: 12.6
+        additionalFinal:
+          type: number
+          format: float
+          example: -1
+        attendance:
+          type: number
+          example: 10
+        courseName:
+          type: string
+          example: History of Azerbaijan
+        ects:
+          type: integer
+          example: 5
+        final:
+          type: number
+          format: float
+          example: 45
+        iw:
+          type: number
+          format: float
+          example: 10
+        l:
+          type: string
+          example: ""
+        m:
+          type: number
+          format: float
+          example: 40
+        n:
+          type: number
+          format: float
+          example: 39
+        reFinal:
+          type: number
+          format: float
+          example: -1
+        sum:
+          type: number
+          format: float
+          example: 83
+        year:
+          type: integer
+          example: 2022
+        semester:
+          type: integer
+          example: 1
     speciality:
       type: object
       required:

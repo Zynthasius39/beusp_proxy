@@ -9,22 +9,22 @@ class Settings(Resource):
         Settings Endpoint
         ---
         summary: Changes settings.
-        parameters:
-        - name: body
-          in: body
+        requestBody:
           description: Language
           required: true
-          schema:
-            properties:
-                lang:
-                    type: string
-                    description: Language
-                    example: EN
-                    required: false
+          content:
+            application/json:
+              schema:
+                properties:
+                    lang:
+                        type: string
+                        description: Language
+                        example: en
+                        required: false
         responses:
             200:
                 description: Success
-            502:
-                description: Bad response from root server
+            400:
+                description: Invalid Language
         """
         return "I definitely saved your changes (wupheli)."

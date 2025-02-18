@@ -17,6 +17,12 @@ class Msg(Resource):
         responses:
             200:
                 description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/Message"
             401:
                 description: Unauthorized
             404:

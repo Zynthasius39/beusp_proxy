@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from .common import course_code_parser, courses_parser, references_parser
+from .common import courses_parser, references_parser
 
 
 def program2(html):

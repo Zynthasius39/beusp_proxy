@@ -28,8 +28,12 @@ class Program(Resource):
         responses:
             200:
                 description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Program"
             400:
-                description: Bad request
+                description: Bad response
             401:
                 description: Unauthorized
             404:

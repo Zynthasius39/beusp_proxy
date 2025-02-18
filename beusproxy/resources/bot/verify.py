@@ -34,6 +34,7 @@ class BotVerify(Resource):
                     text/html:
                         schema:
                             type: string
+                            example: ""
             404:
                 description: Bot is not active
             500:

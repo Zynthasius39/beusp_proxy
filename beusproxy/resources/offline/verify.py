@@ -10,15 +10,17 @@ class Verify(Resource):
 
     def post(self):
         """
-        LogOut Endpoint
+        Session Verify Endpoint
         ---
-        summary: Logs out given SessionID.
-        description: Logs out the SessionID used in API.
+        summary: Verify session
+        description: Check if session is still valid.
         responses:
             200:
-                description: Logged out
-            400:
-                description: Couldn't log out
+                description: Verify successful
+            401:
+                description: Couldn't verify
+            502:
+                description: Bad response from root server
         """
         rp = reqparse.RequestParser()
         rp.add_argument(

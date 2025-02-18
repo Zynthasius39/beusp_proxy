@@ -18,9 +18,17 @@ class StudPhoto(Resource):
         ---
         summary: Returns student photo.
         description: Returns student photo.
+            You need to fetch home resource first to set
+            ImgID cookie before using this endpoint.
         responses:
             200:
                 description: Retrieved
+                content:
+                    image/jpeg:
+                        schema:
+                            type: string
+                            format: binary
+                            example: ""
             401:
                 description: Unauthorized
             502:

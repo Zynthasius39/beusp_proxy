@@ -9,26 +9,28 @@ class Auth(Resource):
     """
 
     def post(self):
-        """
-        Auth Endpoint
+        """Bakes cookies for students
+        Authenticates and returns a SessionID to be used in API.
+        If there is no record of the student/educator in the database,
+        StudentID gets registered, assuming user has agreed the ToS
+        which is usually shown in the login page.
         ---
-        summary: Returns Set-Cookie header.
-        description: Authenticates and returns a SessionID to be used in API.
         parameters:
-          - name: body
-            in: body
-            required: yes
-            description: JSON parameters.
-            schema:
-                properties:
-                    student_id:
-                        type: string
-                        description: Student ID to login as
-                        example: 210987654
-                    password:
-                        type: string
-                        description: Password of the Student
-                        example: S3CR3T_P4SSW0RD
+        - name: studentId
+          in: query
+          description: Student ID to login as
+          required: true
+          schema:
+            type: integer
+          example: 220106000
+        - name: password
+          in: query
+          description: Password of the Student
+          required: true
+          schema:
+            type: string
+            format: password
+          example: demostudent
         responses:
             200:
                 description: Authenticated
@@ -36,13 +38,11 @@ class Auth(Resource):
                     Set-Cookie:
                         schema:
                             type: string
-                            example: SessionID=8c3589030a3854d... (32 char);
+                            example: SessionID=8c3589030a3854d8c3589030a38548c3;
             400:
                 description: Invalid credentials
             401:
                 description: Bad credentials
-            403:
-                description: Not implemented
             502:
                 description: Bad response from root server
         """

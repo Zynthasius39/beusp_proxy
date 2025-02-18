@@ -15,7 +15,8 @@ class Deps(Resource):
         ---
         summary: Returns the given department.
         parameters:
-          - name: code
+          - name: dep_code
+            description: Department Code
             in: path
             required: true
             example: DEP_IT_PROG
@@ -23,6 +24,12 @@ class Deps(Resource):
         responses:
             200:
                 description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/DepartmentPrograms"
             401:
                 description: Unauthorized
             502:

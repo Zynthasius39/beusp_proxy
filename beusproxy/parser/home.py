@@ -68,7 +68,9 @@ def home(text):
             og_field = re.sub(
                 r"\s\s+", " ", cells[-2].text.replace(":", "").strip().replace("\n", "")
             )
-            if og_field.startswith("Education debt") or og_field.startswith("Təhsil haqqı borcunuz"):
+            if (og_field.startswith("Education debt") or
+                og_field.startswith("Təhsil haqqı borcunuz")
+            ):
                 field = "_eduDebt"
             else:
                 field = headers.get(og_field, f"_unkField{unk_counter}")
@@ -79,16 +81,21 @@ def home(text):
                     # Clean the advisor.
                     case "advisor":
                         value_val = value.split(" ")
-                        student_info_table[field] = f"{value_val[0].lower().capitalize()} {value_val[1].lower().capitalize()}"
+                        student_info_table[field] = "{} {}".format(
+                            value_val[0].lower().capitalize(),
+                            value_val[1].lower().capitalize()
+                        )
                     # Construct eduDebt.
                     case "_eduDebt":
-                            m = re.search(r"\[(\d{4}) - (\d)]", og_field)
-                            student_info_table["eduDebt"]["year"] = int(m.group(1))
-                            student_info_table["eduDebt"]["semester"] = int(m.group(2))
-                            m = re.search(r"(\d+) AZN", value)
-                            student_info_table["eduDebt"]["amount"] = int(m.group(1))
+                        m = re.search(r"\[(\d{4}) - (\d)]", og_field)
+                        student_info_table["eduDebt"]["year"] = int(m.group(1))
+                        student_info_table["eduDebt"]["semester"] = int(m.group(2))
+                        m = re.search(r"(\d+) AZN", value)
+                        student_info_table["eduDebt"]["amount"] = int(m.group(1))
                     case "_eduDebtType":
-                        student_info_table["eduDebt"]["paymentType"] = edu_debt_payment_t.get(value, f"_unknown_edup_t.{value}")
+                        student_info_table["eduDebt"]["paymentType"] = edu_debt_payment_t.get(
+                            value, f"_unknown_edup_t.{value}"
+                        )
                     case "_eduDebtFirst":
                         m = re.search(r"(\d+) AZN", value)
                         student_info_table["eduDebt"]["paymentAnnual"] = int(m.group(1))
@@ -100,7 +107,10 @@ def home(text):
                     case "_lastLoginDate":
                         student_info_table["lastLogin"]["datetime"] = parse_date(value)
                     case "_lastLoginIp":
-                        if m := re.search(r"^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$", value):
+                        if m := re.search(
+                                r"^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$",
+                                value
+                        ):
                             student_info_table["lastLogin"]["ip"] = value
                     # Construct speciality.
                     case "_programClass":
@@ -118,7 +128,8 @@ def home(text):
                     case "presidentScholar" | "stateFunded":
                         student_info_table[field] = value in tf_states
                     case "status":
-                        student_info_table[field] = status_t.get(value, f"_unknown_status_t.{value}")
+                        student_info_table[field] =\
+                            status_t.get(value, f"_unknown_status_t.{value}")
                     # Skip empty cells.
                     case "":
                         continue
