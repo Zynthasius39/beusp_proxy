@@ -1,13 +1,13 @@
 import json
 import time
 
-
-from flask import current_app as app, jsonify, make_response
+from flask import current_app as app
+from flask import jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
 from .. import parser
-from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import is_expired
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -21,8 +21,10 @@ class Grades(Resource):
     def get(self, year, semester):
         """
         Grades Endpoint
+        Returns grades in given semester.
         ---
-        summary: Returns grades in given semester.
+        tags:
+          - Resource
         parameters:
           - name: year
             in: path
@@ -154,8 +156,10 @@ class GradesAll(Resource):
     def get(self):
         """
         Grades Endpoint
+        Returns all grades.
         ---
-        summary: Returns all grades.
+        tags:
+          - Resource
         responses:
             200:
                 description: Success

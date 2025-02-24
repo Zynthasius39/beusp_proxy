@@ -12,8 +12,10 @@ class Grades(Resource):
     def get(self, *_, **__):
         """
         Grades Endpoint
+        Returns grades in given semester.
         ---
-        summary: Returns grades in given semester.
+        tags:
+          - Resource
         parameters:
           - name: year
             in: path
@@ -88,8 +90,10 @@ class GradesAll(Resource):
     def get(self):
         """
         Grades Endpoint
+        Returns all grades.
         ---
-        summary: Returns all grades.
+        tags:
+          - Resource
         responses:
             200:
                 description: Success

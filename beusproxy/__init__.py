@@ -2,16 +2,18 @@ import logging
 import os
 
 from flasgger import Swagger
-from flask import Flask, make_response, logging as flogging, request, g
-from flask_restful import Api
+from flask import Flask, g
+from flask import logging as flogging
+from flask import make_response, request
 from flask_cors import CORS
+from flask_restful import Api
 
 from .config import APP_NAME, BOT_ENABLED, FLASGGER_ENABLED, TMSAPI_OFFLINE
 from .context import init_context
-from .services.telegram import TelegramClient
-from .services.httpclient import HTTPClient
-from .services.email import EmailClient
 from .resources import bot as bot_resources
+from .services.email import EmailClient
+from .services.httpclient import HTTPClient
+from .services.telegram import TelegramClient
 
 if TMSAPI_OFFLINE:
     from .resources import offline as resources
@@ -49,29 +51,30 @@ def create_app():
         resources={r"/*": {"origins": "http://10.0.10.75:5173"}},
     )
 
-    api.add_resource(resources.Msg, "/api/resource/msg")
-    api.add_resource(resources.Res, "/api/resource/<resource>")
-    api.add_resource(resources.GradesAll, "/api/resource/grades/all")
-    api.add_resource(resources.Grades, "/api/resource/grades/<int:year>/<int:semester>")
+    api.add_resource(resources.Msg, "/resource/msg")
+    api.add_resource(resources.Res, "/resource/<resource>")
+    api.add_resource(resources.GradesAll, "/resource/grades/all")
+    api.add_resource(resources.Grades, "/resource/grades/<int:year>/<int:semester>")
     api.add_resource(
-        resources.AttendanceByCourse, "/api/resource/attendance/<int:course>"
+        resources.AttendanceByCourse, "/resource/attendance/<int:course_code>"
     )
     api.add_resource(
         resources.AttendanceBySemester,
-        "/api/resource/attendance/<int:year>/<int:semester>",
+        "/resource/attendance/<int:year>/<int:semester>",
     )
-    api.add_resource(resources.Deps, "/api/resource/deps/<dep_code>")
-    api.add_resource(resources.Program, "/api/resource/program/<int:code>/<int:year>")
-    api.add_resource(resources.Auth, "/api/auth")
-    api.add_resource(resources.LogOut, "/api/logout")
-    api.add_resource(resources.Verify, "/api/verify")
-    api.add_resource(resources.Settings, "/api/settings")
-    api.add_resource(resources.StudPhoto, "/api/studphoto")
-    api.add_resource(resources.Status, "/api/status")
+    api.add_resource(resources.Deps, "/resource/deps/<dep_code>")
+    api.add_resource(resources.Program, "/resource/program/<int:code>/<int:year>")
+    api.add_resource(resources.Auth, "/auth")
+    api.add_resource(resources.LogOut, "/logout")
+    api.add_resource(resources.Verify, "/verify")
+    api.add_resource(resources.Settings, "/settings")
+    api.add_resource(resources.StudPhoto, "/resource/studphoto")
+    api.add_resource(resources.Status, "/status")
+    api.add_resource(resources.ReadAnnounce, "/readAnnounces")
 
     if BOT_ENABLED:
-        api.add_resource(bot_resources.Bot, "/api/bot")
-        api.add_resource(bot_resources.BotSubscribe, "/api/bot/subscribe")
-        api.add_resource(bot_resources.BotVerify, "/api/bot/verify/<code>")
+        api.add_resource(bot_resources.Bot, "/bot")
+        api.add_resource(bot_resources.BotSubscribe, "/bot/subscribe")
+        api.add_resource(bot_resources.BotVerify, "/bot/verify/<code>")
 
     return app

@@ -1,7 +1,7 @@
 from flask import make_response
-from flask_restful import Resource, reqparse, abort
+from flask_restful import Resource, abort, reqparse
 
-from ..config import ROOT, HOST, USER_AGENT
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 
 
@@ -11,8 +11,10 @@ class Settings(Resource):
     def post(self):
         """
         Settings Endpoint
+        Changes settings.
         ---
-        summary: Changes settings.
+        tags:
+          - Operations
         requestBody:
           description: Language
           required: true

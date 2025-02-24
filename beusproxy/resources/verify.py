@@ -1,8 +1,9 @@
-from flask import current_app as app, make_response
+from flask import current_app as app
+from flask import make_response
 from flask_restful import Resource, abort, reqparse
 
-from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import is_expired
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -13,11 +14,13 @@ class Verify(Resource):
     Flask-RESTFUL resource
     """
 
-    def post(self):
+    def get(self):
         """
         Session Verify Endpoint
+        Verify session.
         ---
-        summary: Verify session
+        tags:
+          - Authorization
         description: Check if session is still valid.
         responses:
             200:
@@ -42,9 +45,7 @@ class Verify(Resource):
             mid_res = httpc.request(
                 "POST",
                 ROOT,
-                data={
-                    "ajx": 1
-                },
+                data={"ajx": 1},
                 headers={
                     "Host": HOST,
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",

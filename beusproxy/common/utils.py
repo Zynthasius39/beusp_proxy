@@ -3,10 +3,10 @@ import os
 import random
 import sqlite3
 from datetime import datetime
-from dateutil import parser
 
 from bs4 import BeautifulSoup
-from flask import g, abort
+from dateutil import parser
+from flask import abort, g
 
 from ..config import DATABASE, DEMO_FOLDER, HOST, ROOT, USER_AGENT
 from ..services.httpclient import HTTPClient
@@ -31,11 +31,13 @@ def read_announce(http_client: HTTPClient, sessid):
     """
     http_client.request(
         "POST",
-        f"{ROOT}stud_announce.php",
-        data="btnRead=Oxudum",
+        ROOT,
+        data={
+            "btnRead": "Oxudum",
+        },
         headers={
             "Host": HOST,
-            "Cookie": f"PHPSESSID={sessid}; ",
+            "Cookie": f"PHPSESSID={sessid}; uname=240218019; BEU_STUD_AR=0; ",
             "User-Agent": USER_AGENT,
         },
     )
@@ -185,7 +187,10 @@ def is_invalid(html):
         return True
     return False
 
-def parse_date(date, frmt=None, *, default=datetime(1970, 1, 1), no_format=False) -> str | datetime:
+
+def parse_date(
+    date, frmt=None, *, default=datetime(1970, 1, 1), no_format=False
+) -> str | datetime:
     """Parse weirdly formatted date into readable format
     Returns same date, if format is not recognized.
 

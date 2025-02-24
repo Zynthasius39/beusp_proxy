@@ -12,8 +12,10 @@ class Deps(Resource):
     def get(self, *_, **__):
         """
         Departments Endpoint
+        Returns the given department.
         ---
-        summary: Returns the given department.
+        tags:
+          - Resource
         parameters:
           - name: dep_code
             description: Department Code

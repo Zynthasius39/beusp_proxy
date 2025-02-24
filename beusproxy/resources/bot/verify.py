@@ -15,8 +15,10 @@ class BotVerify(Resource):
         # pylint: disable=R0915
         """
         Bot Verify Endpoint
+        Verification by link. Usually sent to e-mail.
         ---
-        summary: Verification step
+        tags:
+          - Bot
         description: Validate code and complete subscription step.
         produces:
           - text/html
@@ -24,9 +26,10 @@ class BotVerify(Resource):
           - name: code
             in: path
             required: true
-            example: home
+            example: 123456789
             schema:
-                type: string
+                type: integer
+                format: int64
         responses:
             200:
                 description: Return response in HTML

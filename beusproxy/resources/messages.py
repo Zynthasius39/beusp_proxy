@@ -1,9 +1,10 @@
-from flask import current_app as app, jsonify, make_response
+from flask import current_app as app
+from flask import jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
 from .. import parser
-from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import is_expired, read_msgs
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -17,8 +18,10 @@ class Msg(Resource):
     def get(self):
         """
         Messages Endpoint
+        Returns all messages.
         ---
-        summary: Returns all messages.
+        tags:
+          - Resource
         responses:
             200:
                 description: Success
@@ -30,8 +33,6 @@ class Msg(Resource):
                                 $ref: "#/components/schemas/Message"
             401:
                 description: Unauthorized
-            404:
-                description: Not Found
             502:
                 description: Bad response from root server
         """

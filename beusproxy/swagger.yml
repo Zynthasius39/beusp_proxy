@@ -15,6 +15,23 @@ servers:
     description: Production server (uses root server)
   - url: http://localhost:5001/
     description: Offline server (uses demo data)
+tags:
+  - name: Authorization
+    description: |
+      Generate and set session cookies to use service.
+      Logging out logs out all session cookies generated on
+      the server automatically.
+  - name: Operations
+    description: |
+      Root server operations to change behaviour of student portal.
+  - name: Resource
+    description: |
+      Returns parsed data as JSON.
+  - name: Bot
+    description: |
+      A user cannot subscribe to same service multiple times.
+      However same service target can be used by multiple students.
+      E.g. Group of students can subscribe to same discord webhook to get notified.
 components:
   schemas:
     AttendanceEntry:

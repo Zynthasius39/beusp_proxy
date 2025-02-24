@@ -68,8 +68,8 @@ def home(text):
             og_field = re.sub(
                 r"\s\s+", " ", cells[-2].text.replace(":", "").strip().replace("\n", "")
             )
-            if (og_field.startswith("Education debt") or
-                og_field.startswith("Təhsil haqqı borcunuz")
+            if og_field.startswith("Education debt") or og_field.startswith(
+                "Təhsil haqqı borcunuz"
             ):
                 field = "_eduDebt"
             else:
@@ -81,9 +81,9 @@ def home(text):
                     # Clean the advisor.
                     case "advisor":
                         value_val = value.split(" ")
-                        student_info_table[field] = "{} {}".format(
-                            value_val[0].lower().capitalize(),
-                            value_val[1].lower().capitalize()
+                        student_info_table[field] = (
+                            f"{value_val[0].lower().capitalize()} "
+                            f"{value_val[1].lower().capitalize()}"
                         )
                     # Construct eduDebt.
                     case "_eduDebt":
@@ -93,8 +93,8 @@ def home(text):
                         m = re.search(r"(\d+) AZN", value)
                         student_info_table["eduDebt"]["amount"] = int(m.group(1))
                     case "_eduDebtType":
-                        student_info_table["eduDebt"]["paymentType"] = edu_debt_payment_t.get(
-                            value, f"_unknown_edup_t.{value}"
+                        student_info_table["eduDebt"]["paymentType"] = (
+                            edu_debt_payment_t.get(value, f"_unknown_edup_t.{value}")
                         )
                     case "_eduDebtFirst":
                         m = re.search(r"(\d+) AZN", value)
@@ -108,15 +108,17 @@ def home(text):
                         student_info_table["lastLogin"]["datetime"] = parse_date(value)
                     case "_lastLoginIp":
                         if m := re.search(
-                                r"^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$",
-                                value
+                            r"^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$",
+                            value,
                         ):
                             student_info_table["lastLogin"]["ip"] = value
                     # Construct speciality.
                     case "_programClass":
                         if m := re.search(r"(.*)-(EN|AZ) / (\d)", value):
                             student_info_table["speciality"]["program"] = m.group(1)
-                            student_info_table["speciality"]["lang"] = m.group(2).lower()
+                            student_info_table["speciality"]["lang"] = m.group(
+                                2
+                            ).lower()
                             student_info_table["speciality"]["year"] = int(m.group(3))
                     # Parse dates.
                     case "birthDate" | "registerDate":
@@ -128,8 +130,9 @@ def home(text):
                     case "presidentScholar" | "stateFunded":
                         student_info_table[field] = value in tf_states
                     case "status":
-                        student_info_table[field] =\
-                            status_t.get(value, f"_unknown_status_t.{value}")
+                        student_info_table[field] = status_t.get(
+                            value, f"_unknown_status_t.{value}"
+                        )
                     # Skip empty cells.
                     case "":
                         continue
@@ -140,7 +143,7 @@ def home(text):
             except (ValueError, AttributeError):
                 pass
 
-# Find documents table which is the table without any border.
+    # Find documents table which is the table without any border.
     documents_table = {}
     for tr in soup.find("table", {"border": "0"}).find_all("tr"):
         for link in tr.find_all("a"):
@@ -162,14 +165,9 @@ def home(text):
         "studentInfo": student_info_table,
     }
 
-edu_debt_payment_t= {
-    "DS": "state_funded"
-}
 
-status_t = {
-    "Oxuyur": "studying"
-}
+edu_debt_payment_t = {"DS": "state_funded"}
 
-tf_states = {
-    "Yes", "Bəli"
-}
+status_t = {"Oxuyur": "studying"}
+
+tf_states = {"Yes", "Bəli"}

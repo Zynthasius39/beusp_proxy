@@ -10,11 +10,13 @@ class Auth(Resource):
 
     def post(self):
         """Bakes cookies for students
-        Authenticates and returns a SessionID to be used in API.
-        If there is no record of the student/educator in the database,
-        StudentID gets registered, assuming user has agreed the ToS
+        Authenticates and returns a SessionID to be used in API. \
+        If there is no record of the student/educator in the database, \
+        StudentID gets registered, assuming user has agreed the ToS \
         which is usually shown in the login page.
         ---
+        tags:
+          - Authorization
         parameters:
         - name: studentId
           in: query

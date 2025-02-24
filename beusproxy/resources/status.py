@@ -3,9 +3,9 @@ import hashlib
 from flask import current_app as app
 from flask_restful import Resource, abort, reqparse
 
-from ..config import ROOT, HOST, USER_AGENT
-from ..context import c
 from ..common.utils import get_db
+from ..config import HOST, ROOT, USER_AGENT
+from ..context import c
 from ..services.httpclient import HTTPClientError
 
 # Files to calculate the sha256 hashsum of.
@@ -26,8 +26,12 @@ class Status(Resource):
     def get(self):
         """
         Status Endpoint
+        Returns the status of root server and statistics. \
+        Advanced status also retrieves and hashes static files of root \
+        server to verify if any modification is present.
         ---
-        summary: Returns the status of root server and statistics.
+        tags:
+          - Operations
         parameters:
         - name: advanced
           in: query
@@ -58,7 +62,8 @@ class Status(Resource):
                                     type: array
                                     items:
                                         type: string
-                                        example: 1d750059806e36fa731f0b045e2844bf52e150a404ab01ac5224dc7e10bbf040 general.js
+                                        example: 1d750059806e36fa731f0b045e284\
+                                        4bf52e150a404ab01ac5224dc7e10bbf040 general.js
                             required:
                              - students_registered
                              - subscriptions

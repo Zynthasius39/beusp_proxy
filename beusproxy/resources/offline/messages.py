@@ -12,8 +12,10 @@ class Msg(Resource):
     def get(self):
         """
         Messages Endpoint
+        Returns all messages.
         ---
-        summary: Returns all messages.
+        tags:
+          - Resource
         responses:
             200:
                 description: Success
@@ -25,8 +27,6 @@ class Msg(Resource):
                                 $ref: "#/components/schemas/Message"
             401:
                 description: Unauthorized
-            404:
-                description: Not Found
             502:
                 description: Bad response from root server
         """

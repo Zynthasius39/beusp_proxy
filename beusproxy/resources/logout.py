@@ -1,8 +1,9 @@
-from flask import current_app as app, make_response
+from flask import current_app as app
+from flask import make_response
 from flask_restful import Resource, abort, reqparse
 
-from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import get_db
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -13,11 +14,13 @@ class LogOut(Resource):
     Flask-RESTFUL resource
     """
 
-    def post(self):
+    def get(self):
         """
         LogOut Endpoint
+        Logs out given SessionID.
         ---
-        summary: Logs out given SessionID.
+        tags:
+          - Authorization
         description: Logs out the SessionID used in API.
         responses:
             200:

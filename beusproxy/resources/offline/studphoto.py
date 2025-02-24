@@ -15,8 +15,10 @@ class StudPhoto(Resource):
     def get(self):
         """
         Student Photo Endpoint
+        Returns student photo in jpeg format, as root server intends.
         ---
-        summary: Returns student photo.
+        tags:
+          - Resource
         description: Returns student photo.
             You need to fetch home resource first to set
             ImgID cookie before using this endpoint.

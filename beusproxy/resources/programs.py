@@ -1,10 +1,10 @@
-
-from flask import current_app as app, jsonify, make_response
+from flask import current_app as app
+from flask import jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
 from .. import parser
-from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import is_expired
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -18,8 +18,10 @@ class Program(Resource):
     def get(self, code, year):
         """
         Programs Endpoint
+        Returns the given program.
         ---
-        summary: Returns the given program.
+        tags:
+          - Resource
         parameters:
           - name: code
             in: path
@@ -42,8 +44,6 @@ class Program(Resource):
                 description: Bad response
             401:
                 description: Unauthorized
-            404:
-                description: Not Found
             502:
                 description: Bad response from root server
         """

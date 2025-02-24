@@ -8,11 +8,13 @@ class LogOut(Resource):
     Flask-RESTFUL resource
     """
 
-    def post(self):
+    def get(self):
         """
         LogOut Endpoint
+        Logs out given SessionID.
         ---
-        summary: Logs out given SessionID.
+        tags:
+          - Authorization
         description: Logs out the SessionID used in API.
         responses:
             200:

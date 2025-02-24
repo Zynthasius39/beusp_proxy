@@ -7,8 +7,10 @@ class Settings(Resource):
     def post(self):
         """
         Settings Endpoint
+        Changes settings.
         ---
-        summary: Changes settings.
+        tags:
+          - Operations
         requestBody:
           description: Language
           required: true

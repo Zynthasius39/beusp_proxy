@@ -1,4 +1,5 @@
-from flask import current_app as app, make_response
+from flask import current_app as app
+from flask import make_response
 from flask_restful import Resource, abort, reqparse
 
 from ..config import HOST, ROOT, USER_AGENT
@@ -15,8 +16,10 @@ class StudPhoto(Resource):
     def get(self):
         """
         Student Photo Endpoint
+        Returns student photo in jpeg format, as root server intends.
         ---
-        summary: Returns student photo.
+        tags:
+          - Resource
         description: Returns student photo.
             You need to fetch home resource first to set
             ImgID cookie before using this endpoint.

@@ -1,11 +1,12 @@
 import secrets
 from datetime import datetime
 
-from flask import current_app as app, make_response
+from flask import current_app as app
+from flask import make_response
 from flask_restful import Resource, abort, reqparse
 
-from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import get_db
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -18,11 +19,13 @@ class Auth(Resource):
 
     def get(self):
         """Bakes cookies for students
-        Authenticates and returns a SessionID to be used in API.
-        If there is no record of the student/educator in the database,
-        StudentID gets registered, assuming user has agreed the ToS
+        Authenticates and returns a SessionID to be used in API. \
+        If there is no record of the student/educator in the database, \
+        StudentID gets registered, assuming user has agreed the ToS \
         which is usually shown in the login page.
         ---
+        tags:
+          - Authorization
         parameters:
         - name: studentId
           in: query

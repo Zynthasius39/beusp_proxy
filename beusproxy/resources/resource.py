@@ -1,9 +1,10 @@
-from flask import current_app as app, jsonify, make_response
+from flask import current_app as app
+from flask import jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
 from .. import parser
-from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import is_expired
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -17,8 +18,10 @@ class Res(Resource):
     def get(self, resource):
         """
         Resource Endpoint
+        Returns specified resource.
         ---
-        summary: Returns specified resource.
+        tags:
+          - Resource
         parameters:
           - name: resource
             in: path
@@ -53,6 +56,8 @@ class Res(Resource):
                 description: Invalid Page
             401:
                 description: Unauthorized
+            404:
+                description: Resource not found
             502:
                 description: Bad response from root server
         """

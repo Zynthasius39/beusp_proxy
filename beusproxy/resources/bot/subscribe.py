@@ -4,8 +4,8 @@ from smtplib import SMTPException
 from flask import make_response
 from flask_restful import Resource, abort, reqparse
 
-from ...context import c
 from ...common.utils import get_db, verify_code_gen
+from ...context import c
 from ...services.discord import is_webhook
 from ...services.email import is_email
 
@@ -19,8 +19,10 @@ class BotSubscribe(Resource):
     def get(self):
         """
         Bot Subscribe Endpoint
+        Returns subscriptions of given student.
         ---
-        summary: Bot subcriptions status
+        tags:
+          - Bot
         description: Gets a list of subscriptions for current user.
         responses:
             200:
@@ -134,8 +136,10 @@ class BotSubscribe(Resource):
     def put(self):
         """
         Bot Subscribe Endpoint
+        Subscribe to Bot.
         ---
-        summary: Subscribe to Bot
+        tags:
+          - Bot
         description: Subscribes the current user.
         requestBody:
             description: Subscriptions to add.
@@ -318,8 +322,12 @@ class BotSubscribe(Resource):
     def delete(self):
         """
         Bot Subscribe Endpoint
+        Unsubscribe from Bot.
+        Removes the subscription reference to unsubscribe.
+        Subscription is still stored for future use.
         ---
-        summary: Unsubscribe to Bot
+        tags:
+          - Bot
         description: Unsubscribes the current user.
         parameters:
           - name: unsubscribe

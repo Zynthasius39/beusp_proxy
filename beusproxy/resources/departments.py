@@ -1,5 +1,5 @@
-
-from flask import current_app as app, jsonify, make_response
+from flask import current_app as app
+from flask import jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
 from .. import parser
@@ -18,8 +18,10 @@ class Deps(Resource):
     def get(self, dep_code):
         """
         Departments Endpoint
+        Returns the given department.
         ---
-        summary: Returns the given department.
+        tags:
+          - Resource
         parameters:
           - name: dep_code
             description: Department Code

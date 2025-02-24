@@ -13,6 +13,8 @@ class AttendanceBySemester(Resource):
         """Gotta save your attendance for holidays
         Returns attendance in given semester.
         ---
+        tags:
+          - Resource
         parameters:
           - name: year
             in: path
@@ -71,10 +73,12 @@ class AttendanceByCourse(Resource):
     def get(self, *_, **__):
         """
         Attendance Endpoint
+        Returns attendance for given course
         ---
-        summary: Returns attendance in given semester.
+        tags:
+          - Resource
         parameters:
-          - name: course
+          - name: course_code
             in: path
             required: true
             example: 58120

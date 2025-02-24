@@ -12,8 +12,10 @@ class Program(Resource):
     def get(self, *_, **__):
         """
         Programs Endpoint
+        Returns the given program.
         ---
-        summary: Returns the given program.
+        tags:
+          - Resource
         parameters:
           - name: code
             in: path
@@ -36,8 +38,6 @@ class Program(Resource):
                 description: Bad response
             401:
                 description: Unauthorized
-            404:
-                description: Not Found
             502:
                 description: Bad response from root server
         """

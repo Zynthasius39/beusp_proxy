@@ -1,11 +1,12 @@
 import json
 
-from flask import current_app as app, jsonify, make_response
+from flask import current_app as app
+from flask import jsonify, make_response
 from flask_restful import Resource, abort, reqparse
 
 from .. import parser
-from ..config import HOST, ROOT, USER_AGENT
 from ..common.utils import is_expired
+from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -20,6 +21,8 @@ class AttendanceBySemester(Resource):
         """Gotta save your attendance for holidays
         Returns attendance in given semester.
         ---
+        tags:
+          - Resource
         parameters:
           - name: year
             in: path
@@ -119,13 +122,15 @@ class AttendanceByCourse(Resource):
     Flask-RESTFUL resource
     """
 
-    def get(self, course):
+    def get(self, course_code):
         """
         Attendance Endpoint
+        Returns attendance for given course
         ---
-        summary: Returns attendance in given semester.
+        tags:
+          - Resource
         parameters:
-          - name: course
+          - name: course_code
             in: path
             required: true
             example: 58120
@@ -164,7 +169,7 @@ class AttendanceByCourse(Resource):
                     "ajx": 1,
                     "mod": "ejurnal",
                     "action": "viewCourse",
-                    "derst": course,
+                    "derst": course_code,
                 },
                 headers={
                     "Host": HOST,

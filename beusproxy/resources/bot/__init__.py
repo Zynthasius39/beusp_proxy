@@ -17,9 +17,10 @@ class Bot(Resource):
     def get(self):
         """
         Bot Endpoint
+        Gets telegram bot and the email used by bot.
         ---
-        summary: Bot status
-        description: Gets telegram bot and the email used by bot
+        tags:
+          - Bot
         responses:
             200:
                 description: Bot status

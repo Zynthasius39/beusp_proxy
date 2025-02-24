@@ -8,11 +8,13 @@ class Verify(Resource):
     Flask-RESTFUL resource
     """
 
-    def post(self):
+    def get(self):
         """
         Session Verify Endpoint
+        Verify session.
         ---
-        summary: Verify session
+        tags:
+          - Authorization
         description: Check if session is still valid.
         responses:
             200:

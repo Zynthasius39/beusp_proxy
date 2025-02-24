@@ -3,8 +3,8 @@ import os
 from flask import make_response
 from flask_restful import Resource, abort
 
-from ...config import DEMO_FOLDER
 from ...common.utils import demo_response
+from ...config import DEMO_FOLDER
 
 
 class Res(Resource):
@@ -16,8 +16,10 @@ class Res(Resource):
     def get(self, resource):
         """
         Resource Endpoint
+        Returns specified resource.
         ---
-        summary: Returns specified resource.
+        tags:
+          - Resource
         parameters:
           - name: resource
             in: path
@@ -52,6 +54,8 @@ class Res(Resource):
                 description: Invalid Page
             401:
                 description: Unauthorized
+            404:
+                description: Resource not found
             502:
                 description: Bad response from root server
         """
