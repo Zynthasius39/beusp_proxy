@@ -8,12 +8,9 @@ from flask import make_response, request
 from flask_cors import CORS
 from flask_restful import Api
 
-from .config import APP_NAME, BOT_ENABLED, FLASGGER_ENABLED, TMSAPI_OFFLINE
+from .config import APP_NAME, BOT_ENABLED, DEBUG, FLASGGER_ENABLED, TMSAPI_OFFLINE
 from .context import init_context
 from .resources import bot as bot_resources
-from .services.email import EmailClient
-from .services.httpclient import HTTPClient
-from .services.telegram import TelegramClient
 
 if TMSAPI_OFFLINE:
     from .resources import offline as resources
@@ -23,7 +20,9 @@ else:
 
 def create_app():
     """App Factory"""
-    # logging.basicConfig(level=logging.DEBUG)
+    if DEBUG:
+        logging.basicConfig(level=logging.DEBUG)
+
     for logger in (APP_NAME, "telegram", "email", "httpclient"):
         logging.getLogger(logger).addHandler(flogging.default_handler)
 
