@@ -82,20 +82,20 @@ class TelegramClient:
         """Close TelegramClient"""
         self._shevent.set()
 
-    def get_me(self):
+    def get_me(httpc):
         """Telegram API: getMe
 
         Returns:
             dict: JSON response
         """
-        res = self._httpc.request(
-            "GET", f"https://{self._api_hostname}/bot{self._api_key}/getMe"
+        res = httpc.request(
+            "GET", f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/getMe"
         )
 
         if not res.status == 200:
             raise ClientError(res.status)
 
-        return self._httpc.cr_json(res)
+        return httpc.cr_json(res)
 
     def send_message(self, text, chat_id):
         """Telegram API: sendMessage
@@ -314,7 +314,7 @@ class TelegramClient:
         """Process verifications queue
 
         Args:
-            update (dict): Update object
+            u (dict): Update object
         """
         if u.get("message"):
             if not u["message"]["chat"]["type"] == "private":

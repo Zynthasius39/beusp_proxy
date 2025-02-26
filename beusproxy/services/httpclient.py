@@ -1,14 +1,14 @@
 import asyncio
-import collections
 import json
-import threading
 import logging
 import sys
+from threading import Event, Thread
 from typing import Optional
 
-from aiohttp import ClientSession, ClientResponse, ClientTimeout, ClientError
+from aiohttp import ClientError, ClientResponse, ClientSession, ClientTimeout
 
 from ..config import REQUEST_TIMEOUT
+
 
 class HTTPClient:
     """HTTPClient base class.
@@ -19,9 +19,7 @@ class HTTPClient:
     def __init__(
         self,
         base_url: Optional[str] = None,
-        timeout: Optional[ClientTimeout] = ClientTimeout(
-            REQUEST_TIMEOUT
-        ),
+        timeout: Optional[ClientTimeout] = ClientTimeout(REQUEST_TIMEOUT),
         *,
         ssl=True,
         loop=None,
@@ -30,22 +28,29 @@ class HTTPClient:
     ):
         # pylint: disable=R0913
         self._loop = asyncio.new_event_loop() if not loop else loop
+        self._proxy = proxy
         self._ssl = ssl
 
         def _client_worker():
             asyncio.set_event_loop(self._loop)
             self._loop.run_forever()
 
-        self._thread = threading.Thread(name=__name__, target=_client_worker, daemon=True)
+        self._shevent = Event()
+        self._thread = Thread(name=__name__, target=_client_worker, daemon=True)
         self._thread.start()
         self._session = ClientSession(
-            base_url, loop=self._loop, proxy=proxy, timeout=timeout, **kwargs
+            base_url, loop=self._loop, timeout=timeout, **kwargs
         )
 
     def close(self):
         """Stop the loop and close ClientSession"""
-        self._loop.call_soon_threadsafe(self._session.close)
+
+        async def close_session():
+            await self._session.close()
+
+        self.submit_coro(close_session)
         self._loop.call_soon_threadsafe(self._loop.stop)
+        self._loop.call_soon_threadsafe(self._loop.close)
 
     def request(self, method, url, *, allow_redirects=True, **kwargs):
         """Blocking ClientSession.request wrapper.
@@ -59,7 +64,11 @@ class HTTPClient:
         """
         try:
             res = self.submit_coro(
-                self.request_coro, method, url, allow_redirects=allow_redirects, **kwargs
+                self.request_coro,
+                method,
+                url,
+                allow_redirects=allow_redirects,
+                **kwargs
             ).result()
         except TimeoutError as e:
             logging.getLogger(__name__).error(e)
@@ -114,7 +123,7 @@ class HTTPClient:
             cr.json, encoding=encoding, loads=loads, content_type=content_type
         ).result()
 
-    def gather(self, *args: collections.abc.coroutine, return_exceptions=False):
+    def gather(self, *args, return_exceptions=False):
         """asyncio.gather wrapper.
 
         Reference:
@@ -147,8 +156,14 @@ class HTTPClient:
             coroutine: Wrapped coroutine
         """
         return await self._session.request(
-            method, url, allow_redirects=allow_redirects, ssl=self._ssl, **kwargs
+            method,
+            url,
+            allow_redirects=allow_redirects,
+            ssl=self._ssl,
+            proxy=self._proxy,
+            **kwargs
         )
+
 
 class HTTPClientError(ClientError):
     """HTTPClient Error Base Exception"""
