@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import re
 import sys
 from urllib.parse import urlparse
@@ -70,6 +70,11 @@ BOT_DISCORD_AVATAR = ""
 # Not advised to edit, but here you are
 EMAIL_REGEX = r"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$"
 
+# Cache init script
+CACHE_INIT_SQL = "cache_init.sql"
+# CACHE_DATABASE = "file:cachedb?mode=memory&cache=shared"
+CACHE_DATABASE = "file:testcache.db"
+
 # Getting ENV
 
 FLASGGER_ENABLED = os.getenv("SWAGGER_ENABLED", "false").lower() == "true"
@@ -137,9 +142,11 @@ if bot_enabled := os.getenv("BOT_ENABLED", ""):
 if BOT_ENABLED:
     DATABASE = os.getenv("BOT_DATABASE", DATABASE)
 
-    BOT_TELEGRAM_API_KEY = os.getenv("BOT_TELEGRAM_API_KEY", BOT_TELEGRAM_API_KEY)
+    BOT_TELEGRAM_API_KEY = os.getenv(
+        "BOT_TELEGRAM_API_KEY", BOT_TELEGRAM_API_KEY)
 
-    BOT_TELEGRAM_HOSTNAME = os.getenv("BOT_TELEGRAM_HOSTNAME", BOT_TELEGRAM_HOSTNAME)
+    BOT_TELEGRAM_HOSTNAME = os.getenv(
+        "BOT_TELEGRAM_HOSTNAME", BOT_TELEGRAM_HOSTNAME)
 
     if re.match(EMAIL_REGEX, bot_email := os.getenv("BOT_EMAIL", "")):
         BOT_EMAIL = bot_email

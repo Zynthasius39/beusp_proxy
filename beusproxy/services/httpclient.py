@@ -36,20 +36,33 @@ class HTTPClient:
             self._loop.run_forever()
 
         self._shevent = Event()
-        self._thread = Thread(name=__name__, target=_client_worker, daemon=True)
+        self._thread = Thread(
+            name=__name__, target=_client_worker, daemon=True)
         self._thread.start()
         self._session = ClientSession(
             base_url, loop=self._loop, timeout=timeout, **kwargs
         )
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
+
     def close(self):
         """Stop the loop and close ClientSession"""
 
-        async def close_session():
-            await self._session.close()
+        # Disabled
+        # Causes burying of uWSGI, Gunicorn server workers to hang
+        # ClientSession keeps hanging
 
-        self.submit_coro(close_session)
-        self._loop.call_soon_threadsafe(self._loop.stop)
+        # async def close_session():
+        #     await self._session.close()
+        # self.submit_coro(close_session)
+
+        # Causes: RuntimeError: Cannot close a running event loop
+        # self._loop.call_soon_threadsafe(self._loop.stop)
+
         self._loop.call_soon_threadsafe(self._loop.close)
 
     def request(self, method, url, *, allow_redirects=True, **kwargs):

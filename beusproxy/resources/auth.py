@@ -57,6 +57,7 @@ class Auth(Resource):
             502:
                 description: Bad response from root server
         """
+        # TODO: Fix subscriber eater
         httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(

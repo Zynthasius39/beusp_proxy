@@ -173,3 +173,5 @@ __pycache__
 pyvenv.cfg
 todo.md
 beusp.db
+
+*.lock
