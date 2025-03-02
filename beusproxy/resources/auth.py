@@ -57,7 +57,6 @@ class Auth(Resource):
             502:
                 description: Bad response from root server
         """
-        # TODO: Fix subscriber eater
         httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
@@ -132,14 +131,13 @@ class Auth(Resource):
             # if it's not present who hopefully read the ToS.
             db_res = db_cur.execute(
                 """
-                REPLACE INTO Students(id, student_id, password)
-                VALUES ((
-                    SELECT id FROM Students
-                    WHERE student_id = ?
-                ), ?, ?)
+                INSERT INTO Students (student_id, password)
+                VALUES (?, ?)
+                ON CONFLICT (student_id) DO UPDATE
+                SET password = ?
                 RETURNING id;
             """,
-                (student_id, student_id, password),
+                (student_id, password, password),
             ).fetchone()
 
             if db_res is None:

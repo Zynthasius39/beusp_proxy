@@ -5,7 +5,7 @@ import sys
 from ..config import CACHE_DATABASE, CACHE_INIT_SQL, DATABASE
 
 _conn_list = []
-_CACHE_INIT = False
+_CACHE_INIT = True  # TODO: Turn me off :sideeye:
 
 
 def get_db(*, readonly=False):

@@ -13,23 +13,24 @@ def authorize_subs(cconn, httpc):
     stud_credentials = cconn.execute(
         """
         SELECT
-            ss.id,
+            ss.sub_id,
             ss.student_id,
-            ss.password,
-            ses.session_id
+            ss.password
         FROM
             Student_Subscribers ss
         LEFT JOIN
             Student_Sessions ses
         ON
-            ss.id == ses.owner_id AND
-            ses.logged_out == 0
+            ss.sub_id == ses.owner_id AND
+            ses.expired == 0
+        WHERE
+            ses.session_id IS NULL;
     """
     ).fetchall()
 
     id_table = {}
     for stud in stud_credentials:
-        id_table[stud["student_id"]] = stud["id"]
+        id_table[stud["student_id"]] = stud["sub_id"]
     print(id_table)
 
     async def auth_stud_coro(student_id, password):
@@ -61,14 +62,7 @@ def authorize_subs(cconn, httpc):
         if res.status != 200:
             logger.warning("Auth failed for %d: %d", student_id, res.status)
             continue
-        if (
-            sess_id := dict(
-                cookie.split("=", 1)
-                # TODO: Fix cookie theft
-                for cookie in res.headers.get("Set-Cookie").split("; ")
-            ).get("SessionID")
-            is None
-        ):
+        if (sess_id := res.cookies.get("SessionID")) is None:
             logger.error("No cookie for %d: %d", student_id, res.status)
             continue
         cconn.execute(
@@ -81,6 +75,6 @@ def authorize_subs(cconn, httpc):
                 ?, ?
             )
         """,
-            (id_table.get(student_id), sess_id),
+            (id_table.get(student_id), sess_id.value),
         )
         cconn.commit()

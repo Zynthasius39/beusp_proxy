@@ -1,6 +1,3 @@
-import beusproxy.services.database as db
-
-
 def fetch_subs(cconn, mconn):
     """Fetch subscribed students"""
     stud_rows = mconn.execute(
@@ -20,10 +17,15 @@ def fetch_subs(cconn, mconn):
         );
     """
     ).fetchall()
+    cconn.execute(
+        """
+        DELETE FROM Student_Subscribers;
+    """
+    )
     cconn.executemany(
         """
         INSERT INTO Student_Subscribers (
-            id,
+            sub_id,
             student_id,
             password,
             active_telegram_id,

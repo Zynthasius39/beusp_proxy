@@ -20,3 +20,10 @@ def run_chain():
         httpc = HTTPClient()
         chain.authorize_subs(cconn, httpc)
         httpc.close()
+
+        # Stage 3
+        # Fetch grades and compare against database
+        chain.check_grades(cconn)
+
+        # Stage 4
+        # Notify subscribers with visual cards
