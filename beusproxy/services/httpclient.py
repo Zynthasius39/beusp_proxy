@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import sys
+import time
 from threading import Event, Thread
 from typing import Optional
 
@@ -56,14 +57,16 @@ class HTTPClient:
         # Causes burying of uWSGI, Gunicorn server workers to hang
         # ClientSession keeps hanging
 
-        # async def close_session():
-        #     await self._session.close()
-        # self.submit_coro(close_session)
+        async def close_session():
+            await self._session.close()
+
+        self.submit_coro(close_session)
+        time.sleep(1)
 
         # Causes: RuntimeError: Cannot close a running event loop
         # self._loop.call_soon_threadsafe(self._loop.stop)
 
-        self._loop.call_soon_threadsafe(self._loop.close)
+        # self._loop.call_soon_threadsafe(self._loop.close)
 
     def request(self, method, url, *, allow_redirects=True, **kwargs):
         """Blocking ClientSession.request wrapper.
