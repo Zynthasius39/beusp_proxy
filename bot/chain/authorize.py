@@ -31,22 +31,18 @@ def authorize_subs(cconn, httpc):
     id_table = {}
     for stud in stud_credentials:
         id_table[stud["student_id"]] = stud["sub_id"]
-    print(id_table)
+    logger.debug("Authenticating: %s", str(id_table))
 
     async def auth_stud_coro(student_id, password):
         """Authorize Student"""
-        try:
-            return (
-                student_id,
-                await httpc.request_coro(
-                    "GET",
-                    f"{API_HOSTNAME}auth",
-                    params={"studentId": student_id, "password": password},
-                ),
-            )
-        except ClientError as e:
-            logger.error(e)
-            return
+        return (
+            student_id,
+            await httpc.request_coro(
+                "GET",
+                f"{API_HOSTNAME}auth",
+                params={"studentId": student_id, "password": password},
+            ),
+        )
 
     try:
         ress = httpc.gather(
@@ -55,8 +51,9 @@ def authorize_subs(cconn, httpc):
                 for stud in stud_credentials
             ]
         )
-    except HTTPClientError as e:
+    except ClientError as e:
         logger.error(e)
+        return
 
     for student_id, res in ress:
         if res.status != 200:

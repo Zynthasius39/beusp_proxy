@@ -1,3 +1,5 @@
+import time
+
 import beusproxy.services.database as db
 from beusproxy.services.httpclient import HTTPClient
 
@@ -16,14 +18,13 @@ def run_chain():
         # Stage 2
         # Bake cookies for students in need
         # Skips students with invalid credentials just in case.
-        # with HTTPClient() as httpc:
         httpc = HTTPClient()
         chain.authorize_subs(cconn, httpc)
-        httpc.close()
 
         # Stage 3
         # Fetch grades and compare against database
-        chain.check_grades(cconn)
+        chain.check_grades(cconn, httpc)
+        httpc.close()
 
         # Stage 4
         # Notify subscribers with visual cards

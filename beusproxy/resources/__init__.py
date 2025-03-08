@@ -1,7 +1,7 @@
 from .attendance import AttendanceByCourse, AttendanceBySemester
 from .auth import Auth
 from .departments import Deps
-from .grades import Grades, GradesAll
+from .grades import Grades, GradesAll, GradesLatest
 from .logout import LogOut
 from .messages import Msg
 from .programs import Program
@@ -19,6 +19,7 @@ __all__ = [
     "Deps",
     "Grades",
     "GradesAll",
+    "GradesLatest",
     "LogOut",
     "Msg",
     "Program",

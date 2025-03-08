@@ -8,7 +8,7 @@ class Auth(Resource):
     Flask-RESTFUL resource
     """
 
-    def post(self):
+    def get(self):
         """Bakes cookies for students
         Authenticates and returns a SessionID to be used in API. \
         If there is no record of the student/educator in the database, \

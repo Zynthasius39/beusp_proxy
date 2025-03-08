@@ -7,7 +7,7 @@ from flask_restful import Resource, abort, reqparse
 
 from .. import parser
 from ..common.utils import is_expired
-from ..config import HOST, ROOT, USER_AGENT
+from ..config import API_HOSTNAME, HOST, ROOT, USER_AGENT
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -269,4 +269,123 @@ class GradesAll(Resource):
 
         page = jsonify(parser.grades2(text))
         res = make_response(page, 200)
+        return res
+
+
+class GradesLatest(Resource):
+    """Latest Grades
+
+    Flask-RESTFUL resource
+    """
+
+    def get(self):
+        """
+        Grades Endpoint
+        Returns latest grades semester.
+        ---
+        tags:
+          - Resource
+        responses:
+            200:
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties:
+                                $ref: "#/components/schemas/CourseGrade"
+                            example:
+                                BA108:
+                                    absents: 2
+                                    act1: 15
+                                    act2: 12.6
+                                    addfinal: -1
+                                    att: 10
+                                    courseName: Principles of Entrepreneurship
+                                    ects: 3
+                                    final: 50
+                                    iw: 10
+                                    l: ""
+                                    m: 4
+                                    n: 3
+                                    refinal: -1
+                                    sum: 98
+                                    year: 2022
+                                    semester: 1
+                                ECON163:
+                                    absents: 0
+                                    act1: 13.5
+                                    act2: 15
+                                    addfinal: -1
+                                    att: 10
+                                    courseName: Engineering Economics
+                                    ects: 9
+                                    final: 38
+                                    iw: 10
+                                    l: ""
+                                    m: 4
+                                    n: 3
+                                    refinal: -1
+                                    sum: 87
+                                    year: 2022
+                                    semester: 1
+            400:
+                description: Bad response
+            401:
+                description: Unauthorized
+            502:
+                description: Bad response from root server
+        """
+        httpc = c.get("httpc")
+        rp = reqparse.RequestParser()
+        rp.add_argument(
+            "SessionID",
+            type=str,
+            help="Invalid sessionid",
+            location="cookies",
+            required=True,
+        )
+        args = rp.parse_args()
+
+        try:
+            mid_res = httpc.request(
+                "GET",
+                f"{API_HOSTNAME}resource/grades",
+                headers={
+                    "Host": HOST,
+                    "Cookie": f"SessionID={args.get("SessionID")};",
+                    "User-Agent": USER_AGENT,
+                },
+            )
+
+            mid_json = httpc.cr_json(mid_res)
+            if not mid_res.status == 200:
+                abort(mid_res.status, help=mid_json.get("help", ""))
+
+            year, semester = (
+                mid_json["entries"][-1]["year"],
+                mid_json["entries"][-1]["semester"],
+            )
+
+            if not mid_json.get("entries"):
+                abort(502, help="Bad response from root server")
+
+            mid_res = httpc.request(
+                "GET",
+                f"{API_HOSTNAME}resource/grades/{year}/{semester}",
+                headers={
+                    "Host": HOST,
+                    "Cookie": f"SessionID={args.get("SessionID")};",
+                    "User-Agent": USER_AGENT,
+                },
+            )
+
+            mid_json = httpc.cr_json(mid_res)
+            if not mid_res.status == 200:
+                abort(mid_res.status, help=mid_res.get("help", ""))
+        except HTTPClientError as ce:
+            app.logger.error(ce)
+            abort(502, help="Bad response from root server")
+
+        res = make_response(mid_json, 200)
         return res

@@ -89,7 +89,7 @@ def grades2(html):
         "act2": 15,
         "act3": 10,
         "iw": 10,
-        "att": 10,
+        "attendance": 10,
         "final": 50,
         "addfinal": 50,
         "refinal": 50,
@@ -124,7 +124,9 @@ def grades2(html):
                     row.append(td.text.strip())
             table.append(row)
 
-        m = re.search(r"(\d{4})-\d{4} ([12]). (term|semester)", table_ys[ys_count].text.strip())
+        m = re.search(
+            r"(\d{4})-\d{4} ([12]). (term|semester)", table_ys[ys_count].text.strip()
+        )
         ys_cur = f"{m.group(1)}#{m.group(2)}"
         ys_count += 1
         # Checking if SDF3 exists in header row.
@@ -143,7 +145,7 @@ def grades2(html):
                 grade_field = grade_fields.get(table[0][inx])
                 # If field exists in scale table
                 # and if it is a digit.
-                if not grade_field is None and j.isdigit():
+                if grade_field is not None and j.isdigit():
                     # Cast the grade into int.
                     grade = int(j)
                     # Check if grade table is using old scale.
@@ -173,7 +175,7 @@ def grades2(html):
                         if act3_enabled and grade_field == 15:
                             grade_field = 10
                         # Convert 100-point scale grade to new scale
-                        if not grade_field is None and is_old_graded:
+                        if grade_field is not None and is_old_graded:
                             j = round(int(j) / 100 * grade_field, 2)
                         else:
                             j = int(j)

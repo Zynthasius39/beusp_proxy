@@ -4,11 +4,12 @@ import os
 from flasgger import Swagger
 from flask import Flask, g
 from flask import logging as flogging
-from flask import make_response, request
+from flask import make_response
 from flask_cors import CORS
 from flask_restful import Api
 
-from .config import APP_NAME, BOT_ENABLED, DEBUG, FLASGGER_ENABLED, TMSAPI_OFFLINE
+from .config import (APP_NAME, BOT_ENABLED, DEBUG, FLASGGER_ENABLED,
+                     TMSAPI_OFFLINE)
 from .context import init_context
 from .resources import bot as bot_resources
 
@@ -53,7 +54,9 @@ def create_app():
     api.add_resource(resources.Msg, "/resource/msg")
     api.add_resource(resources.Res, "/resource/<resource>")
     api.add_resource(resources.GradesAll, "/resource/grades/all")
-    api.add_resource(resources.Grades, "/resource/grades/<int:year>/<int:semester>")
+    api.add_resource(resources.GradesLatest, "/resource/grades/latest")
+    api.add_resource(resources.Grades,
+                     "/resource/grades/<int:year>/<int:semester>")
     api.add_resource(
         resources.AttendanceByCourse, "/resource/attendance/<int:course_code>"
     )
@@ -62,7 +65,8 @@ def create_app():
         "/resource/attendance/<int:year>/<int:semester>",
     )
     api.add_resource(resources.Deps, "/resource/deps/<dep_code>")
-    api.add_resource(resources.Program, "/resource/program/<int:code>/<int:year>")
+    api.add_resource(resources.Program,
+                     "/resource/program/<int:code>/<int:year>")
     api.add_resource(resources.Auth, "/auth")
     api.add_resource(resources.LogOut, "/logout")
     api.add_resource(resources.Verify, "/verify")
