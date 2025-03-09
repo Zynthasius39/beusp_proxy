@@ -1,15 +1,16 @@
 import json
 import logging
+import sys
 from datetime import datetime
 
-from jsondiff import diff
+from aiohttp import ClientError
 
 from beusproxy.config import API_HOSTNAME, HOST, USER_AGENT
 
-from ..common.utils import grade_diff
+from ..common.utils import grade_diff, report_gen
 
 
-def check_grades(cconn, httpc):
+def check_grades(cconn, httpc, nmgr):
     """Fetch grades and compare"""
     # Fetch grades json from db
     subs = cconn.execute(
@@ -37,9 +38,13 @@ def check_grades(cconn, httpc):
 
     # Fetch grades via API
     cr_dict = {}
-    httpc.gather(
-        *[grades_coro(cr_dict, sub["owner_id"], sub["session_id"]) for sub in subs]
-    )
+    try:
+        httpc.gather(
+            *[grades_coro(cr_dict, sub["owner_id"], sub["session_id"]) for sub in subs]
+        )
+    except ClientError as e:
+        logging.error(e)
+        sys.exit(1)
 
     async def grades_json_coro(cr, sub_id, sub_grades_cr):
         if sub_grades_cr.status == 200:
@@ -49,12 +54,16 @@ def check_grades(cconn, httpc):
         elif sub_grades_cr.status == 401:
             cr[sub_id] = 401
 
-    httpc.gather(
-        *[
-            grades_json_coro(cr_dict, sub_id, sub_grades_cr)
-            for sub_id, sub_grades_cr in cr_dict.items()
-        ]
-    )
+    try:
+        httpc.gather(
+            *[
+                grades_json_coro(cr_dict, sub_id, sub_grades_cr)
+                for sub_id, sub_grades_cr in cr_dict.items()
+            ]
+        )
+    except ClientError as e:
+        logging.error(e)
+        sys.exit(1)
 
     subs_grades_old = cconn.execute(
         """
@@ -87,7 +96,12 @@ def check_grades(cconn, httpc):
                     cconn.revert()
                 cconn.commit()
                 continue
-            grade_diff(sub_grades, json.loads(subs_grades_old_dict[sub_id]))
+
+            # Grade diff util
+            diffs = grade_diff(json.loads(subs_grades_old_dict[sub_id]), sub_grades)
+
+            # Push to notifier
+            nmgr.notify(sub_id, diffs)
         json_grades = json.dumps(sub_grades)
         res = cconn.execute(
             """

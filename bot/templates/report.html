@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      color: white;
+      height: fit-content;
+    }
+
+    .container {
+      width: 50%;
+      margin: 0 auto;
+    }
+
+    .item {
+      background: #131313;
+      padding: 20px;
+      border-radius: 12px;
+      border-top: 5px solid;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .label {
+      font-weight: bold;
+      padding: 5px 15px;
+      border-radius: 8px;
+      height: fit-content;
+    }
+
+    .long-text-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .long-text {
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+
+    ul {
+      margin: 20px;
+    }
+
+    ul li {
+      text-align: left;
+      padding-left: 20px;
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    {% for div in divs %}
+    <div class="item">
+      <div class="long-text-container">
+        <p class="label">{{ div.courseCode }}</p>
+        <p class="long-text">{{ div.courseName }}</p>
+      </div>
+      <ul>
+        {% for diff in div.diffs %}
+        <li>{{ diff }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+  <script>
+    function getRandomColor() {
+      let h = Math.floor(Math.random() * 360);
+      let s = Math.floor(Math.random() * 50) + 50;
+      let l = Math.floor(Math.random() * 30) + 60;
+      return [h, s, l];
+    }
+
+    function darkenColor(color) {
+      [h, s, l] = color;
+      l -= 40;
+      return [h, s, l];
+    }
+
+    function getHsl(color) {
+      [h, s, l] = color;
+      return `hsl(${h}, ${s}%, ${l}%)`;
+    }
+
+    document.querySelectorAll(".item").forEach((item) => {
+      color = getRandomColor();
+      colorHsl = getHsl(color);
+      dColorHsl = getHsl(darkenColor(color));
+      item.style.borderColor = dColorHsl;
+      label = item.querySelector(".label");
+      label.style.backgroundColor = colorHsl;
+      label.style.color = dColorHsl;
+    });
+  </script>
+</body>
+
+</html>
