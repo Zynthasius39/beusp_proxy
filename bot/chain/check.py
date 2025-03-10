@@ -7,11 +7,17 @@ from aiohttp import ClientError
 
 from beusproxy.config import API_HOSTNAME, HOST, USER_AGENT
 
-from ..common.utils import grade_diff, report_gen
+from ..common.utils import grade_diff
 
 
 def check_grades(cconn, httpc, nmgr):
-    """Fetch grades and compare"""
+    """Fetch grades and compare
+
+    Args:
+        cconn (sqlite3.Connection): CacheDB Connection
+        httpc (HTTPClient): HTTP Client
+        nmgr (NotifyManager): Notification Manager
+    """
     # Fetch grades json from db
     subs = cconn.execute(
         """

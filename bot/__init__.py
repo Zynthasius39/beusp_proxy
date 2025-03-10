@@ -4,6 +4,7 @@ import beusproxy.services.database as db
 from beusproxy.services.httpclient import HTTPClient
 
 from . import chain
+from .notify_mgr import NotifyManager
 
 
 def run_chain():
@@ -23,7 +24,8 @@ def run_chain():
 
         # Stage 3
         # Fetch grades and compare against database
-        chain.check_grades(cconn, httpc)
+        with NotifyManager(httpc) as nmgr:
+            chain.check_grades(cconn, httpc, nmgr)
         httpc.close()
 
         # Stage 4

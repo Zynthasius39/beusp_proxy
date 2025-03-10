@@ -3,13 +3,18 @@ import logging
 from aiohttp import ClientError
 
 from beusproxy.config import API_HOSTNAME
-from beusproxy.services.httpclient import HTTPClientError
 
 
 def authorize_subs(cconn, httpc):
-    """Authorize Student Subscribers"""
+    """Authorize Student Subscribers
+
+    Args:
+        cconn (sqlite3.Connection): CacheDB Connection
+        httpc (HTTPClient): HTTP Client
+    """
     logger = logging.getLogger("beuspbot")
 
+    # Fetch students to be authorized.
     stud_credentials = cconn.execute(
         """
         SELECT
@@ -28,11 +33,13 @@ def authorize_subs(cconn, httpc):
     """
     ).fetchall()
 
+    # Mapping sqlite3.Row's.
     id_table = {}
     for stud in stud_credentials:
         id_table[stud["student_id"]] = stud["sub_id"]
     logger.debug("Authenticating: %s", str(id_table))
 
+    # Authorization Coroutine
     async def auth_stud_coro(student_id, password):
         """Authorize Student"""
         return (
@@ -44,6 +51,7 @@ def authorize_subs(cconn, httpc):
             ),
         )
 
+    # Grab hot cookies for every student.
     try:
         ress = httpc.gather(
             *[
@@ -62,6 +70,8 @@ def authorize_subs(cconn, httpc):
         if (sess_id := res.cookies.get("SessionID")) is None:
             logger.error("No cookie for %d: %d", student_id, res.status)
             continue
+
+        # Put cookies into jar.
         cconn.execute(
             """
             INSERT INTO Student_Sessions (

@@ -8,7 +8,7 @@ def course_code_parser(code):
         code (str): courseCode
 
     Returns:
-        (str): Parsed courseCode
+        str: Parsed courseCode
     """
     if nm := re.search(r"(\w+) (\d+)", code):
         return f"{nm.group(1)}{nm.group(2)}"
@@ -22,15 +22,15 @@ def course_parser(course):
         course (dict): Course
 
     Returns:
-        (dict): Parsed course
+        dict: Parsed course
     """
     if not course["courseCode"]:
         if course["courseName"].find("[ AE ]") != -1:
             course["courseType"] = "ae"
         elif course["courseName"].find("[ NAE ]") != -1:
             if (
-                    course["courseName"].find("Foreign") != -1
-                    or course["courseName"].find("Xarici") != -1
+                course["courseName"].find("Foreign") != -1
+                or course["courseName"].find("Xarici") != -1
             ):
                 course["courseType"] = "lang"
             else:
@@ -50,7 +50,7 @@ def courses_parser(course_group):
         course_group (list): List of raw courses
 
     Returns:
-        (list): Courses
+        list: Courses
     """
     courses = []
     # Iterating through subjects while ignoring header.
@@ -60,7 +60,7 @@ def courses_parser(course_group):
         for i, j in enumerate(subject):
             # Skip if it is empty or a number column.
             if course_group[0][i] == "№" or (
-                    not course_group[0][i].strip() and not j.strip()
+                not course_group[0][i].strip() and not j.strip()
             ):
                 continue
             # Migrate / Translate fields.
@@ -78,10 +78,10 @@ def references_parser(references):
     """References Parser
 
     Args:
-          references (list): List of raw reference
+        references (list): List of raw reference
 
     Returns:
-          (list): Parsed references
+        list: Parsed references
     """
     refs = []
     # Iterating through subjects while ignoring header.
@@ -92,7 +92,7 @@ def references_parser(references):
         for i, j in enumerate(subject):
             # Skip if it is empty or a number column.
             if references[0][i] == "№" or (
-                    not references[0][i].strip() and not j.strip()
+                not references[0][i].strip() and not j.strip()
             ):
                 continue
             # Migrate / Translate fields.

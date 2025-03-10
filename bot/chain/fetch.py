@@ -1,5 +1,10 @@
 def fetch_subs(cconn, mconn):
-    """Fetch subscribed students"""
+    """Fetch subscribed students
+
+    Args:
+        cconn (sqlite3.Connection): CacheDB Connection
+        mconn (sqlite3.Connection): MainDB Connection
+    """
     stud_rows = mconn.execute(
         """
         SELECT
@@ -39,4 +44,3 @@ def fetch_subs(cconn, mconn):
         stud_rows,
     )
     cconn.commit()
-    mconn.close()
