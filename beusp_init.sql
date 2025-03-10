@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS Students;
 DROP TABLE IF EXISTS Student_Sessions;
+DROP TABLE IF EXISTS Student_Grades;
 DROP TABLE IF EXISTS Telegram_Subscribers;
 DROP TABLE IF EXISTS Discord_Subscribers;
 DROP TABLE IF EXISTS Email_Subscribers;
@@ -19,6 +20,12 @@ CREATE TABLE Student_Sessions(
 	session_id VARCHAR(32) NOT NULL,
 	login_date TEXT,
 	logged_out BOOLEAN NOT NULL DEFAULT 0
+);
+
+CREATE TABLE Student_Grades (
+  owner_id INTEGER PRIMARY KEY,
+  grades TEXT NOT NULL DEFAULT "{}",
+  updated TEXT
 );
 
 CREATE TABLE Telegram_Subscribers(

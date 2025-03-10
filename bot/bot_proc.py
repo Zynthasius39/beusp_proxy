@@ -4,8 +4,10 @@ import time
 from multiprocessing import Event, Process
 from pathlib import Path
 
+from beusproxy.services.httpclient import HTTPClient
 from bot import run_chain
 
+logger = logging.getLogger(__package__)
 
 class BotProc:
     """Bot Process Base Class"""
@@ -18,16 +20,17 @@ class BotProc:
             self._lock_file.write_text(str(os.getpid()), encoding="UTF-8")
             time.sleep(1)
             if self._lock_file.read_text(encoding="UTF-8") == str(os.getpid()):
-                logging.info("Bot Process spawned - PID:%d", os.getpid())
+                logger.info("Bot Process spawned - PID:%d", os.getpid())
             else:
                 return
         else:
             return
 
-        def proc_init(self):
+        def proc_init():
+            httpc = HTTPClient()
             while not self._shevent.is_set():
                 time.sleep(10)
-                run_chain()
+                run_chain(httpc)
                 # TODO: Scheduling
 
         self._proc = Process(target=proc_init)

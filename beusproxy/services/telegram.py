@@ -10,9 +10,13 @@ from typing import Optional
 from aiohttp import ClientError
 from jinja2 import Environment
 
-from ..config import (BOT_TELEGRAM_API_KEY, BOT_TELEGRAM_HOSTNAME,
-                      POLLING_TIMEOUT, REQUEST_TIMEOUT, WEB_HOSTNAME)
-from ..context import c
+from ..config import (
+    BOT_TELEGRAM_API_KEY,
+    BOT_TELEGRAM_HOSTNAME,
+    POLLING_TIMEOUT,
+    REQUEST_TIMEOUT,
+    WEB_HOSTNAME,
+)
 from .database import get_db
 from .httpclient import HTTPClient
 
@@ -88,7 +92,9 @@ class TelegramClient:
             user_id (str): Telegram user_id
         """
         logger.debug("User '@%s' issued start command", user_id)
-        send_template(self._httpc, "start", chat_id, user_id)
+        send_template(
+            "start", chat_id, user_id, httpc=self._httpc, jinja_env=self._jinja_env
+        )
 
     def help_cmd(self, chat_id, user_id):
         """/help command logic.
@@ -99,7 +105,14 @@ class TelegramClient:
             user_id (str): Telegram user_id
         """
         logger.debug("User '@%s' issued help command", user_id)
-        send_template(self._httpc, "help", chat_id, user_id, WEB_HOSTNAME)
+        send_template(
+            "help",
+            chat_id,
+            user_id,
+            WEB_HOSTNAME,
+            httpc=self._httpc,
+            jinja_env=self._jinja_env,
+        )
 
     def verify_cmd(self, params, user_id, chat_id):
         """/verify command logic.
@@ -112,7 +125,13 @@ class TelegramClient:
         """
         m = re.match(r".*(\d{6})", params)
         if m is None:
-            send_template(self._httpc, "verify_empty", chat_id, user_id)
+            send_template(
+                "verify_empty",
+                chat_id,
+                user_id,
+                httpc=self._httpc,
+                jinja_env=self._jinja_env,
+            )
             return
         logger.info("User '@%s' tried to verify code: %s", user_id, m.group(1))
 
@@ -134,7 +153,13 @@ class TelegramClient:
                 (m.group(1),),
             ).fetchone()
             if not db_res:
-                send_template(self._httpc, "verify_invalid", chat_id, user_id)
+                send_template(
+                    "verify_invalid",
+                    chat_id,
+                    user_id,
+                    httpc=self._httpc,
+                    jinja_env=self._jinja_env,
+                )
                 logger.info(
                     "User '@%s' is not registered or sent an invalid code.", user_id
                 )
@@ -151,7 +176,13 @@ class TelegramClient:
                 )
                 > 9
             ):
-                send_template(self._httpc, "verify_expired", chat_id, user_id)
+                send_template(
+                    "verify_expired",
+                    chat_id,
+                    user_id,
+                    httpc=self._httpc,
+                    jinja_env=self._jinja_env,
+                )
                 logger.info("User '@%s'`s verification code has been expired")
                 return
 
@@ -213,7 +244,13 @@ class TelegramClient:
                     telegram_id,
                 )
 
-            send_template(self._httpc, "verify_success", chat_id, user_id)
+            send_template(
+                "verify_success",
+                chat_id,
+                user_id,
+                httpc=self._httpc,
+                jinja_env=self._jinja_env,
+            )
             db_con.commit()
 
     def unsubscribe(self, chat_id, user_id):
@@ -249,7 +286,12 @@ class TelegramClient:
         if not db_res.rowcount > 0:
             db_con.rollback()
             send_template(
-                self._httpc, "unsubscribe_nosub", chat_id, user_id, WEB_HOSTNAME
+                "unsubscribe_nosub",
+                chat_id,
+                user_id,
+                WEB_HOSTNAME,
+                httpc=self._httpc,
+                jinja_env=self._jinja_env,
             )
             logger.info(
                 "Couldn't unsubscribe for telegram user '@%s'. No subscriptions",
@@ -258,7 +300,13 @@ class TelegramClient:
             return
 
         db_con.commit()
-        send_template(self._httpc, "unsubscribe", chat_id, user_id)
+        send_template(
+            "unsubscribe",
+            chat_id,
+            user_id,
+            httpc=self._httpc,
+            jinja_env=self._jinja_env,
+        )
         logger.info("Telegram user '@%s' unsubscribed", user_id)
 
     def process_update(self, u):
@@ -303,7 +351,7 @@ class TelegramClient:
                     logger.error(e)
 
 
-def get_me(httpc):
+def get_me(*, httpc):
     """Telegram API: getMe
 
     Returns:
@@ -319,7 +367,7 @@ def get_me(httpc):
     return httpc.cr_json(res)
 
 
-def send_message(httpc, text, chat_id):
+def send_message(text, chat_id, *, httpc):
     """Telegram API: sendMessage
 
     Args:
@@ -339,7 +387,7 @@ def send_message(httpc, text, chat_id):
     return httpc.cr_json(res)
 
 
-def send_template(httpc, template, chat_id, user_id, *args):
+def send_template(template, chat_id, user_id, *args, httpc, jinja_env):
     """Telegram API Wrapper.
     Send template messages
 
@@ -350,7 +398,7 @@ def send_template(httpc, template, chat_id, user_id, *args):
     """
     logger.debug("Sent template %s  to '@%s'", template, user_id)
     send_message(
-        httpc,
-        c.get("jinjaenv").get_template(f"{template}.txt").render(args=args),
+        jinja_env.get_template(f"{template}.txt").render(args=args),
         chat_id,
+        httpc=httpc,
     )

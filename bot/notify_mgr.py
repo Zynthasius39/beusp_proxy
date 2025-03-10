@@ -4,7 +4,7 @@ from threading import Thread
 
 import aiosqlite
 
-from beusproxy.config import CACHE_DATABASE
+from beusproxy.config import DATABASE
 
 
 class NotifyManager:
@@ -103,6 +103,7 @@ class NotifyManager:
         """
         # Get sub services, destinations (sub_id)
         sub = self.get_sub_future(sub_id, fetchone=True).result()
+        print(sub)
 
         # Parse diffs and send for each service
 
@@ -110,7 +111,7 @@ class NotifyManager:
         self, query, *args, commit=False, fetchall=True, fetchone=False
     ):
         """Coroutine wrapper using aiosqlite"""
-        async with aiosqlite.connect(CACHE_DATABASE, uri=True) as conn:
+        async with aiosqlite.connect(DATABASE) as conn:
             conn.row_factory = aiosqlite.Row
             async with conn.execute(query, args) as cursor:
                 if commit:
