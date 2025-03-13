@@ -1,4 +1,5 @@
 import re
+import sys
 
 from bs4 import BeautifulSoup
 
@@ -39,7 +40,7 @@ def grades2(html):
     """Grade parser
 
     Args:
-        text (str): HTML input from root server
+        html (str): HTML input from root server
 
     Returns:
         dict: parsed JSON output
@@ -52,59 +53,9 @@ def grades2(html):
     # pylint: disable=R1702
 
     # Cleaning input HTML.
-    html = re.sub(r"\\(r|n|t)", "", html)
+    html = re.sub(r"\\([rnt])", "", html)
     html = re.sub(r"\\", "", html)
     soup = BeautifulSoup(html, "html.parser")
-
-    # New headers
-    rename_table = {
-        "ABS.": "absents",
-        "Dav": "absents",
-        "AVG": "sum",
-        "ORT": "sum",
-        "IGB": "calc",
-        "SDF1": "act1",
-        "SDF2": "act2",
-        "SDF3": "act3",
-        "TSI": "iw",
-        "DVM": "attendance",
-        "SSI": "final",
-        "ƏI": "addFinal",
-        "TI": "reFinal",
-        "N": "n",
-        "M": "m",
-        "L": "l",
-        "Course code": "courseCode",
-        "Dərs kodu": "courseCode",
-        "Course name": "courseName",
-        "Dərsin adı": "courseName",
-        "ECTS": "ects",
-        "AKTS": "ects",
-    }
-
-    # New grade scale
-    grade_fields = {
-        "sum": 100,
-        "act1": 15,
-        "act2": 15,
-        "act3": 10,
-        "iw": 10,
-        "attendance": 10,
-        "final": 50,
-        "addfinal": 50,
-        "refinal": 50,
-    }
-
-    # Specifing digit fields.
-    digit_fields = [
-        "absents",
-        "ects",
-        # "l", Unknown field
-        "m",
-        "n",
-        *grade_fields.keys(),
-    ]
-
     ys_count = 0
     grades_table = {}
     # Find all year & semester headers.
@@ -185,3 +136,60 @@ def grades2(html):
             grades_table[row_name] = row
 
     return grades_table
+
+
+# New headers
+rename_table = {
+    "ABS.": "absents",
+    "Dav": "absents",
+    "AVG": "sum",
+    "ORT": "sum",
+    "IGB": "calc",
+    "SDF1": "act1",
+    "SDF2": "act2",
+    "SDF3": "act3",
+    "TSI": "iw",
+    "DVM": "attendance",
+    "SSI": "final",
+    "ƏI": "addFinal",
+    "TI": "reFinal",
+    "N": "n",
+    "M": "m",
+    "L": "l",
+    "Course code": "courseCode",
+    "Dərs kodu": "courseCode",
+    "Course name": "courseName",
+    "Dərsin adı": "courseName",
+    "ECTS": "ects",
+    "AKTS": "ects",
+}
+
+# New grade scale
+grade_fields = {
+    "sum": 100,
+    "act1": 15,
+    "act2": 15,
+    "act3": 10,
+    "iw": 10,
+    "attendance": 10,
+    "final": 50,
+    "addfinal": 50,
+    "refinal": 50,
+}
+
+# Inverted headers table
+# Used to translate for notifications
+rename_table_inv = {
+    v: k
+    for k, v in rename_table.items()
+}
+
+# Specifying digit fields.
+digit_fields = [
+    "absents",
+    "ects",
+    # "l", Unknown field
+    "m",
+    "n",
+    *grade_fields.keys(),
+]

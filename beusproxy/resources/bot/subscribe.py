@@ -329,19 +329,22 @@ class BotSubscribe(Resource):
         tags:
           - Bot
         description: Unsubscribes the current user.
-        parameters:
-          - name: unsubscribe
-            in: body
-            required: yes
+        requestBody:
             description: Subscriptions to cancel.
-            schema:
-                type: array
-                items:
-                    type: string
-                example:
-                  - telegram
-                  - discord
-                  - email
+            required: true
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            unsubscribe:
+                                type: array
+                                items:
+                                    type: string
+                                example:
+                                  - telegram
+                                  - discord
+                                  - email
         responses:
             202:
                 description: Nothing to do

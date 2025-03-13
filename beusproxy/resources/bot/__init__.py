@@ -4,7 +4,7 @@ from flask_restful import Resource, abort
 from ...config import BOT_EMAIL
 from ...context import c
 from ...services.httpclient import HTTPClientError
-from ...services.telegram import TelegramClient
+from ...services.telegram import TelegramClient, get_me
 from .subscribe import BotSubscribe
 from .verify import BotVerify
 
@@ -45,10 +45,11 @@ class Bot(Resource):
             bot["bot_email"] = BOT_EMAIL
 
         try:
-            telegram_bot = TelegramClient.get_me(c.get("httpc"))
+            telegram_bot = get_me(httpc=c.get("httpc"))
         except (AssertionError, HTTPClientError) as e:
             app.logger.error(e)
             abort(502, help="Bad response from root server")
+            return
 
         if telegram_bot:
             if telegram_bot["result"].get("username"):

@@ -19,7 +19,7 @@ def is_webhook(url):
     ) is not None
 
 
-def send_message(http_client: HTTPClient, webhook, *, msg=None, embeds=None):
+def send_message(webhook, *, msg=None, embeds=None, httpc):
     """Discord Webhook: send_message
     Sends a message with embeds
 
@@ -27,6 +27,7 @@ def send_message(http_client: HTTPClient, webhook, *, msg=None, embeds=None):
         webhook (str): Webhook URL
         msg (str, optional): Message. Defaults to None.
         embeds (list, optional): List of Embeds. Defaults to [].
+        httpc (HTTPClient): HTTP Client
 
     Returns:
         bool: Result
@@ -37,7 +38,7 @@ def send_message(http_client: HTTPClient, webhook, *, msg=None, embeds=None):
     if not is_webhook(webhook):
         return False
 
-    res = http_client.request(
+    res = httpc.request(
         "POST",
         webhook,
         json={
@@ -48,4 +49,4 @@ def send_message(http_client: HTTPClient, webhook, *, msg=None, embeds=None):
         },
     )
 
-    return res.status_code == 204
+    return res.status == 204

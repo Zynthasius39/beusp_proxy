@@ -1,5 +1,9 @@
+import logging
+
 import jsondiff
 from jinja2 import Environment, FileSystemLoader
+
+from beusproxy.parser.grades import rename_table_inv
 
 
 def diff(dic_old, dic):
@@ -12,14 +16,9 @@ def diff(dic_old, dic):
     Returns:
         dict: Differences
     """
-    return {
-        k: v for k, v in jsondiff.diff(
-            dic_old,
-            dic,
-            syntax="rightonly"
-        # Filter out jsondiff symbols.
-        ).items() if not isinstance(k, jsondiff.symbols.Symbol)
-    }
+    # Filter out jsondiff symbols.
+    return clean_symbol(jsondiff.diff(dic_old, dic))
+
 
 def grade_diff(grades_old, grades):
     """Grades table comparator
@@ -34,7 +33,7 @@ def grade_diff(grades_old, grades):
 
     # Differentiate grades using jsondiff.
     diff_dic = diff(grades_old, grades)
-    
+
     # Filter
     filter = {
         "absents",
@@ -51,13 +50,47 @@ def grade_diff(grades_old, grades):
         if isinstance(v, dict):
             for kk, vv in dict(v).items():
                 if kk not in filter:
-                    del v[kk]
+                    v.pop(kk)
+            if len(v) == 0:
+                diff_dic.pop(k)
 
     return diff_dic
 
 
+def clean_symbol(table):
+    """Remove jsondiff Symbols
+
+    Args:
+        table (dict): Input table
+
+    Returns:
+        dict: Output table
+    """
+    out_table = {}
+    for k, v in table.items():
+        if isinstance(k, jsondiff.symbols.Symbol):
+            continue
+        if isinstance(v, dict):
+            v = clean_symbol(v)
+        out_table[k] = v
+    return out_table
+
+def report_gen_md(diffs, grades):
+    """Markdown Report Generator
+
+    Args:
+        diffs (dict): Differences
+        grades (dict): Grades Table
+
+    Return:
+        str: Rendered Markdown Output
+    """
+    # Render and return.
+    env = Environment(loader=FileSystemLoader("bot/templates"))
+    return env.get_template("telegram_report.txt").render(courses=report_gen_list(diffs, grades))
+
 def report_gen_html(diffs, grades):
-    """HTML Report Generator
+    """HTML5 Report Generator
 
     Args:
         diffs (dict): Differences
@@ -66,20 +99,53 @@ def report_gen_html(diffs, grades):
     Return:
         str: Rendered HTML Output
     """
-    divs = []
+    # Render and return.
+    env = Environment(loader=FileSystemLoader("bot/templates"))
+    return env.get_template("report.html").render(divs=report_gen_list(diffs, grades))
+
+def report_gen_list(diffs, grades):
+    """Dictionary Generator for rendering
+
+    Args:
+        diffs (dict): Differences
+        grades (dict): Grades Table
+
+    Return:
+        dict: Dictionary used in rendering
+    """
+    courses = []
     for k, v in diffs.items():
         # Sanity check.
-        if grades.get(k) is None:
+        if not grades.get(k):
             continue
 
         # Construct and append a diff div.
-        divs.append(
+        courses.append(
             {
-                "courseCode": k,
-                "courseName": grades.get(k).get("courseName"),
-                "diffs": [f"{kk}: {vv}" for kk, vv in v.items()],
+                "courseCode": escape_tg_chars(k),
+                "courseName": escape_tg_chars(grades[k].get("courseName")),
+                # "diffs": [f"{rename_table_inv.get(kk, f"\_notFound\.{kk}")}: ```{vv}```" for kk, vv in v.items()],
+                "diffs": {kk: vv for kk, vv in v.items()},
             }
         )
-    # Render and return.
-    env = Environment(loader=FileSystemLoader("bot/templates"))
-    return env.get_template("report.html").render(divs=divs)
+
+    return courses
+
+def escape_tg_chars(input_str):
+    """Escapes Telegram Special Characters
+
+    Args:
+        input_str (str): Input string
+
+    Returns:
+        str: Output string
+    """
+    special_chars = {'_', '-', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'}
+
+    output_str = None
+    # for char in special_chars:
+    #     # output_str = input_str.replace(char, f"\\{char}")
+    #     output_str = input_str.replace(char, "")
+
+    output_str = input_str.replace("-", "")
+    return output_str

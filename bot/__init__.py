@@ -10,7 +10,6 @@ def run_chain(httpc):
     Args:
         httpc (HTTPClient): HTTP Client
     """
-    # TODO: Test 3 staged model
     # Stage 1
     # Bake cookies for students in need
     # Skips students with invalid credentials just in case.
@@ -19,9 +18,6 @@ def run_chain(httpc):
 
     # Stage 2
     # Fetch grades and compare against database
+    # Notify subscribers asynchronously
     with db.get_db() as conn, NotifyManager(httpc) as nmgr:
         chain.check_grades(conn, httpc, nmgr)
-
-    # Stage 3
-    # Notify subscribers with visual cards
-    # TODO: Stage 3

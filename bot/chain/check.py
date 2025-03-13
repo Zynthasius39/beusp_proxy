@@ -12,6 +12,7 @@ from ..common.utils import grade_diff
 
 logger = logging.getLogger(__package__)
 
+
 def check_grades(conn, httpc, nmgr):
     """Fetch grades and compare
 
@@ -20,14 +21,22 @@ def check_grades(conn, httpc, nmgr):
         httpc (HTTPClient): HTTP Client
         nmgr (NotifyManager): Notification Manager
     """
-    # Fetch grades json from db
     subs = conn.execute(
         """
         SELECT
-            owner_id,
-            session_id
+            ses.owner_id,
+            ses.session_id
         FROM
-            Student_Sessions
+            Student_Sessions ses
+        INNER JOIN
+            Students s
+        ON
+            ses.owner_id == s.id AND
+            NOT (
+                s.active_telegram_id IS NULL AND
+                s.active_discord_id IS NULL AND
+                s.active_email_id IS NULL
+            )
         WHERE
             logged_out == 0;
     """
@@ -76,38 +85,55 @@ def check_grades(conn, httpc, nmgr):
     subs_grades_old = conn.execute(
         """
         SELECT
-            owner_id,
-            grades
+            sg.owner_id,
+            sg.grades
         FROM
-            Student_Grades;
+            Student_Grades sg
+        INNER JOIN
+            Students s
+        ON
+            sg.owner_id == s.id AND
+            NOT (
+                s.active_telegram_id IS NULL AND
+                s.active_discord_id IS NULL AND
+                s.active_email_id IS NULL
+            );
     """
     ).fetchall()
 
-    subs_grades_old_dict = {}
-    for sub_id, sub_grades in dict(subs_grades_old).items():
-        subs_grades_old_dict[sub_id] = sub_grades
     # Compare grades wisely
     for sub_id, sub_grades in cr_dict.items():
         if isinstance(sub_grades, int):
+            if sub_grades == 401:
+                cur = conn.execute("""
+                    UPDATE
+                        Student_Sessions
+                    SET
+                        logged_out = 1
+                    WHERE
+                        owner_id = ?;
+                """, (sub_id,))
+                if cur.rowcount > 0:
+                    conn.commit()
+                else:
+                    conn.rollback()
             logger.error("Invalid response %d for %d", sub_grades, sub_id)
             continue
-        if sub_grades and subs_grades_old_dict.get(sub_id):
+        if sub_grades and dict(subs_grades_old).get(sub_id):
             # Grade diff util
             try:
                 diffs = grade_diff(json.loads(
-                    subs_grades_old_dict[sub_id]), sub_grades)
+                    dict(subs_grades_old)[sub_id]), sub_grades)
                 if len(diffs) != 0:
+                    # Push to notifier
+                    nmgr.notify(sub_id, diffs, sub_grades)
                     logger.debug(
                         "Changes found for Sub %d: %s", sub_id, json.dumps(
-                            diffs, indent=1)
+                            diffs, indent=1, ensure_ascii=True)
                     )
             except JSONDecodeError as e:
-                logger.error("Couldn't decode JSON from DB for Sub %d", sub_id)
-
-            # Push to notifier
-            # nmgr.notify(sub_id, diffs)
-        json_grades = json.dumps(sub_grades)
-
+                logger.error("Couldn't decode JSON from DB for Sub %d: %s", sub_id, e)
+                continue
         # Write notes and changes back to db
         cur = conn.execute(
             """
@@ -118,9 +144,9 @@ def check_grades(conn, httpc, nmgr):
                 ?, ?, ?
             );
         """,
-            (sub_id, json_grades, datetime.now().isoformat()),
+            (sub_id, json.dumps(sub_grades), datetime.now().isoformat()),
         )
         if cur.rowcount > 0:
             conn.commit()
         else:
-            conn.rolback()
+            conn.rollback()

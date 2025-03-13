@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from aiohttp import ClientError
@@ -29,7 +30,12 @@ def authorize_subs(conn, httpc):
             s.id == ses.owner_id AND
             ses.logged_out == 0
         WHERE
-            ses.session_id IS NULL;
+            ses.session_id IS NULL AND
+            NOT (
+                s.active_telegram_id IS NULL AND
+                s.active_discord_id IS NULL AND
+                s.active_email_id IS NULL
+            );
     """
     ).fetchall()
 
@@ -59,7 +65,7 @@ def authorize_subs(conn, httpc):
                 for stud in stud_credentials
             ]
         )
-    except ClientError as e:
+    except (ClientError, asyncio.TimeoutError) as e:
         logger.error(e)
         return
 

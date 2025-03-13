@@ -367,36 +367,47 @@ def get_me(*, httpc):
     return httpc.cr_json(res)
 
 
-def send_message(text, chat_id, *, httpc):
+def send_message(text=None, chat_id=None, *, params=None, httpc):
     """Telegram API: sendMessage
 
     Args:
         text (str): Text message
         chat_id (int): Telegram Chat ID
+        params (dict): sendMessage parameters
+        httpc (HTTPClient): HTTP Client
     """
+    if params is None:
+        params = {}
+    if text:
+        params["text"] = text
+    if chat_id:
+        params["chat_id"] = chat_id
     res = httpc.request(
         "GET",
         f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/sendMessage",
-        params={"chat_id": chat_id, "text": text},
+        params=params,
         timeout=REQUEST_TIMEOUT,
     )
 
     if not res.status == 200:
-        raise ClientError(res.status)
+        logger.debug(text)
+        raise ClientError(httpc.cr_text(res))
+        # raise ClientError(res.status)
 
     return httpc.cr_json(res)
 
 
-def send_template(template, chat_id, user_id, *args, httpc, jinja_env):
+def send_template(template, chat_id, *args, httpc, jinja_env):
     """Telegram API Wrapper.
     Send template messages
 
     Args:
         template (str): Template key
         chat_id (int): Telegram Chat ID
-        user_id (str): Telegram user_id
+        httpc (HTTPClient): HTTP Client
+        jinja_env (Environment): Jinja2 Environment
     """
-    logger.debug("Sent template %s  to '@%s'", template, user_id)
+    logger.debug("Sent template '%s' to chat %d'", template, chat_id)
     send_message(
         jinja_env.get_template(f"{template}.txt").render(args=args),
         chat_id,

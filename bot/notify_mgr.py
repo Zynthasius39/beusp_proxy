@@ -1,10 +1,91 @@
 import asyncio
+import json
+import logging
+import sqlite3
 from enum import Enum
 from threading import Thread
 
 import aiosqlite
 
 from beusproxy.config import DATABASE
+from beusproxy.services.telegram import send_message
+from bot.common.utils import report_gen_md
+
+
+async def query(
+        sql, *args, commit=False, fetchall=True, fetchone=False
+):
+    """Aiosqlite query execution wrapper"""
+    async with aiosqlite.connect(DATABASE) as conn:
+        conn.row_factory = aiosqlite.Row
+        async with conn.execute(sql, args) as cursor:
+            if commit:
+                if cursor.total_changes > 0:
+                    await conn.commit()
+                else:
+                    await conn.rollback()
+            if fetchone:
+                return await cursor.fetchone()
+            if fetchall:
+                return await cursor.fetchall()
+
+
+async def get_sub(sub_id) -> sqlite3.Row | list[sqlite3.Row]:
+    """Get Subscriptions Coroutine
+
+    Args:
+        sub_id (int): Subscriber ID
+
+    Returns:
+        - list: List of Rows
+        - sqlite3.Row: Row
+    """
+    return await query("""
+        SELECT
+            tgs.telegram_chat_id,
+            ems.email,
+            dcs.discord_webhook_url
+        FROM
+            Students s
+        LEFT JOIN
+            Telegram_Subscribers tgs
+        ON
+            s.id == tgs.owner_id AND
+            s.active_telegram_id == tgs.telegram_id
+        LEFT JOIN
+            Email_Subscribers ems
+        ON
+            s.id == ems.owner_id AND
+            s.active_email_id == ems.email_id
+        LEFT JOIN
+            Discord_Subscribers dcs
+        ON
+            s.id == dcs.owner_id AND
+            s.active_discord_id == dcs.discord_id
+        WHERE
+            s.id = ?;
+    """, sub_id, fetchone=True)
+
+
+async def notify_coro(sub_id, diffs, grades, *, httpc):
+    sub = await get_sub(sub_id)
+
+    logging.getLogger(__package__).debug("Rendered:\n%s", report_gen_md(diffs, grades))
+    if sub["telegram_chat_id"]:
+        send_message(
+            report_gen_md(diffs, grades),
+            sub["telegram_chat_id"],
+            params = {
+                "parse_mode": "MarkdownV2"
+            },
+            httpc=httpc
+        )
+    if sub["email"]:
+        pass
+    if sub["discord_webhook_url"]:
+        pass
+
+    logging.debug("Sub %d: %s", sub_id, json.dumps(dict(sub), indent=1))
 
 
 class NotifyManager:
@@ -23,7 +104,7 @@ class NotifyManager:
         self._thread.start()
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self, *_):
         self.close()
@@ -32,44 +113,21 @@ class NotifyManager:
         """Clean up the manager"""
         self._loop.stop()
 
-    def notify(self, sub_id, diffs):
+    def notify(self, sub_id, diffs, grades):
         """Notify Asynchronously
 
         Args:
             sub_id (int): Subscriber ID
             diffs (dict): Differences
+            grades (dict): Grades
 
         Returns:
             Future: Future object
         """
-        return self.submit_coro(self.notify_gen, sub_id, diffs)
 
-    def get_sub_future(self, sub_id, **kwargs):
-        """Get Subscriptions Coroutine
+        self.submit_coro(notify_coro, sub_id, diffs, grades, httpc=self._httpc).result()
 
-        Args:
-            sub_id (int): Subscriber ID
-
-        Returns:
-            list: List of sqlite3.Row
-        """
-        return self.submit_coro(
-            self.query_coro,
-            """
-                SELECT
-                    active_telegram_id,
-                    active_discord_id,
-                    active_email_id
-                FROM
-                    Student_Subscribers
-                WHERE
-                    id = ?;
-            """,
-            sub_id,
-            **kwargs,
-        )
-
-    def submit_coro(self, task, *args, **kargs):
+    def submit_coro(self, task, *args, **kwargs):
         """Thread-safe method to submit coroutine task.
 
         Args:
@@ -78,7 +136,7 @@ class NotifyManager:
         Returns:
             Future: Future object
         """
-        return asyncio.run_coroutine_threadsafe(task(*args, **kargs), self._loop)
+        return asyncio.run_coroutine_threadsafe(task(*args, **kwargs), self._loop)
 
     def service_coro_gen(self, service_t, diffs):
         """Generate Coroutine to send diffs for the service type
@@ -93,36 +151,6 @@ class NotifyManager:
         # match service_t:
         #     case SubService.TELEGRAM:
         #         pass
-
-    async def notify_gen(self, sub_id, diffs):
-        """Notification Parser Coroutine
-
-        Args:
-            sub_id (int): Subscriber ID
-            diffs (dict): Differences
-        """
-        # Get sub services, destinations (sub_id)
-        sub = self.get_sub_future(sub_id, fetchone=True).result()
-        print(sub)
-
-        # Parse diffs and send for each service
-
-    async def query_coro(
-        self, query, *args, commit=False, fetchall=True, fetchone=False
-    ):
-        """Coroutine wrapper using aiosqlite"""
-        async with aiosqlite.connect(DATABASE) as conn:
-            conn.row_factory = aiosqlite.Row
-            async with conn.execute(query, args) as cursor:
-                if commit:
-                    if cursor.total_changes > 0:
-                        await conn.commit()
-                    else:
-                        await conn.rollback()
-                if fetchone:
-                    return await cursor.fetchone()
-                if fetchall:
-                    return await cursor.fetchall()
 
 
 class Notification:

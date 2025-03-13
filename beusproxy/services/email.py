@@ -59,15 +59,13 @@ class EmailClient:
         """
         self.send(
             generate_mime(
-                BOT_EMAIL,
-                recipient,
-                jinja_env.get_template("email_subject.txt").render(),
-                jinja_env.get_template("verify.html").render(
+                email_to=recipient,
+                email_subject=jinja_env.get_template("email_subject.txt").render(),
+                body=jinja_env.get_template("verify.html").render(
                     assets_link=f"{WEB_HOSTNAME}",
                     verify_link=f"{API_HOSTNAME}/bot/verify/{code}",
                     verify_code=code,
                 ),
-                "html",
             )
         )
 
@@ -82,11 +80,11 @@ def is_email(email):
         bool: If it is a correct email address
     """
     return (
-        re.match(EMAIL_REGEX, email) is not None
+            re.match(EMAIL_REGEX, email) is not None
     )
 
 
-def generate_mime(email_from, email_to, email_subject, body, body_type):
+def generate_mime(*, email_from=BOT_EMAIL, email_to, email_subject, body, body_type="html"):
     """Generates a MIME
 
     Args:
@@ -143,13 +141,13 @@ def verify_email(code):
         email = db_res["verify_item"]
 
         if (
-            math.floor(
-                (
-                    datetime.now() - datetime.fromisoformat(db_res["verify_date"])
-                ).total_seconds()
-                / 60
-            )
-            > 29
+                math.floor(
+                    (
+                            datetime.now() - datetime.fromisoformat(db_res["verify_date"])
+                    ).total_seconds()
+                    / 60
+                )
+                > 29
         ):
             logger.info("%s - verification code has been expired", email)
             return jinja_env.get_template("verify_failed.html").render(
