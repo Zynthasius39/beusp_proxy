@@ -1,8 +1,8 @@
 {
   "IT205": {
-    "act1": -1,
+    "act1": 15,
     "act2": -1,
-    "addFinal": "",
+    "addFinal": "50",
     "attendance": "11000",
     "courseName": "Obyekt yönlü proqramlaşdırma",
     "ects": 7,

@@ -59,6 +59,7 @@ def grades2(html):
     # New headers
     rename_table = {
         "ABS.": "absents",
+        "Dav": "absents",
         "AVG": "sum",
         "ORT": "sum",
         "IGB": "calc",
@@ -67,7 +68,6 @@ def grades2(html):
         "SDF3": "act3",
         "TSI": "iw",
         "DVM": "attendance",
-        "Dav": "attendance",
         "SSI": "final",
         "ƏI": "addFinal",
         "TI": "reFinal",
