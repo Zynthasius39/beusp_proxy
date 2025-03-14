@@ -18,7 +18,7 @@ from ..config import (
     WEB_HOSTNAME,
 )
 from .database import get_db
-from .httpclient import HTTPClient
+from .httpclient import HTTPClient, HTTPClientError
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +78,12 @@ class TelegramClient:
         self._shevent = Event()
         self._worker = Thread(name=worker_name, target=updates_thread, daemon=True)
         self._worker.start()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self):
+        self.close()
 
     def close(self):
         """Close TelegramClient"""
@@ -390,9 +396,7 @@ def send_message(text=None, chat_id=None, *, params=None, httpc):
     )
 
     if not res.status == 200:
-        logger.debug(text)
-        raise ClientError(httpc.cr_text(res))
-        # raise ClientError(res.status)
+        raise HTTPClientError(res.status, httpc.cr_text(res))
 
     return httpc.cr_json(res)
 

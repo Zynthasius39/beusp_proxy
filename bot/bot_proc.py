@@ -4,6 +4,7 @@ import time
 from multiprocessing import Event, Process
 from pathlib import Path
 
+from beusproxy.services.email import EmailClient
 from beusproxy.services.httpclient import HTTPClient
 from bot import run_chain
 
@@ -28,9 +29,10 @@ class BotProc:
 
         def proc_init():
             httpc = HTTPClient()
+            emailc = EmailClient()
             while not self._shevent.is_set():
                 time.sleep(10)
-                run_chain(httpc)
+                run_chain(httpc, emailc)
                 # TODO: Scheduling
 
         self._proc = Process(target=proc_init)

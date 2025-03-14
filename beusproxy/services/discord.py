@@ -1,7 +1,7 @@
 import re
 
 from ..config import BOT_DISCORD_USERNAME, BOT_DISCORD_AVATAR
-from .httpclient import HTTPClient
+from .httpclient import HTTPClientError
 
 
 def is_webhook(url):
@@ -19,34 +19,49 @@ def is_webhook(url):
     ) is not None
 
 
-def send_message(webhook, *, msg=None, embeds=None, httpc):
-    """Discord Webhook: send_message
-    Sends a message with embeds
+def send_content(webhook, *, content, embeds=None, httpc):
+    """Discord Webhook: send_content
+    Sends content with optional embeds
 
     Args:
         webhook (str): Webhook URL
-        msg (str, optional): Message. Defaults to None.
-        embeds (list, optional): List of Embeds. Defaults to [].
+        content (str): Content
+        embeds (list): Discord Embeds List
         httpc (HTTPClient): HTTP Client
-
-    Returns:
-        bool: Result
     """
     if embeds is None:
         embeds = []
 
+    return send_message(webhook, httpc=httpc, message={
+        "username": BOT_DISCORD_USERNAME,
+        "avatar_url": BOT_DISCORD_AVATAR,
+        "content": content,
+        "embeds": embeds,
+    })
+
+
+def send_message(webhook, *, message, httpc):
+    """Discord Webhook: send_message
+    Sends message object
+
+    Args:
+        webhook (str): Webhook URL
+        message (dict): Message Dictionary
+        httpc (HTTPClient): HTTP Client
+
+    Returns:
+        bool: If it was successful
+    """
     if not is_webhook(webhook):
         return False
 
     res = httpc.request(
         "POST",
         webhook,
-        json={
-            "username": BOT_DISCORD_USERNAME,
-            "avatar_url": BOT_DISCORD_AVATAR,
-            "content": msg,
-            "embeds": embeds,
-        },
+        json=message
     )
 
-    return res.status == 204
+    if not res.status == 204:
+        raise HTTPClientError(res.status, httpc.cr_text(res))
+
+    return httpc.cr_json(res)

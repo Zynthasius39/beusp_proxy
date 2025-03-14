@@ -1,15 +1,19 @@
 import asyncio
-import json
 import logging
 import sqlite3
-from enum import Enum
+from smtplib import SMTPException
 from threading import Thread
 
 import aiosqlite
+from aiohttp import ClientError
 
-from beusproxy.config import DATABASE
-from beusproxy.services.telegram import send_message
-from bot.common.utils import report_gen_md
+from beusproxy.config import DATABASE, APP_NAME
+from beusproxy.services.email import generate_mime
+from beusproxy.services.telegram import send_message as tg_send_message
+from beusproxy.services.discord import send_message as dc_send_message
+from bot.common.utils import report_gen_md, report_gen_dcmsg, report_gen_html
+
+logger = logging.getLogger(__package__)
 
 
 async def query(
@@ -67,32 +71,52 @@ async def get_sub(sub_id) -> sqlite3.Row | list[sqlite3.Row]:
     """, sub_id, fetchone=True)
 
 
-async def notify_coro(sub_id, diffs, grades, *, httpc):
+async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
     sub = await get_sub(sub_id)
 
-    logging.getLogger(__package__).debug("Rendered:\n%s", report_gen_md(diffs, grades))
     if sub["telegram_chat_id"]:
-        send_message(
-            report_gen_md(diffs, grades),
-            sub["telegram_chat_id"],
-            params = {
-                "parse_mode": "MarkdownV2"
-            },
-            httpc=httpc
-        )
+        try:
+            tg_send_message(
+                report_gen_md(diffs, grades),
+                sub["telegram_chat_id"],
+                params={
+                    "parse_mode": "MarkdownV2"
+                },
+                httpc=httpc
+            )
+        except ClientError as ex:
+            logger.error("Couldn't send notification for sub %d via Telegram: %s", sub_id, ex)
+        logger.debug("Notification sent for sub %d via Telegram.", sub_id)
     if sub["email"]:
-        pass
+        try:
+            emailc.send(
+                generate_mime(
+                    email_to=sub["email"],
+                    email_subject=f"[{APP_NAME}] Notification",
+                    body=report_gen_html(diffs, grades),
+                )
+            )
+        except SMTPException as ex:
+            logger.error("Couldn't send notification for sub %d via Email: %s", sub_id, ex)
+        logger.debug("Notification sent for sub %d via Email.", sub_id)
     if sub["discord_webhook_url"]:
-        pass
-
-    logging.debug("Sub %d: %s", sub_id, json.dumps(dict(sub), indent=1))
+        try:
+            dc_send_message(
+                sub["discord_webhook_url"],
+                message=report_gen_dcmsg(diffs, grades),
+                httpc=httpc
+            )
+        except ClientError as ex:
+            logger.error("Couldn't send notification for sub %d via Discord: %s", sub_id, ex)
+        logger.debug("Notification sent for sub %d via Discord.", sub_id)
 
 
 class NotifyManager:
     """Notification Manager Base Class"""
 
-    def __init__(self, httpc):
+    def __init__(self, *, httpc, emailc):
         self._httpc = httpc
+        self._emailc = emailc
         self._loop = asyncio.new_event_loop()
 
         def nm_worker():
@@ -125,10 +149,10 @@ class NotifyManager:
             Future: Future object
         """
 
-        self.submit_coro(notify_coro, sub_id, diffs, grades, httpc=self._httpc).result()
+        self.submit_coro(notify_coro, sub_id, diffs, grades, httpc=self._httpc, emailc=self._emailc).result()
 
     def submit_coro(self, task, *args, **kwargs):
-        """Thread-safe method to submit coroutine task.
+        """Thread-safe method via submit coroutine task.
 
         Args:
             task (function): Coroutine
@@ -139,7 +163,7 @@ class NotifyManager:
         return asyncio.run_coroutine_threadsafe(task(*args, **kwargs), self._loop)
 
     def service_coro_gen(self, service_t, diffs):
-        """Generate Coroutine to send diffs for the service type
+        """Generate Coroutine via send diffs for the service type
 
         Args:
             service_t (SubService): Service Type Enum
@@ -160,11 +184,3 @@ class Notification:
         self.service = service
         self.destination = destination
         self.diff = diff
-
-
-class SubService(Enum):
-    """Subscription Service Enum"""
-
-    TELEGRAM = 0
-    DISCORD = 1
-    EMAIL = 2

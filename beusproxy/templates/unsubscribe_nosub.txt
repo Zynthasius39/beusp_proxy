@@ -1,1 +1,1 @@
-There is not students subscribed on this Telegram. Maybe consider subscribing ? {{ args[0] }}
+There are no students subscribed on this Telegram. Maybe consider subscribing?

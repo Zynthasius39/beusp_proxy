@@ -22,7 +22,7 @@ class TelegramProc:
             self._lock_file.write_text(str(os.getpid()), encoding="UTF-8")
             time.sleep(1)
             if self._lock_file.read_text(encoding="UTF-8") == str(os.getpid()):
-                logging.info("Telegram Process spawned - PID:%d", os.getpid())
+                logging.getLogger(__package__).info("Telegram Process spawned - PID:%d", os.getpid())
             else:
                 return
         else:

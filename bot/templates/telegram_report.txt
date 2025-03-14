@@ -1,9 +1,9 @@
-{% for course in courses %}
+{% for course in courses -%}
 *{{ course.courseCode }}*
 {{ course.courseName }}
-{% for key, value in course.diffs.items() %}\
-{{ key }}: `{{ value }}`\
+{% for key, value in course.diffs.items() -%}
+{{ key }}: `{{ value }}`
 {% endfor %}
 {% if courses|length != 1 %}
 {% endif %}
-{% endfor %}
+{%- endfor %}

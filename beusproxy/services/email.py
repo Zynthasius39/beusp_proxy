@@ -17,7 +17,7 @@ from ..config import (
     BOT_EMAIL,
     BOT_EMAIL_PASSWORD,
     BOT_SMTP_HOSTNAME,
-    TEMPLATES_FOLDER,
+    TEMPLATES_FOLDER, APP_NAME,
 )
 
 jinja_env = Environment(loader=FileSystemLoader(TEMPLATES_FOLDER))
@@ -36,6 +36,12 @@ class EmailClient:
         else:
             self._server = SMTP(BOT_SMTP_HOSTNAME)
         self._server.login(BOT_EMAIL, BOT_EMAIL_PASSWORD)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
 
     def close(self):
         """Close the SMTP server"""
@@ -60,7 +66,7 @@ class EmailClient:
         self.send(
             generate_mime(
                 email_to=recipient,
-                email_subject=jinja_env.get_template("email_subject.txt").render(),
+                email_subject=f"[{APP_NAME}] Verification",
                 body=jinja_env.get_template("verify.html").render(
                     assets_link=f"{WEB_HOSTNAME}",
                     verify_link=f"{API_HOSTNAME}/bot/verify/{code}",

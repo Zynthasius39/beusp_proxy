@@ -13,12 +13,13 @@ from ..common.utils import grade_diff
 logger = logging.getLogger(__package__)
 
 
-def check_grades(conn, httpc, nmgr):
+def check_grades(conn, httpc, emailc, nmgr):
     """Fetch grades and compare
 
     Args:
         conn (sqlite3.Connection): MainDB Connection
         httpc (HTTPClient): HTTP Client
+        emailc (EmailClient): Email Client
         nmgr (NotifyManager): Notification Manager
     """
     subs = conn.execute(
