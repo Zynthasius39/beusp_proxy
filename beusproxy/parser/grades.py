@@ -180,8 +180,19 @@ grade_fields = {
 # Inverted headers table
 # Used to translate for notifications
 rename_table_inv = {
-    v: k
-    for k, v in rename_table.items()
+    "absents": "Absents",
+    "sum": "Total",
+    "act1": "Mid-semester 1",
+    "act2": "Mid-semester 2",
+    "act3": "Mid-semester 3",
+    "iw": "Individual Work",
+    "attendance": "Attendance",
+    "final": "Final",
+    "addFinal": "Additional Final",
+    "reFinal": "Repeated Final",
+    "courseCode": "Course Code",
+    "courseName": "Course Name",
+    "ects": "ECTS",
 }
 
 # Specifying digit fields.

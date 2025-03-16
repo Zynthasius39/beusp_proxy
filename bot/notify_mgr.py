@@ -77,7 +77,7 @@ async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
     if sub["telegram_chat_id"]:
         try:
             tg_send_message(
-                report_gen_md(diffs, grades),
+                report_gen_md(diffs, grades, telegram=True),
                 sub["telegram_chat_id"],
                 params={
                     "parse_mode": "MarkdownV2"

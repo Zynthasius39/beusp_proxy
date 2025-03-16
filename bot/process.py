@@ -4,6 +4,8 @@ import time
 from multiprocessing import Event, Process
 from pathlib import Path
 
+import schedule
+
 from beusproxy.services.email import EmailClient
 from beusproxy.services.httpclient import HTTPClient
 from bot import run_chain
@@ -27,16 +29,25 @@ class BotProc:
         else:
             return
 
-        def proc_init():
+        def proc_worker():
             httpc = HTTPClient()
             emailc = EmailClient()
+            schedule.every(2).minutes.do(run_chain, httpc, emailc)
             while not self._shevent.is_set():
-                time.sleep(10)
-                run_chain(httpc, emailc)
-                # TODO: Scheduling
+                schedule.run_pending()
+                time.sleep(1)
+            schedule.clear()
+            emailc.close()
+            httpc.close()
 
-        self._proc = Process(target=proc_init)
+        self._proc = Process(target=proc_worker)
         self._proc.start()
+
+    def __enter__(self, *_):
+        return self
+
+    def __exit__(self):
+        self.close()
 
     def close(self):
         """Terminates Bot Process"""

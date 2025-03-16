@@ -109,12 +109,13 @@ def report_gen_dcmsg(diffs, grades):
     }
 
 
-def report_gen_md(diffs, grades):
+def report_gen_md(diffs, grades, *, telegram=False):
     """Markdown Report Generator
 
     Args:
         diffs (dict): Differences
         grades (dict): Grades Table
+        telegram (bool): Generate for Telegram
 
     Return:
         str: Rendered Markdown Output
@@ -134,18 +135,30 @@ def report_gen_html(diffs, grades):
     Return:
         str: Rendered HTML Output
     """
-    # TODO: Fix for email
     # Render and return.
+
     env = Environment(loader=FileSystemLoader("bot/templates"))
-    return env.get_template("report.html").render(divs=report_gen_list(diffs, grades))
+
+    colors = []
+    report = report_gen_list(diffs, grades)
+    for i in report:
+        r, g, b = random_rgb_color(minimum=64)
+        colors.append({
+        "fgColor": rgb2hex((r - 64, g - 64, b - 64)),
+        "bgColor": rgb2hex((r, g, b)),
+        "borderColor": rgb2hex((r, g, b)),
+    })
+
+    return env.get_template("report.html").render(divs=report, colors=colors)
 
 
-def report_gen_list(diffs, grades):
+def report_gen_list(diffs, grades, *, telegram=False):
     """Dictionary Generator for rendering
 
     Args:
         diffs (dict): Differences
         grades (dict): Grades Table
+        telegram (bool): Escape Telegram Special Chars
 
     Return:
         dict: Dictionary used in rendering
@@ -157,17 +170,18 @@ def report_gen_list(diffs, grades):
             continue
 
         # Construct and append a diff list.
-        diffs = {}
+        diffs_dict = {}
         for kk, vv in v.items():
             # Skips boring fields.
             # Maximum attendance point was 10 at the time of writing.
-            if vv and vv != -1 and not (kk == "attendance" and vv == 10):
-                diffs[rename_table_inv.get(kk, f"\\_notFound\\.{kk}")] = vv
+            print(vv)
+            if vv != -1 and not (kk == "attendance" and vv == 10):
+                diffs_dict[rename_table_inv.get(kk, kk)] = vv
         courses.append(
             {
-                "courseCode": escape_tg_chars(k),
-                "courseName": escape_tg_chars(grades[k].get("courseName")),
-                "diffs": diffs
+                "courseCode": escape_tg_chars(k) if telegram else k,
+                "courseName": escape_tg_chars(grades[k].get("courseName")) if telegram else grades[k].get("courseName"),
+                "diffs": diffs_dict
             }
         )
 
@@ -223,3 +237,14 @@ def random_dec_color(*, minimum=0):
     """
     r, g, b = random_rgb_color(minimum=minimum)
     return r * 256 ** 2 + g * 256 + b
+
+def rgb2hex(rgb_color):
+    """RGB To HEX
+
+    Args:
+        rgb_color (tuple): RGB Color Tuple
+
+    Returns:
+        str: HEX color
+    """
+    return "#" + "".join(f"{i:02x}" for i in rgb_color)
