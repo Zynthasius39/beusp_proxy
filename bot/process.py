@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 from multiprocessing import Event, Process
@@ -6,11 +5,12 @@ from pathlib import Path
 
 import schedule
 
+from beusproxy.common.utils import get_logger
 from beusproxy.services.email import EmailClient
 from beusproxy.services.httpclient import HTTPClient
 from bot import run_chain
 
-logger = logging.getLogger(__package__)
+logger = get_logger(__package__)
 
 class BotProc:
     """Bot Process Base Class"""

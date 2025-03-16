@@ -1,4 +1,3 @@
-import logging
 import math
 import re
 import time
@@ -10,6 +9,7 @@ from typing import Optional
 from aiohttp import ClientError
 from jinja2 import Environment
 
+from ..common.utils import get_logger
 from ..config import (
     BOT_TELEGRAM_API_KEY,
     BOT_TELEGRAM_HOSTNAME,
@@ -20,7 +20,7 @@ from ..config import (
 from .database import get_db
 from .httpclient import HTTPClient, HTTPClientError
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class TelegramClient:

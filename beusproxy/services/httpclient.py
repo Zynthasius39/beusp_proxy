@@ -7,9 +7,13 @@ from threading import Event, Thread
 from typing import Optional
 
 from aiohttp import ClientError, ClientResponse, ClientSession, ClientTimeout
+from flask import logging as flogging
 
 from ..config import REQUEST_TIMEOUT
 
+
+logger = logging.getLogger("httpclient")
+logger.addHandler(flogging.default_handler)
 
 class HTTPClient:
     """HTTPClient base class.
@@ -87,10 +91,10 @@ class HTTPClient:
                 **kwargs
             ).result()
         except TimeoutError as e:
-            logging.getLogger(__name__).error(e)
+            logger.getLogger(__name__).error(e)
             raise HTTPClientError(e) from e
         except ClientError as e:
-            logging.getLogger(__name__).error(e)
+            logger.getLogger(__name__).error(e)
             sys.exit(1)
 
         return res

@@ -24,9 +24,6 @@ def create_app():
     if DEBUG:
         logging.basicConfig(level=logging.DEBUG)
 
-    for logger in (APP_NAME, "telegram", "email", "httpclient"):
-        logging.getLogger(logger).addHandler(flogging.default_handler)
-
     curdir = os.path.dirname(os.path.abspath(__file__))
 
     init_context()

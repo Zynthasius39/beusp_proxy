@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import sqlite3
 from smtplib import SMTPException
 from threading import Thread
@@ -7,13 +6,15 @@ from threading import Thread
 import aiosqlite
 from aiohttp import ClientError
 
+from beusproxy.common.utils import get_logger
 from beusproxy.config import DATABASE, APP_NAME
 from beusproxy.services.email import generate_mime
+from beusproxy.services.httpclient import HTTPClientError
 from beusproxy.services.telegram import send_message as tg_send_message
 from beusproxy.services.discord import send_message as dc_send_message
 from bot.common.utils import report_gen_md, report_gen_dcmsg, report_gen_html
 
-logger = logging.getLogger(__package__)
+logger = get_logger(__package__)
 
 
 async def query(
@@ -84,9 +85,9 @@ async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
                 },
                 httpc=httpc
             )
-        except ClientError as ex:
+            logger.debug("Notification sent for sub %d via Telegram.", sub_id)
+        except (HTTPClientError, ClientError) as ex:
             logger.error("Couldn't send notification for sub %d via Telegram: %s", sub_id, ex)
-        logger.debug("Notification sent for sub %d via Telegram.", sub_id)
     if sub["email"]:
         try:
             emailc.send(
@@ -96,9 +97,9 @@ async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
                     body=report_gen_html(diffs, grades),
                 )
             )
+            logger.debug("Notification sent for sub %d via Email.", sub_id)
         except SMTPException as ex:
             logger.error("Couldn't send notification for sub %d via Email: %s", sub_id, ex)
-        logger.debug("Notification sent for sub %d via Email.", sub_id)
     if sub["discord_webhook_url"]:
         try:
             dc_send_message(
@@ -106,9 +107,9 @@ async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
                 message=report_gen_dcmsg(diffs, grades),
                 httpc=httpc
             )
-        except ClientError as ex:
+            logger.debug("Notification sent for sub %d via Discord.", sub_id)
+        except (HTTPClientError, ClientError) as ex:
             logger.error("Couldn't send notification for sub %d via Discord: %s", sub_id, ex)
-        logger.debug("Notification sent for sub %d via Discord.", sub_id)
 
 
 class NotifyManager:

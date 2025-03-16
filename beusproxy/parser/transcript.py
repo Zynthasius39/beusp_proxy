@@ -129,11 +129,7 @@ def transcript(html):
                 j, k = j.strip().lower(), k.strip()
                 if k == "0t":
                     k = "0"
-                current_semester[
-                    j
-                    if j in ["sac", "tacc", "tatc"]
-                    else f"_unk.{j}"
-                ] = int(k) if k.isdigit() else f"_err.{k}"
+                current_semester[fields_table.get(j, f"_unk.{j}")] = int(k) if k.isdigit() else f"_err.{k}"
             # Appending remaining cells.
             if (total_hours := tds[2].text.strip()).isdigit():
                 current_semester["totalHours"] = int(total_hours)
@@ -169,4 +165,14 @@ def transcript(html):
         }
         current_semester["courses"][tds[0].text.strip().replace(" ", "")] = course_table
 
-    return {"transcript": transcript_table}
+    return transcript_table
+
+# New headers table
+fields_table = {
+    "sqk": "sac",
+    "tak": "tacc",
+    "tqk": "tatc",
+    "sac": "sac",
+    "tacc": "tacc",
+    "tatc": "tatc",
+}

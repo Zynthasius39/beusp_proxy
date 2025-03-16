@@ -1,4 +1,3 @@
-import logging
 import math
 import re
 from datetime import datetime
@@ -10,6 +9,7 @@ from typing import Optional
 from jinja2 import Environment, FileSystemLoader
 
 from .database import get_db
+from ..common.utils import get_logger
 from ..config import (
     API_HOSTNAME,
     WEB_HOSTNAME,
@@ -118,7 +118,7 @@ def verify_email(code):
     Args:
         code (str): 9-digit code
     """
-    logger = logging.getLogger(__name__)
+    logger = get_logger(__name__)
 
     with get_db() as db_con:
         db_cur = db_con.cursor()

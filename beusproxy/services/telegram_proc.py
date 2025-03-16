@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 from multiprocessing import Event, Process
@@ -6,6 +5,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
+from ..common.utils import get_logger
 from ..config import TEMPLATES_FOLDER
 from .httpclient import HTTPClient
 from .telegram import TelegramClient
@@ -22,7 +22,7 @@ class TelegramProc:
             self._lock_file.write_text(str(os.getpid()), encoding="UTF-8")
             time.sleep(1)
             if self._lock_file.read_text(encoding="UTF-8") == str(os.getpid()):
-                logging.getLogger(__package__).info("Telegram Process spawned - PID:%d", os.getpid())
+                get_logger(__package__).info("Telegram Process spawned - PID:%d", os.getpid())
             else:
                 return
         else:

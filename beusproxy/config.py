@@ -4,7 +4,10 @@ import re
 import sys
 from urllib.parse import urlparse
 
-logger = logging.getLogger(__name__)
+from flask import logging as flogging
+
+logger = logging.getLogger("config")
+logger.addHandler(flogging.default_handler)
 
 
 def _arg_error(arg=None, *, help_msg=None):
@@ -21,7 +24,7 @@ def _arg_error(arg=None, *, help_msg=None):
 def _log_config():
     """Debug exported constants."""
     for a in __all__:
-        logger.debug("%s: %s", a, getattr(sys.modules[__name__], a))
+        logger.debug("%s -> %s", a, getattr(sys.modules[__name__], a))
 
 
 # App config
@@ -152,7 +155,7 @@ if BOT_ENABLED:
     BOT_SMTP_HOSTNAME = os.getenv("BOT_SMTP_HOSTNAME", BOT_SMTP_HOSTNAME)
 
     if not (
-        BOT_DISCORD_USERNAME := os.getenv("BOT_DISCORD_USERNAME", BOT_DISCORD_USERNAME)
+            BOT_DISCORD_USERNAME := os.getenv("BOT_DISCORD_USERNAME", BOT_DISCORD_USERNAME)
     ):
         _arg_error("BOT_DISCORD_USERNAME")
 

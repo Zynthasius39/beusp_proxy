@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 import sqlite3
@@ -6,10 +7,23 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 from dateutil import parser
-from flask import abort, g
+from flask import abort, g, logging as flogging
 
 from ..config import DATABASE, DEMO_FOLDER, HOST, ROOT, USER_AGENT
 from ..services.httpclient import HTTPClient
+
+def get_logger(name=None):
+    """Get a logger
+
+    Args:
+        name (str): Logger name
+
+    Returns:
+        Logger: Logger
+    """
+    logger = logging.getLogger(name)
+    logger.addHandler(flogging.default_handler)
+    return logger
 
 
 def get_db():

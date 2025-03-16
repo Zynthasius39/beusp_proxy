@@ -1,16 +1,16 @@
 import json
-import logging
 import sys
 from datetime import datetime
 from json import JSONDecodeError
 
 from aiohttp import ClientError
 
+from beusproxy.common.utils import get_logger
 from beusproxy.config import API_HOSTNAME, HOST, USER_AGENT
 
 from ..common.utils import grade_diff
 
-logger = logging.getLogger(__package__)
+logger = get_logger(__package__)
 
 
 def check_grades(conn, httpc, emailc, nmgr):
@@ -129,8 +129,8 @@ def check_grades(conn, httpc, emailc, nmgr):
                     # Push to notifier
                     nmgr.notify(sub_id, diffs, sub_grades)
                     logger.debug(
-                        "Changes found for Sub %d: %s", sub_id, json.dumps(
-                            diffs, indent=1, ensure_ascii=True)
+                        "Changes found for Sub %d -> %s", sub_id, json.dumps(
+                            diffs, ensure_ascii=True)
                     )
             except JSONDecodeError as e:
                 logger.error("Couldn't decode JSON from DB for Sub %d: %s", sub_id, e)

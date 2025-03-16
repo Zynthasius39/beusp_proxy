@@ -64,4 +64,4 @@ def send_message(webhook, *, message, httpc):
     if not res.status == 204:
         raise HTTPClientError(res.status, httpc.cr_text(res))
 
-    return httpc.cr_json(res)
+    return httpc.cr_text(res)

@@ -122,7 +122,7 @@ def report_gen_md(diffs, grades, *, telegram=False):
     """
     # Render and return.
     env = Environment(loader=FileSystemLoader("bot/templates"))
-    return env.get_template("telegram_report.txt").render(courses=report_gen_list(diffs, grades))
+    return env.get_template("telegram_report.txt").render(courses=report_gen_list(diffs, grades, telegram=telegram))
 
 
 def report_gen_html(diffs, grades):
@@ -174,7 +174,6 @@ def report_gen_list(diffs, grades, *, telegram=False):
         for kk, vv in v.items():
             # Skips boring fields.
             # Maximum attendance point was 10 at the time of writing.
-            print(vv)
             if vv != -1 and not (kk == "attendance" and vv == 10):
                 diffs_dict[rename_table_inv.get(kk, kk)] = vv
         courses.append(

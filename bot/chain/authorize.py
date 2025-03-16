@@ -1,8 +1,8 @@
 import asyncio
-import logging
 
 from aiohttp import ClientError
 
+from beusproxy.common.utils import get_logger
 from beusproxy.config import API_HOSTNAME
 
 
@@ -13,7 +13,7 @@ def authorize_subs(conn, httpc):
         conn (sqlite3.Connection): MainDB Connection
         httpc (HTTPClient): HTTP Client
     """
-    logger = logging.getLogger(__package__)
+    logger = get_logger(__package__)
 
     # Fetch students to be authorized.
     stud_credentials = conn.execute(
@@ -43,7 +43,7 @@ def authorize_subs(conn, httpc):
     id_table = {}
     for stud in stud_credentials:
         id_table[stud["student_id"]] = stud["id"]
-    logger.debug("Authenticating: %s", str(id_table))
+    logger.debug("Authenticating -> %s", str(id_table))
 
     # Authorization Coroutine
     async def auth_stud_coro(student_id, password):

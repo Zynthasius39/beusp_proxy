@@ -1,10 +1,11 @@
 import atexit
-import logging
 import sys
 from smtplib import SMTPAuthenticationError
 
 from jinja2 import Environment, FileSystemLoader
 
+from bot.process import BotProc
+from .common.utils import get_logger
 from .config import BOT_ENABLED, TEMPLATES_FOLDER
 from .services.email import EmailClient
 from .services.httpclient import HTTPClient
@@ -35,7 +36,7 @@ c = Context()
 
 def init_context():
     """Initialize the global context"""
-    logger = logging.getLogger(__name__)
+    logger = get_logger(__name__)
 
     try:
         c.set("jinjaenv", Environment(loader=FileSystemLoader(TEMPLATES_FOLDER)))
@@ -43,11 +44,10 @@ def init_context():
         if BOT_ENABLED:
             c.set("tgproc", TelegramProc())
             c.set("emailc", EmailClient())
+            c.set("bot", BotProc())
     except SMTPAuthenticationError as e:
         logger.error(e)
         sys.exit(1)
-
-    c.get("jinjaenv").list_templates()
 
     @atexit.register
     def cleanup():
@@ -55,4 +55,5 @@ def init_context():
         if BOT_ENABLED:
             c.get("tgproc").close()
             c.get("emailc").close()
+            c.get("bot").close()
         c.get("httpc").close()
