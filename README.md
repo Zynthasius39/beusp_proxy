@@ -24,7 +24,8 @@ This API is designed from a student's point of view. Don't expect a fully workin
 ![Screenshot 2024-12-17 at 02-12-11 Baku Engineering University TMS_PMS - Rest API](https://github.com/user-attachments/assets/9e4717bd-5796-48bf-a761-72551e109ac9)
 
 ## Getting started (docker)
-Coming soon...
+
+[//]: # (TODO: Dockerize)
 
 ## Getting started (manual)
 - Set-up the proxy server:
@@ -52,13 +53,17 @@ gunicorn
 # uwsgi.ini, gunicorn.conf.py
 
 # Neither uWSGI, nor gunicorn supports Windows. This tutorial is Linux/macOS only.
-# If you don't know what you are doing, just use the Docker container. [Not out yet :(]
+# If you don't know what you are doing, just use the Docker container.
 ```
 - If you want a development server instead:
 ```bash
 flask --app beusproxy run --debug
 
-# Reloading may or may not work properly.
+# Set DEBUG Environmental variable
+export DEBUG=true
+
+# Reloading may or may not work properly
+# for bot and telegram modules
 # To run without reloading:
 flask --app beusproxy run --debug --no-reload
 ```
