@@ -115,12 +115,12 @@ BOT_SMTP_HOSTNAME="smtp.gmail.com"
 BOT_DISCORD_USERNAME="BeuTMSBot"
 BOT_DISCORD_AVATAR="http://localhost/beutmsbot.png"
 
-EMAIL_REGEX="long_email_regex"
 # Custom email regex
+EMAIL_REGEX="long_email_regex"
 ```
 ```diff
 # Use proper URL in the webserver
-/src/Api.ts (Line 1)
+src/Api.ts (Line 1)
 + When offline mode is enabled, no request is being made to root server.
 - You need to have the proxy server running!
 ```

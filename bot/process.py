@@ -8,14 +8,15 @@ import schedule
 from beusproxy.common.utils import get_logger
 from beusproxy.services.email import EmailClient
 from beusproxy.services.httpclient import HTTPClient
-from bot import run_chain
+from . import run_chain
 
 logger = get_logger(__package__)
+
 
 class BotProc:
     """Bot Process Base Class"""
 
-    def __init__(self):
+    def __init__(self, daemon=True):
         self._shevent = Event()
         self._proc = None
         self._lock_file = Path(".bot.lock")
@@ -29,25 +30,20 @@ class BotProc:
         else:
             return
 
-        def proc_worker():
-            httpc = HTTPClient()
-            emailc = EmailClient()
-            schedule.every(2).minutes.do(run_chain, httpc, emailc)
-            while not self._shevent.is_set():
-                schedule.run_pending()
-                time.sleep(1)
-            schedule.clear()
-            emailc.close()
-            httpc.close()
-
-        self._proc = Process(target=proc_worker)
-        self._proc.start()
+        self._daemon = daemon
+        if daemon:
+            self._proc = Process(target=proc_worker, args={self._shevent}, daemon=daemon)
+            self._proc.start()
 
     def __enter__(self, *_):
         return self
 
     def __exit__(self):
         self.close()
+
+    def run(self):
+        if not self._daemon:
+            proc_worker(shevent=self._shevent)
 
     def close(self):
         """Terminates Bot Process"""
@@ -56,3 +52,15 @@ class BotProc:
             self._proc.join()
             if self._lock_file.exists():
                 self._lock_file.unlink()
+
+
+def proc_worker(shevent=None):
+    httpc = HTTPClient()
+    emailc = EmailClient()
+    schedule.every(2).minutes.do(run_chain, httpc, emailc)
+    while not shevent.is_set():
+        schedule.run_pending()
+        time.sleep(1)
+    schedule.clear()
+    emailc.close()
+    httpc.close()
