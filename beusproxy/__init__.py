@@ -45,7 +45,7 @@ def create_app():
     CORS(
         app,
         supports_credentials=True,
-        resources={r"/*": {"origins": "http://10.0.10.75:5173"}},
+        resources={r"/*": {"origins": "http://localhost:5173"}},
     )
 
     api.add_resource(resources.Msg, "/resource/msg")

@@ -82,6 +82,8 @@ class HTTPClient:
         Returns:
             ClientResponse: Response object
         """
+        logger = logging.getLogger(__name__)
+        logger.addHandler(flogging.default_handler)
         try:
             res = self.submit_coro(
                 self.request_coro,
@@ -91,10 +93,10 @@ class HTTPClient:
                 **kwargs
             ).result()
         except TimeoutError as e:
-            logger.getLogger(__name__).error(e)
+            logger.error(e)
             raise HTTPClientError(e) from e
         except ClientError as e:
-            logger.getLogger(__name__).error(e)
+            logger.error(e)
             sys.exit(1)
 
         return res
