@@ -27,7 +27,7 @@ if api_host.scheme and api_host.netloc:
     parsed_url = api_host.geturl()
     url = parsed_url if api_host.path else parsed_url + "/"
 
-httpc = HTTPClient(trust_env=True, proxy="http://127.0.0.1:8081", ssl=False)
+httpc = HTTPClient(trust_env=True)
 
 demo_table = {
     "transcript.json": "resource/transcript",

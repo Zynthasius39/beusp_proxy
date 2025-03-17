@@ -63,7 +63,7 @@ class Res(Resource):
         if not os.path.exists(demo_file):
             abort(404)
 
-        res = make_response(demo_response("program"), 200)
+        res = make_response(demo_response(resource), 200)
 
         if resource == "home":
             res.set_cookie(

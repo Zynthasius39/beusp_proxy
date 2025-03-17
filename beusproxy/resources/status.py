@@ -3,6 +3,7 @@ import hashlib
 from flask import current_app as app
 from flask_restful import Resource, abort, reqparse
 
+from .. import BOT_ENABLED
 from ..common.utils import get_db
 from ..config import HOST, ROOT, USER_AGENT
 from ..context import c
@@ -79,7 +80,7 @@ class Status(Resource):
             location="args",
         )
         args = rp.parse_args()
-        status_table = {}
+        status_table = {"botEnabled": BOT_ENABLED}
 
         with get_db() as db_con:
             db_cur = db_con.cursor()
@@ -91,7 +92,7 @@ class Status(Resource):
             """
             ).fetchone()
             if db_res:
-                status_table["students_registered"] = db_res["c"]
+                status_table["studentsRegistered"] = db_res["c"]
 
             # Get total subscribers count.
             db_res = db_cur.execute(
@@ -110,7 +111,7 @@ class Status(Resource):
             mid_res = httpc.request(
                 "GET", ROOT, headers={"Host": HOST, "User-Agent": USER_AGENT}
             )
-            status_table["root_server_is_up"] = mid_res.status == 200
+            status_table["rootServerIsUp"] = mid_res.status == 200
 
             # Advanced status check.
             # Return hashsums of given files.

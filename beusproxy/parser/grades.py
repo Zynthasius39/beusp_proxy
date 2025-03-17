@@ -26,7 +26,7 @@ def grades(text):
             all_enabled = True
         # Append year and semester.
         else:
-            grades_ops.append(
+            grades_ops.appendresource(
                 {
                     "year": int(m.group(1)),
                     "semester": int(m.group(2)),
