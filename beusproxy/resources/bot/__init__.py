@@ -30,19 +30,19 @@ class Bot(Resource):
                         schema:
                             type: object
                             properties:
-                                bot_email:
+                                botEmail:
                                     type: string
                                     example: example@std.beu.edu.az
-                                bot_telegram:
+                                botTelegram:
                                     type: string
-                                    example: example_telegram_bot
+                                    example: exampleTelegramBot
             404:
                 description: Bot is not active
         """
         bot = {}
 
         if BOT_EMAIL:
-            bot["bot_email"] = BOT_EMAIL
+            bot["botEmail"] = BOT_EMAIL
 
         try:
             telegram_bot = get_me(httpc=c.get("httpc"))
@@ -53,7 +53,7 @@ class Bot(Resource):
 
         if telegram_bot:
             if telegram_bot["result"].get("username"):
-                bot["bot_telegram"] = telegram_bot["result"]["username"]
+                bot["botTelegram"] = telegram_bot["result"]["username"]
 
         return bot
 

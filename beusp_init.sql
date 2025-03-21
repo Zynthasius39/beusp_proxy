@@ -31,7 +31,7 @@ CREATE TABLE Student_Grades (
 CREATE TABLE Telegram_Subscribers(
 	owner_id INTEGER,
 	telegram_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	telegram_user_id TEXT NOT NULL,
+	telegram_user_id INTEGER NOT NULL,
 	telegram_chat_id INTEGER NOT NULL,
 	FOREIGN KEY(owner_id) REFERENCES Students(id)
 );

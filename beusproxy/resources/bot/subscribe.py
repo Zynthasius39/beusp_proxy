@@ -32,11 +32,11 @@ class BotSubscribe(Resource):
                         schema:
                             type: object
                             properties:
-                                telegram_user_id:
+                                telegramUserId:
                                     type: integer
                                     format: int64
                                     example: 1220173140
-                                discord_webhook_url:
+                                discordWebhookUrl:
                                     type: string
                                     example: https://discord.com/api/webhooks/...
                                 email:
@@ -95,9 +95,7 @@ class BotSubscribe(Resource):
                         (owner_id,),
                     ).fetchone()
                     if db_sub_res is not None:
-                        subscriptions["telegram_user_id"] = db_sub_res[
-                            "telegram_user_id"
-                        ]
+                        subscriptions["telegramUserId"] = db_sub_res["telegram_user_id"]
                 if db_res["active_discord_id"] is not None:
                     db_sub_res = (
                         db_con.cursor()
@@ -112,7 +110,7 @@ class BotSubscribe(Resource):
                         .fetchone()
                     )
                     if db_sub_res is not None:
-                        subscriptions["discord_webhook_url"] = db_sub_res[
+                        subscriptions["discordWebhookUrl"] = db_sub_res[
                             "discord_webhook_url"
                         ]
                 if db_res["active_email_id"] is not None:
@@ -152,7 +150,7 @@ class BotSubscribe(Resource):
                                 type: string
                                 description: Telegram
                                 example: ""
-                            discord_webhook_url:
+                            discordWebhookUrl:
                                 type: string
                                 description: Discord Webhook
                                 example: https://discord.com/api/webhooks/...
@@ -174,15 +172,15 @@ class BotSubscribe(Resource):
                             oneOf:
                               - type: object
                                 properties:
-                                    telegram_code:
+                                    telegramCode:
                                         type: integer
                                         format: int32
                                         example: 411001
                                 required:
-                                  - telegram_code
+                                  - telegramCode
                               - type: object
                                 properties:
-                                    email_sent:
+                                    emailSent:
                                         type: boolean
                                         example: true
                             example:
@@ -212,7 +210,7 @@ class BotSubscribe(Resource):
             type=str,
         )
         rp.add_argument(
-            "discord_webhook_url",
+            "discordWebhookUrl",
             type=str,
         )
         rp.add_argument(
@@ -263,9 +261,9 @@ class BotSubscribe(Resource):
                     ),
                 )
                 db_con.commit()
-                return {"telegram_code": code}, 202
-            if args.get("discord_webhook_url") is not None:
-                if not is_webhook(args.get("discord_webhook_url")):
+                return {"telegramCode": code}, 202
+            if args.get("discordWebhookUrl") is not None:
+                if not is_webhook(args.get("discordWebhookUrl")):
                     abort(400, help="Invalid Discord Webhook URL")
                 db_sub_res = db_cur.execute(
                     """
@@ -273,7 +271,7 @@ class BotSubscribe(Resource):
                     VALUES(?, ?)
                     RETURNING discord_id;
                 """,
-                    (owner_id, args.get("discord_webhook_url")),
+                    (owner_id, args.get("discordWebhookUrl")),
                 ).fetchone()
                 if db_sub_res is None:
                     db_con.rollback()
@@ -315,7 +313,7 @@ class BotSubscribe(Resource):
                     c.get("emailc").send_verification(args.get("email"), code)
                 except SMTPException:
                     abort(500)
-                return {"email_sent": True}, 202
+                return {"emailSent": True}, 202
 
         return make_response("", 200)
 
@@ -383,12 +381,23 @@ class BotSubscribe(Resource):
             db_cur = db_con.cursor()
             db_res = db_cur.execute(
                 """
-                SELECT ss.owner_id, s.active_telegram_id, s.active_discord_id, s.active_email_id
-                FROM Student_Sessions ss
-                INNER JOIN Students s
-                ON ss.owner_id = s.id
-                WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
-                LIMIT 1;
+                SELECT
+                    ss.owner_id,
+                    s.active_telegram_id,
+                    s.active_discord_id,
+                    s.active_email_id
+                FROM
+                    Student_Sessions ss
+                INNER JOIN
+                    Students s
+                ON
+                    ss.owner_id = s.id
+                WHERE
+                    s.student_id = ? AND
+                    ss.session_id = ? AND
+                    ss.logged_out = 0
+                LIMIT
+                    1;
                 """,
                 (args.get("StudentID"), args.get("SessionID")),
             ).fetchone()
@@ -400,13 +409,6 @@ class BotSubscribe(Resource):
 
             owner_id = db_res["owner_id"]
             unsub_list = args.get("unsubscribe")
-            # unsub_list = (
-            #     request.get_json().get("unsubscribe")
-            #     if isinstance(request.get_json(), dict)
-            #     else None
-            # )
-            # if unsub_list is None:
-            #     abort(400, help="Missing unsubscribe array")
 
             if "telegram" in unsub_list and db_res["active_telegram_id"]:
                 db_sub_res = db_cur.execute(
@@ -450,12 +452,5 @@ class BotSubscribe(Resource):
                     abort(400, help="Couldn't find the subscription")
                 db_con.commit()
                 res = make_response("", 204)
-
-        if (
-            args.get("telegram_user_id") is not None
-            or args.get("discord_webhook_url") is not None
-            or args.get("email") is not None
-        ):
-            abort(400, help="Couldn't find the subscription")
 
         return res
