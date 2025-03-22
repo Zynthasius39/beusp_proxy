@@ -57,6 +57,7 @@ def home(text):
         "speciality": {},
     }
 
+    lang = ""
     unk_counter = 0
     # Find main table with given class name.
     for tr in soup.find("table", class_="table").find_all("tr"):
@@ -74,6 +75,11 @@ def home(text):
                 field = "_eduDebt"
             else:
                 field = headers.get(og_field, f"_unkField{unk_counter}")
+                if not lang:
+                    if og_field == "Tələbə nömrəniz":
+                        lang = "az"
+                    else:
+                        lang = "en"
             unk_counter += 1
             value = cells[-1].text.strip()
             try:
@@ -163,6 +169,7 @@ def home(text):
         "documents": documents_table,
         "image": image_url,
         "studentInfo": student_info_table,
+        "lang": lang,
     }
 
 

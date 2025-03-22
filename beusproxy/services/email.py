@@ -1,26 +1,21 @@
 import math
 import re
 from datetime import datetime
-from smtplib import SMTP, SMTP_SSL
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from smtplib import SMTP, SMTP_SSL, SMTPSenderRefused
 from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
 
-from .database import get_db
 from ..common.utils import get_logger
-from ..config import (
-    API_HOSTNAME,
-    WEB_HOSTNAME,
-    EMAIL_REGEX,
-    BOT_EMAIL,
-    BOT_EMAIL_PASSWORD,
-    BOT_SMTP_HOSTNAME,
-    TEMPLATES_FOLDER, APP_NAME,
-)
+from ..config import (API_HOSTNAME, APP_NAME, BOT_EMAIL, BOT_EMAIL_PASSWORD,
+                      BOT_SMTP_HOSTNAME, EMAIL_REGEX, TEMPLATES_FOLDER,
+                      WEB_HOSTNAME)
+from .database import get_db
 
 jinja_env = Environment(loader=FileSystemLoader(TEMPLATES_FOLDER))
+logger = get_logger("email")
 
 
 class EmailClient:
@@ -54,7 +49,11 @@ class EmailClient:
         Args:
             mime (MIMEBase): Message as MIME
         """
-        self._server.sendmail(BOT_EMAIL, mime["To"], mime.as_string())
+        try:
+            self._server.sendmail(BOT_EMAIL, mime["To"], mime.as_string())
+        except SMTPSenderRefused as e:
+            logger.error(e)
+            self._server.connect()
 
     def send_verification(self, recipient, code):
         """Sends verification email.
@@ -85,12 +84,12 @@ def is_email(email):
     Returns:
         bool: If it is a correct email address
     """
-    return (
-            re.match(EMAIL_REGEX, email) is not None
-    )
+    return re.match(EMAIL_REGEX, email) is not None
 
 
-def generate_mime(*, email_from=BOT_EMAIL, email_to, email_subject, body, body_type="html"):
+def generate_mime(
+    *, email_from=BOT_EMAIL, email_to, email_subject, body, body_type="html"
+):
     """Generates a MIME
 
     Args:
@@ -147,13 +146,14 @@ def verify_email(code):
         email = db_res["verify_item"]
 
         if (
-                math.floor(
-                    (
-                            datetime.now() - datetime.fromisoformat(db_res["verify_date"])
-                    ).total_seconds()
-                    / 60
-                )
-                > 29
+            math.floor(
+                (
+                    datetime.now() -
+                    datetime.fromisoformat(db_res["verify_date"])
+                ).total_seconds()
+                / 60
+            )
+            > 29
         ):
             logger.info("%s - verification code has been expired", email)
             return jinja_env.get_template("verify_failed.html").render(
@@ -177,7 +177,9 @@ def verify_email(code):
         db_con.commit()
         if not db_res.rowcount > 0:
             db_con.rollback()
-            logger.info("%s - couldn't find the email, even though found a matching code", email)
+            logger.info(
+                "%s - couldn't find the email, even though found a matching code", email
+            )
             return jinja_env.get_template("verify_failed.html").render(
                 assets_link=WEB_HOSTNAME
             )
@@ -197,7 +199,9 @@ def verify_email(code):
 
         if not db_res:
             db_con.rollback()
-            logger.error("Couldn't insert a email subscription: (%d, %s)", owner_id, email)
+            logger.error(
+                "Couldn't insert a email subscription: (%d, %s)", owner_id, email
+            )
 
         email_id = db_res["email_id"]
         db_con.commit()

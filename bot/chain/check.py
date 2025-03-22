@@ -25,21 +25,24 @@ def check_grades(conn, httpc, emailc, nmgr):
     subs = conn.execute(
         """
         SELECT
-            ses.owner_id,
-            ses.session_id
-        FROM
-            Student_Sessions ses
-        INNER JOIN
-            Students s
-        ON
-            ses.owner_id == s.id AND
-            NOT (
-                s.active_telegram_id IS NULL AND
-                s.active_discord_id IS NULL AND
-                s.active_email_id IS NULL
-            )
-        WHERE
-            logged_out == 0;
+            id,
+            session_id
+        FROM (
+          SELECT
+            *,
+            ROW_NUMBER() OVER (
+                PARTITION BY
+                    s.id
+                ORDER BY
+                    ses.login_date DESC
+            ) rn
+          FROM Students s
+          INNER JOIN Student_Sessions ses
+          ON
+            s.id == ses.owner_id AND
+            ses.logged_out == 0
+        ) t
+        WHERE rn = 1;
     """
     ).fetchall()
 
@@ -58,7 +61,7 @@ def check_grades(conn, httpc, emailc, nmgr):
     cr_dict = {}
     try:
         httpc.gather(
-            *[grades_coro(cr_dict, sub["owner_id"], sub["session_id"]) for sub in subs]
+            *[grades_coro(cr_dict, sub["id"], sub["session_id"]) for sub in subs]
         )
     except ClientError as e:
         logger.error(e)

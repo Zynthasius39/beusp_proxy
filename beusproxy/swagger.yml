@@ -151,6 +151,7 @@ components:
       required:
         - documents
         - image
+        - lang
         - studentInfo
       properties:
         documents:
@@ -163,6 +164,9 @@ components:
         image:
           type: string
           example: 290bfdbca904e59e4566ca862be9bf50
+        lang:
+          type: string
+          example: en
         studentInfo:
           type: object
           required:
