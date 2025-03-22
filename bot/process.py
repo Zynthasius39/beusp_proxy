@@ -19,6 +19,7 @@ class BotProc:
     def __init__(self, daemon=True):
         self._shevent = Event()
         self._proc = None
+        self._daemon = daemon
         self._lock_file = Path(".bot.lock")
         if not self._lock_file.exists():
             self._lock_file.write_text(str(os.getpid()), encoding="UTF-8")
@@ -30,7 +31,6 @@ class BotProc:
         else:
             return
 
-        self._daemon = daemon
         if daemon:
             self._proc = Process(target=proc_worker, args={self._shevent}, daemon=daemon)
             self._proc.start()

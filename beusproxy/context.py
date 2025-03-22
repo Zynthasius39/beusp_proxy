@@ -4,7 +4,6 @@ from smtplib import SMTPAuthenticationError
 
 from jinja2 import Environment, FileSystemLoader
 
-from bot.process import BotProc
 from .common.utils import get_logger
 from .config import BOT_ENABLED, TEMPLATES_FOLDER
 from .services.email import EmailClient
@@ -44,7 +43,6 @@ def init_context():
         if BOT_ENABLED:
             c.set("tgproc", TelegramProc())
             c.set("emailc", EmailClient())
-            c.set("bot", BotProc())
     except SMTPAuthenticationError as e:
         logger.error(e)
         sys.exit(1)
@@ -55,5 +53,4 @@ def init_context():
         if BOT_ENABLED:
             c.get("tgproc").close()
             c.get("emailc").close()
-            c.get("bot").close()
         c.get("httpc").close()

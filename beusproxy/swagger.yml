@@ -13,7 +13,7 @@ info:
 servers:
   - url: /
     description: Production server (uses root server)
-  - url: http://localhost:5001/
+  - url: http://localhost:5000/
     description: Offline server (uses demo data)
 tags:
   - name: Authorization
