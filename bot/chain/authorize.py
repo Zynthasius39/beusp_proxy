@@ -3,7 +3,7 @@ import asyncio
 from aiohttp import ClientError
 
 from beusproxy.common.utils import get_logger
-from beusproxy.config import API_HOSTNAME
+from beusproxy.config import API_INTERNAL_HOSTNAME
 
 
 def authorize_subs(conn, httpc):
@@ -52,7 +52,7 @@ def authorize_subs(conn, httpc):
             student_id,
             await httpc.request_coro(
                 "GET",
-                f"{API_HOSTNAME}auth",
+                f"{API_INTERNAL_HOSTNAME}auth",
                 params={"studentId": student_id, "password": password},
             ),
         )

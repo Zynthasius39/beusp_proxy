@@ -54,6 +54,7 @@ BOT_ENABLED = False
 # emails and telegram response
 WEB_HOSTNAME = ""
 API_HOSTNAME = ""
+API_INTERNAL_HOSTNAME = ""
 
 BOT_EMAIL = ""
 BOT_EMAIL_PASSWORD = "asd"
@@ -93,21 +94,28 @@ root_server = urlparse(os.getenv("ROOT_SERVER", ROOT))
 if root_server.scheme and root_server.netloc:
     parsed_url = root_server.geturl()
     HOST = root_server.netloc
-    ROOT = parsed_url if root_server.path else parsed_url + "/"
+    ROOT = parsed_url if parsed_url.endswith("/") else parsed_url + "/"
 else:
     _arg_error("ROOT_SERVER")
 
 app_host = urlparse(os.getenv("API_HOSTNAME", API_HOSTNAME))
 if app_host.scheme and app_host.netloc:
     parsed_url = app_host.geturl()
-    API_HOSTNAME = parsed_url if app_host.path else parsed_url + "/"
+    API_HOSTNAME = parsed_url if parsed_url.endswith("/") else parsed_url + "/"
 else:
     _arg_error("API_HOSTNAME")
+
+app_int_host = urlparse(os.getenv("API_INTERNAL_HOSTNAME", API_INTERNAL_HOSTNAME))
+if app_int_host.scheme and app_int_host.netloc:
+    parsed_url = app_int_host.geturl()
+    API_INTERNAL_HOSTNAME = parsed_url if parsed_url.endswith("/") else parsed_url + "/"
+else:
+    _arg_error("API_INTERNAL_HOSTNAME")
 
 web_host = urlparse(os.getenv("WEB_HOSTNAME", WEB_HOSTNAME))
 if web_host.scheme and web_host.netloc:
     parsed_url = web_host.geturl()
-    WEB_HOSTNAME = parsed_url if web_host.path else parsed_url + "/"
+    WEB_HOSTNAME = parsed_url if parsed_url.endswith("/") else parsed_url + "/"
 else:
     _arg_error("WEB_HOSTNAME")
 

@@ -4,8 +4,8 @@ services:
     ports:
       - 8080:80
     networks:
-      beusp:
-        ipv4_address: 10.5.0.2
+      - beusp
+    image: zynthasius/beusp:alpine
   api:
     build:
       context: .
@@ -15,9 +15,9 @@ services:
         source: ./shared
         target: /hpage/shared
     networks:
-      beusp:
-        ipv4_address: 10.5.0.3
+      - beusp
     env_file: .env
+    image: zynthasius/beusproxy:alpine
   bot:
     build:
       context: .
@@ -27,14 +27,9 @@ services:
         source: ./shared
         target: /hpage/shared
     networks:
-      beusp:
-        ipv4_address: 10.5.0.4
+      - beusp
     env_file: .env
+    image: zynthasius/beusproxy:bot-alpine
 
 networks:
   beusp:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.5.0.0/24
-          gateway: 10.5.0.1

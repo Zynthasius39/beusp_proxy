@@ -35,10 +35,10 @@ class BotProc:
             self._proc = Process(target=proc_worker, args={self._shevent}, daemon=daemon)
             self._proc.start()
 
-    def __enter__(self, *_):
+    def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, *_):
         self.close()
 
     def run(self):
@@ -55,7 +55,7 @@ class BotProc:
 
 
 def proc_worker(shevent=None):
-    httpc = HTTPClient()
+    httpc = HTTPClient(trust_env=True)
     emailc = EmailClient()
     schedule.every(2).minutes.do(run_chain, httpc, emailc)
     while not shevent.is_set():

@@ -7,7 +7,7 @@ from flask_restful import Resource, abort, reqparse
 
 from .. import parser
 from ..common.utils import is_expired
-from ..config import API_HOSTNAME, HOST, ROOT, USER_AGENT
+from ..config import API_HOSTNAME, HOST, ROOT, USER_AGENT, API_INTERNAL_HOSTNAME
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -350,7 +350,7 @@ class GradesLatest(Resource):
         try:
             mid_res = httpc.request(
                 "GET",
-                f"{API_HOSTNAME}resource/grades",
+                f"{API_INTERNAL_HOSTNAME}resource/grades",
                 headers={
                     "Host": HOST,
                     "Cookie": f"SessionID={args.get("SessionID")};",
@@ -372,7 +372,7 @@ class GradesLatest(Resource):
 
             mid_res = httpc.request(
                 "GET",
-                f"{API_HOSTNAME}resource/grades/{year}/{semester}",
+                f"{API_INTERNAL_HOSTNAME}resource/grades/{year}/{semester}",
                 headers={
                     "Host": HOST,
                     "Cookie": f"SessionID={args.get("SessionID")};",

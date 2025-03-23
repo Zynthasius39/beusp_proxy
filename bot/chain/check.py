@@ -6,7 +6,7 @@ from json import JSONDecodeError
 from aiohttp import ClientError
 
 from beusproxy.common.utils import get_logger
-from beusproxy.config import API_HOSTNAME, HOST, USER_AGENT
+from beusproxy.config import API_INTERNAL_HOSTNAME, HOST, USER_AGENT
 
 from ..common.utils import grade_diff
 
@@ -49,7 +49,7 @@ def check_grades(conn, httpc, emailc, nmgr):
     async def grades_coro(cr, owner_id, session_id):
         cr[owner_id] = await httpc.request_coro(
             "GET",
-            f"{API_HOSTNAME}resource/grades/latest",
+            f"{API_INTERNAL_HOSTNAME}resource/grades/latest",
             headers={
                 "Host": HOST,
                 "Cookie": f"SessionID={session_id};",
