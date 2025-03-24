@@ -1,0 +1,10 @@
+[Unit]
+Description=HPage Bot container
+Requires=hpage_web.service
+
+[Container]
+Image=zynthasius/beusproxy:bot-alpine
+Network=beusp
+HostName=bot
+Volume=/root/hpage/shared:/hpage/shared
+EnvironmentFile=/root/hpage/env

@@ -1,0 +1,9 @@
+[Unit]
+Description=HPage UWSGI container
+
+[Container]
+Image=zynthasius/beusproxy:alpine
+Network=beusp
+HostName=api
+Volume=/root/hpage/shared:/hpage/shared
+EnvironmentFile=/root/hpage/env

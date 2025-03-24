@@ -1,0 +1,9 @@
+[Unit]
+Description=HPage Nginx container
+Requires=hpage_api.service
+
+[Container]
+Image=zynthasius/beusp:alpine
+Network=beusp
+HostName=web
+PublishPort=8080:80

@@ -1,0 +1,6 @@
+[Unit]
+Description=HPage pod network
+
+[Network]
+Driver=bridge
+NetworkName=beusp
