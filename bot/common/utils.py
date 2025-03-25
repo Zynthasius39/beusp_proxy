@@ -105,7 +105,7 @@ def report_gen_dcmsg(diffs, grades):
             }
         ],
         "username": BOT_DISCORD_USERNAME,
-        "avatar": BOT_DISCORD_AVATAR
+        "avatar_url": BOT_DISCORD_AVATAR
     }
 
 

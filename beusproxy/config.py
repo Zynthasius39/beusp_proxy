@@ -55,6 +55,7 @@ BOT_ENABLED = False
 WEB_HOSTNAME = ""
 API_HOSTNAME = ""
 API_INTERNAL_HOSTNAME = ""
+STATIC_HOSTNAME = ""
 
 BOT_EMAIL = ""
 BOT_EMAIL_PASSWORD = "asd"
@@ -111,6 +112,13 @@ if app_int_host.scheme and app_int_host.netloc:
     API_INTERNAL_HOSTNAME = parsed_url if parsed_url.endswith("/") else parsed_url + "/"
 else:
     _arg_error("API_INTERNAL_HOSTNAME")
+
+static_host = urlparse(os.getenv("STATIC_HOSTNAME", STATIC_HOSTNAME))
+if static_host.scheme and static_host.netloc:
+    parsed_url = static_host.geturl()
+    STATIC_HOSTNAME = parsed_url if parsed_url.endswith("/") else parsed_url + "/"
+else:
+    _arg_error("STATIC_HOSTNAME")
 
 web_host = urlparse(os.getenv("WEB_HOSTNAME", WEB_HOSTNAME))
 if web_host.scheme and web_host.netloc:

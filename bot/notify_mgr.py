@@ -115,9 +115,8 @@ async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
 class NotifyManager:
     """Notification Manager Base Class"""
 
-    def __init__(self, *, httpc, emailc):
+    def __init__(self, *, httpc):
         self._httpc = httpc
-        self._emailc = emailc
         self._loop = asyncio.new_event_loop()
 
         def nm_worker():
@@ -138,7 +137,7 @@ class NotifyManager:
         """Clean up the manager"""
         self._loop.stop()
 
-    def notify(self, sub_id, diffs, grades):
+    def notify(self, sub_id, diffs, grades, *, emailc):
         """Notify Asynchronously
 
         Args:
@@ -150,7 +149,7 @@ class NotifyManager:
             Future: Future object
         """
 
-        self.submit_coro(notify_coro, sub_id, diffs, grades, httpc=self._httpc, emailc=self._emailc).result()
+        self.submit_coro(notify_coro, sub_id, diffs, grades, httpc=self._httpc, emailc=emailc).result()
 
     def submit_coro(self, task, *args, **kwargs):
         """Thread-safe method via submit coroutine task.

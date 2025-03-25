@@ -6,7 +6,6 @@ from pathlib import Path
 import schedule
 
 from beusproxy.common.utils import get_logger
-from beusproxy.services.email import EmailClient
 from beusproxy.services.httpclient import HTTPClient
 from . import run_chain
 
@@ -56,8 +55,7 @@ class BotProc:
 
 def proc_worker(shevent=None):
     httpc = HTTPClient(trust_env=True)
-    emailc = EmailClient()
-    schedule.every(2).minutes.do(run_chain, httpc, emailc)
+    schedule.every(2).minutes.do(run_chain, httpc)
     while not shevent.is_set():
         schedule.run_pending()
         time.sleep(1)

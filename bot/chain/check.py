@@ -7,13 +7,14 @@ from aiohttp import ClientError
 
 from beusproxy.common.utils import get_logger
 from beusproxy.config import API_INTERNAL_HOSTNAME, HOST, USER_AGENT
+from beusproxy.services.email import EmailClient
 
 from ..common.utils import grade_diff
 
 logger = get_logger(__package__)
 
 
-def check_grades(conn, httpc, emailc, nmgr):
+def check_grades(conn, httpc, nmgr):
     """Fetch grades and compare
 
     Args:
@@ -105,6 +106,9 @@ def check_grades(conn, httpc, emailc, nmgr):
     """
     ).fetchall()
 
+    # Get a EmailClient
+    emailc = EmailClient()
+
     # Compare grades wisely
     for sub_id, sub_grades in cr_dict.items():
         if isinstance(sub_grades, int):
@@ -130,7 +134,7 @@ def check_grades(conn, httpc, emailc, nmgr):
                     dict(subs_grades_old)[sub_id]), sub_grades)
                 if len(diffs) != 0:
                     # Push to notifier
-                    nmgr.notify(sub_id, diffs, sub_grades)
+                    nmgr.notify(sub_id, diffs, sub_grades, emailc=emailc)
                     logger.debug(
                         "Changes found for Sub %d -> %s", sub_id, json.dumps(
                             diffs, ensure_ascii=True)

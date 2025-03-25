@@ -4,7 +4,7 @@ from . import chain
 from .notify_mgr import NotifyManager
 
 
-def run_chain(httpc, emailc):
+def run_chain(httpc):
     """Worker function
 
     Args:
@@ -19,5 +19,5 @@ def run_chain(httpc, emailc):
     # Stage 2
     # Fetch grades and compare against database
     # Notify subscribers asynchronously
-    with db.get_db() as conn, NotifyManager(httpc=httpc, emailc=emailc) as nmgr:
-        chain.check_grades(conn, httpc, emailc, nmgr)
+    with db.get_db() as conn, NotifyManager(httpc=httpc) as nmgr:
+        chain.check_grades(conn, httpc, nmgr)

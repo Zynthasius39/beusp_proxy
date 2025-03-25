@@ -11,7 +11,7 @@ from jinja2 import Environment, FileSystemLoader
 from ..common.utils import get_logger
 from ..config import (API_HOSTNAME, APP_NAME, BOT_EMAIL, BOT_EMAIL_PASSWORD,
                       BOT_SMTP_HOSTNAME, EMAIL_REGEX, TEMPLATES_FOLDER,
-                      WEB_HOSTNAME)
+                      STATIC_HOSTNAME)
 from .database import get_db
 
 jinja_env = Environment(loader=FileSystemLoader(TEMPLATES_FOLDER))
@@ -67,7 +67,7 @@ class EmailClient:
                 email_to=recipient,
                 email_subject=f"[{APP_NAME}] Verification",
                 body=jinja_env.get_template("verify.html").render(
-                    assets_link=f"{WEB_HOSTNAME}",
+                    assets_link=STATIC_HOSTNAME,
                     verify_link=f"{API_HOSTNAME}/bot/verify/{code}",
                     verify_code=code,
                 ),
@@ -88,7 +88,7 @@ def is_email(email):
 
 
 def generate_mime(
-    *, email_from=BOT_EMAIL, email_to, email_subject, body, body_type="html"
+        *, email_from=BOT_EMAIL, email_to, email_subject, body, body_type="html"
 ):
     """Generates a MIME
 
@@ -139,25 +139,25 @@ def verify_email(code):
         ).fetchone()
         if not db_res:
             return jinja_env.get_template("verify_failed.html").render(
-                assets_link=WEB_HOSTNAME
+                assets_link=STATIC_HOSTNAME
             )
 
         owner_id = db_res["owner_id"]
         email = db_res["verify_item"]
 
         if (
-            math.floor(
-                (
-                    datetime.now() -
-                    datetime.fromisoformat(db_res["verify_date"])
-                ).total_seconds()
-                / 60
-            )
-            > 29
+                math.floor(
+                    (
+                            datetime.now() -
+                            datetime.fromisoformat(db_res["verify_date"])
+                    ).total_seconds()
+                    / 60
+                )
+                > 29
         ):
             logger.info("%s - verification code has been expired", email)
             return jinja_env.get_template("verify_failed.html").render(
-                assets_link=WEB_HOSTNAME
+                assets_link=STATIC_HOSTNAME
             )
 
         db_res = db_cur.execute(
@@ -181,7 +181,7 @@ def verify_email(code):
                 "%s - couldn't find the email, even though found a matching code", email
             )
             return jinja_env.get_template("verify_failed.html").render(
-                assets_link=WEB_HOSTNAME
+                assets_link=STATIC_HOSTNAME
             )
 
         db_res = db_cur.execute(
@@ -227,5 +227,5 @@ def verify_email(code):
         db_con.commit()
 
     return jinja_env.get_template("verify_success.html").render(
-        assets_link=WEB_HOSTNAME
+        assets_link=STATIC_HOSTNAME
     )
