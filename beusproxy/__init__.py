@@ -40,11 +40,11 @@ def create_app():
             db.close()
 
     api = Api(app)
-    CORS(
-        app,
-        supports_credentials=True,
-        resources={r"/*": {"origins": "http://localhost:8080"}},
-    )
+    # CORS(
+    #     app,
+    #     supports_credentials=True,
+    #     resources={r"/*": {"origins": "http://localhost:8080"}},
+    # )
 
     api.add_resource(resources.Msg, "/api/resource/msg")
     api.add_resource(resources.Res, "/api/resource/<resource>")

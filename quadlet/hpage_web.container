@@ -1,6 +1,7 @@
 [Unit]
 Description=HPage Nginx container
-Requires=hpage_api.service
+Requires=beusp-network.service hpage_api.service
+After=beusp-network.service hpage_api.service
 
 [Container]
 Image=zynthasius/beusp:alpine

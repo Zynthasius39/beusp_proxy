@@ -1,6 +1,7 @@
 [Unit]
 Description=HPage Bot container
-Requires=hpage_web.service
+Requires=beusp-network.service hpage_web.service
+After=beusp-network.service hpage_web.service
 
 [Container]
 Image=zynthasius/beusproxy:bot-alpine

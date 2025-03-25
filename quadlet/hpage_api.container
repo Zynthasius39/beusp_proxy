@@ -1,5 +1,7 @@
 [Unit]
 Description=HPage UWSGI container
+Requires=beusp-network.service
+After=beusp-network.service
 
 [Container]
 Image=zynthasius/beusproxy:alpine
