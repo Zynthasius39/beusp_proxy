@@ -1,3 +1,4 @@
+import logging
 import math
 import re
 from datetime import datetime
@@ -6,16 +7,18 @@ from email.mime.text import MIMEText
 from smtplib import SMTP, SMTP_SSL, SMTPSenderRefused
 from typing import Optional
 
+from flask import logging as flogging
 from jinja2 import Environment, FileSystemLoader
 
-from ..common.utils import get_logger
 from ..config import (API_HOSTNAME, APP_NAME, BOT_EMAIL, BOT_EMAIL_PASSWORD,
                       BOT_SMTP_HOSTNAME, EMAIL_REGEX, TEMPLATES_FOLDER,
                       STATIC_HOSTNAME)
 from .database import get_db
 
+
 jinja_env = Environment(loader=FileSystemLoader(TEMPLATES_FOLDER))
-logger = get_logger("email")
+logger = logging.getLogger("email")
+logger.addHandler(flogging.default_handler)
 
 
 class EmailClient:
@@ -117,7 +120,6 @@ def verify_email(code):
     Args:
         code (str): 9-digit code
     """
-    logger = get_logger(__name__)
 
     with get_db() as db_con:
         db_cur = db_con.cursor()

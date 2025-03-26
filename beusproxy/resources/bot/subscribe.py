@@ -4,8 +4,7 @@ from smtplib import SMTPException
 from flask import make_response
 from flask_restful import Resource, abort, reqparse
 
-from ...common.utils import get_db, verify_code_gen
-from ...context import c
+from ...common.utils import get_db, get_emailc, verify_code_gen
 from ...services.discord import is_webhook
 from ...services.email import is_email
 
@@ -310,7 +309,7 @@ class BotSubscribe(Resource):
                 )
                 db_con.commit()
                 try:
-                    c.get("emailc").send_verification(args.get("email"), code)
+                    get_emailc().send_verification(args.get("email"), code)
                 except SMTPException:
                     abort(500)
                 return {"emailSent": True}, 202

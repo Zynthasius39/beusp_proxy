@@ -11,6 +11,7 @@ from flask import abort, g, logging as flogging
 
 from ..config import DATABASE, DEMO_FOLDER, HOST, ROOT, USER_AGENT
 from ..services.httpclient import HTTPClient
+from ..services.email import EmailClient
 
 def get_logger(name=None):
     """Get a logger
@@ -35,6 +36,15 @@ def get_db():
         db = g._database = sqlite3.connect(DATABASE)
         db.row_factory = sqlite3.Row
     return db
+
+def get_emailc():
+    """Get an email client.
+    Create one if doesn't exist in appcontext.
+    """
+    emailc = getattr(g, "_emailc", None)
+    if emailc is None:
+        emailc = g._database = EmailClient()
+    return emailc
 
 
 def read_announce(http_client: HTTPClient, sessid):
