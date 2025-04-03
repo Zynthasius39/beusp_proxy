@@ -175,10 +175,16 @@ def report_gen_list(diffs, grades, *, telegram=False):
             # Skips boring fields.
             # Maximum attendance point was 10 at the time of writing.
             if vv != -1 and not (kk == "attendance" and vv == 10):
-                diffs_dict[rename_table_inv.get(kk, kk)] = vv
+                if telegram:
+                    if isinstance(vv, str):
+                        vv = escape_tg_chars(vv)
+                    diffs_dict[escape_tg_chars(rename_table_inv.get(kk, kk))] = vv
+                else:
+                    diffs_dict[rename_table_inv.get(kk, kk)] = vv
+        print(diffs_dict)
         courses.append(
             {
-                "courseCode": escape_tg_chars(k) if telegram else k,
+                "courseCode": escape_tg_chars(k),
                 "courseName": escape_tg_chars(grades[k].get("courseName")) if telegram else grades[k].get("courseName"),
                 "diffs": diffs_dict
             }
@@ -196,7 +202,7 @@ def escape_tg_chars(input_str):
     Returns:
         str: Output string
     """
-    special_chars = {"_", "-", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+    special_chars = {"_", "-", "*", "[", "]", "(", ")", "~", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
 
     for char in special_chars:
         input_str = input_str.replace(char, "\\" + char)
