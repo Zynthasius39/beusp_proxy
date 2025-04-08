@@ -67,10 +67,11 @@ def read_announce(http_client: HTTPClient, sessid):
     )
 
 
-def read_msgs(http_client: HTTPClient, sessid, msg_ids):
+def read_msgs(httpc: HTTPClient, sessid, msg_ids):
     """Read messages of student
 
     Args:
+        httpc (HTTPClient): HTTP Client
         sessid (str): Student session_id
         msg_ids (list): List of message ids to be read
 
@@ -78,9 +79,9 @@ def read_msgs(http_client: HTTPClient, sessid, msg_ids):
         list: List of responses
     """
 
-    return http_client.gather(
+    return httpc.gather(
         *[
-            http_client.request_coro(
+            httpc.request_coro(
                 "POST",
                 ROOT,
                 data={
@@ -98,7 +99,6 @@ def read_msgs(http_client: HTTPClient, sessid, msg_ids):
             for id in msg_ids
         ]
     )
-
 
 def verify_code_gen(length):
     """Generate verification code of given length

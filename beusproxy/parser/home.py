@@ -151,14 +151,15 @@ def home(text):
 
     # Find documents table which is the table without any border.
     documents_table = {}
-    for tr in soup.find("table", {"border": "0"}).find_all("tr"):
-        for link in tr.find_all("a"):
-            # Clean the cell, parse field and value.
-            field = link.text.strip()
-            value = link["href"].strip()
-            # Add the field if it is not empty.
-            if not field == "":
-                documents_table[field] = value
+    if table := soup.find("table", {"border": "0"}) is not None:
+        for tr in table.find_all("tr"):
+            for link in tr.find_all("a"):
+                # Clean the cell, parse field and value.
+                field = link.text.strip()
+                value = link["href"].strip()
+                # Add the field if it is not empty.
+                if not field == "":
+                    documents_table[field] = value
 
     # Match image id via regex.
     image_url = re.findall(
