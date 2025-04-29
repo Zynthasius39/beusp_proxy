@@ -3,7 +3,9 @@ import sys
 from datetime import datetime
 from json import JSONDecodeError
 
+from asyncio import TimeoutError
 from aiohttp import ClientError
+from smtplib import SMTPException
 
 from beusproxy.common.utils import get_logger
 from beusproxy.config import API_INTERNAL_HOSTNAME, HOST, USER_AGENT
@@ -64,7 +66,7 @@ def check_grades(conn, httpc, nmgr):
         httpc.gather(
             *[grades_coro(cr_dict, sub["id"], sub["session_id"]) for sub in subs]
         )
-    except ClientError as e:
+    except (TimeoutError, ClientError) as e:
         logger.error(e)
         sys.exit(1)
 
@@ -107,7 +109,11 @@ def check_grades(conn, httpc, nmgr):
     ).fetchall()
 
     # Get a EmailClient
-    emailc = EmailClient()
+    try:
+        emailc = EmailClient()
+    except SMTPException as e:
+        logger.error(e)
+        return
 
     # Compare grades wisely
     for sub_id, sub_grades in cr_dict.items():
