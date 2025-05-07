@@ -88,7 +88,7 @@ class Res(Resource):
         for i in range(2):
             try:
                 mid_res = httpc.request(
-                    "POST",
+                    "GET",
                     f"{ROOT}?mod={tms_pages[resource]}",
                     headers={
                         "Host": HOST,
