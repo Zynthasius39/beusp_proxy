@@ -122,6 +122,7 @@ components:
           items:
             type: string
             example: IT
+      deprecated: true
     DepartmentPrograms:
       type: object
       required:

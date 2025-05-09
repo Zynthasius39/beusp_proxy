@@ -26,8 +26,8 @@ class Res(Resource):
           - name: resource
             in: path
             required: true
-            description: home, faq, deps, grades, announces, transcript
-            example: deps
+            description: home, faq, grades, announces, transcript
+            example: home
             schema:
                 type: string
         responses:
@@ -46,9 +46,6 @@ class Res(Resource):
                               - type: array
                                 items:
                                     $ref: "#/components/schemas/Message"
-                              - type: array
-                                items:
-                                    $ref: "#/components/schemas/Department"
                               - type: array
                                 items:
                                     $ref: "#/components/schemas/Announce"
@@ -136,6 +133,6 @@ tms_pages = {
     "grades": "grades",
     "faq": "faq",
     "announces": "elan",
-    "deps": "viewdeps",
+#    "deps": "viewdeps",
     "transcript": "transkript",
 }
