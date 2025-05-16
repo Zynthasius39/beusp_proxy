@@ -91,7 +91,8 @@ def report_gen_dcmsg(diffs, grades):
     for course in report_gen_list(diffs, grades):
         value = ""
         for k, v in course["diffs"].items():
-            value += f"{k}: {v}\n"
+            value += f"{k}\n"
+            # value += f"{k}: {v}\n"
         fields.append({
             "name": f"{course["courseCode"]} - {course["courseName"]}",
             "value": value
@@ -175,6 +176,10 @@ def report_gen_list(diffs, grades, *, telegram=False):
             # Skips boring fields.
             # Maximum attendance point was 10 at the time of writing.
             if vv != -1 and not (kk == "attendance" and vv == 10):
+                if vv == -2:
+                    vv = "Q"
+                if vv == -3:
+                    vv = "Err"
                 if telegram:
                     if isinstance(vv, str):
                         vv = escape_tg_chars(vv)
