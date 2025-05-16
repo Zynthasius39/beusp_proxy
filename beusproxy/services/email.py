@@ -30,7 +30,7 @@ class EmailClient:
         self._server: Optional[SMTP] = None
 
         if is_ssl:
-            self._server = SMTP_SSL(BOT_SMTP_HOSTNAME, 465)
+            self._server = SMTP_SSL(BOT_SMTP_HOSTNAME)
         else:
             self._server = SMTP(BOT_SMTP_HOSTNAME)
         self._server.login(BOT_EMAIL, BOT_EMAIL_PASSWORD)
@@ -39,11 +39,11 @@ class EmailClient:
         return self
 
     def __exit__(self, *_):
-        self.close()
+        self.quit()
 
-    def close(self):
+    def quit(self):
         """Close the SMTP server"""
-        self._server.close()
+        self._server.quit()
 
     def send(self, mime):
         """Sends an email.

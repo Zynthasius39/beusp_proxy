@@ -1,4 +1,5 @@
 import json
+import socket
 import sys
 from datetime import datetime
 from json import JSONDecodeError
@@ -111,7 +112,7 @@ def check_grades(conn, httpc, nmgr):
     # Get a EmailClient
     try:
         emailc = EmailClient()
-    except SMTPException as e:
+    except (SMTPException, socket.gaierror) as e:
         logger.error(e)
         return
 
@@ -164,3 +165,5 @@ def check_grades(conn, httpc, nmgr):
             conn.commit()
         else:
             conn.rollback()
+    
+    emailc.quit()

@@ -360,7 +360,7 @@ class GradesLatest(Resource):
 
             mid_json = httpc.cr_json(mid_res)
             if not mid_res.status == 200:
-                abort(mid_res.status, help=mid_json.get("help", ""))
+                abort(mid_res.status)
 
             year, semester = (
                 mid_json["entries"][-1]["year"],

@@ -115,11 +115,15 @@ def grades2(html):
                 if table[0][inx] == "courseCode":
                     row_name = j
                     continue
-                # If grade is empty, set it to -1.
                 if table[0][inx] in digit_fields:
+                    # If grade is empty, set it to -1.
                     if j.strip() == "":
                         j = -1
-                    else:
+                    # If it is Q, set it to -2.
+                    elif j.strip() == "Q":
+                        j = -2
+                    # Actual Grade parsing
+                    elif j.isdigit():
                         # Getting scale in given column.
                         grade_field = grade_fields.get(table[0][inx])
                         # Set SDF1 and SDF2 scale to 10, if SDF3 is enabled.
@@ -130,6 +134,9 @@ def grades2(html):
                             j = round(int(j) / 100 * grade_field, 2)
                         else:
                             j = int(j)
+                    # If cannot be parsed, set it to -3.
+                    else:
+                        j = -3
                 row[table[0][inx]] = j
             # Appending year & semester header.
             row["ys"] = ys_cur
