@@ -5,6 +5,7 @@ import sys
 import time
 from threading import Event, Thread
 from typing import Optional
+from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from aiohttp import ClientError, ClientResponse, ClientSession, ClientTimeout
 from flask import logging as flogging
@@ -92,7 +93,7 @@ class HTTPClient:
                 allow_redirects=allow_redirects,
                 **kwargs
             ).result()
-        except TimeoutError as e:
+        except FutureTimeoutError as e:
             logger.error(e)
             raise HTTPClientError(e) from e
         except ClientError as e:
