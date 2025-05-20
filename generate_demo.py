@@ -11,6 +11,7 @@ import logging
 import pathlib
 from urllib.parse import urlparse
 
+from beusproxy.config import API_HOSTNAME
 from beusproxy.services.httpclient import HTTPClient
 
 parser = argparse.ArgumentParser()
@@ -18,7 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("destination", help="Destination Folder")
 parser.add_argument("-l", "--student-id", help="StudentID to login as", required=True)
 parser.add_argument("-p", "--password", help="Password", required=True)
-parser.add_argument("-u", "--url", help="Url", default="http://localhost:5000/")
+parser.add_argument("-u", "--url", help="Url", default=API_HOSTNAME)
 args = parser.parse_args()
 
 url = ""
