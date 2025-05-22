@@ -9,7 +9,7 @@ info:
   license:
     name: GPL3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
-  version: 1.0.4
+  version: 1.12
 servers:
   - url: /
     description: Production server (uses root server)
