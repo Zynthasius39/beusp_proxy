@@ -30,7 +30,7 @@ def attendance2(html):
     attendance = {}
     # Find attendance table by given class name.
     # Iterating through rows while ignoring header and last empty row.
-    for tr in soup.find("table", class_="table box").find_all("tr")[1:-1]:
+    for tr in soup.find("table", class_="table box").find_all("tr")[1:]:
         course_table = {}
         course_name = ""
         # Iterating through cells while ignoring first and last empty cells.
