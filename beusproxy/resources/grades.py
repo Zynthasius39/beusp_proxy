@@ -7,7 +7,7 @@ from flask_restful import Resource, abort, reqparse
 
 from .. import parser
 from ..common.utils import is_expired
-from ..config import API_HOSTNAME, HOST, ROOT, USER_AGENT, API_INTERNAL_HOSTNAME
+from ..config import HOST, ROOT, USER_AGENT, API_INTERNAL_HOSTNAME
 from ..context import c
 from ..services.httpclient import HTTPClientError
 
@@ -360,7 +360,7 @@ class GradesLatest(Resource):
 
             mid_json = httpc.cr_json(mid_res)
             if not mid_res.status == 200:
-                abort(mid_res.status)
+                return mid_json, mid_res.status
 
             year, semester = (
                 mid_json["entries"][-1]["year"],
@@ -382,7 +382,7 @@ class GradesLatest(Resource):
 
             mid_json = httpc.cr_json(mid_res)
             if not mid_res.status == 200:
-                abort(mid_res.status, help=mid_res.get("help", ""))
+                return mid_json, mid_res.status
         except HTTPClientError as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")

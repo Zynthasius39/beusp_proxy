@@ -69,7 +69,7 @@ def check_grades(conn, httpc, nmgr):
         )
     except (TimeoutError, ClientError) as e:
         logger.error(e)
-        sys.exit(1)
+        return
 
     async def grades_json_coro(cr, sub_id, sub_grades_cr):
         if sub_grades_cr.status == 200:
@@ -88,7 +88,7 @@ def check_grades(conn, httpc, nmgr):
         )
     except ClientError as e:
         logger.error(e)
-        sys.exit(1)
+        return
 
     subs_grades_old = conn.execute(
         """
@@ -112,7 +112,7 @@ def check_grades(conn, httpc, nmgr):
     # Get a EmailClient
     try:
         emailc = EmailClient()
-    except (SMTPException, socket.gaierror) as e:
+    except (SMTPException, socket.gaierror, OSError) as e:
         logger.error(e)
         return
 
@@ -165,5 +165,5 @@ def check_grades(conn, httpc, nmgr):
             conn.commit()
         else:
             conn.rollback()
-    
+
     emailc.quit()

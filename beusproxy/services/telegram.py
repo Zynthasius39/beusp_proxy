@@ -53,26 +53,29 @@ class TelegramClient:
             # pylint: disable=W3101
             """Telegram Updates Thread"""
             while not self._shevent.is_set():
-                res = self._httpc.request(
-                    "GET",
-                    f"https://{api_hostname}/bot{api_key}/getUpdates",
-                    params={
-                        k: v
-                        for k, v in {
-                            "offset": self._offset,
-                            "timeout": self._polling_timeout,
-                        }.items()
-                        if v is not None
-                    },
-                    timeout=None,
-                )
-                if res.status == 200:
-                    for u in self._httpc.cr_json(res)["result"]:
-                        self._offset = u["update_id"] + 1
-                        self.process_update(u)
-                else:
-                    logger.error("Error while getting updates")
-                    time.sleep(self._request_timeout)
+                try:
+                    res = self._httpc.request(
+                        "GET",
+                        f"https://{api_hostname}/bot{api_key}/getUpdates",
+                        params={
+                            k: v
+                            for k, v in {
+                                "offset": self._offset,
+                                "timeout": self._polling_timeout,
+                            }.items()
+                            if v is not None
+                        },
+                        timeout=None,
+                    )
+                    if res.status == 200:
+                        for u in self._httpc.cr_json(res)["result"]:
+                            self._offset = u["update_id"] + 1
+                            self.process_update(u)
+                    else:
+                        logger.error("Error while getting updates")
+                        time.sleep(self._request_timeout)
+                except TimeoutError as e:
+                    logger.error(e)
             logger.info("TelegramClient shutting down...")
 
         self._shevent = Event()

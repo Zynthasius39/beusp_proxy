@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import sys
 import time
 from threading import Event, Thread
 from typing import Optional
@@ -83,8 +82,6 @@ class HTTPClient:
         Returns:
             ClientResponse: Response object
         """
-        logger = logging.getLogger(__name__)
-        logger.addHandler(flogging.default_handler)
         try:
             res = self.submit_coro(
                 self.request_coro,
@@ -93,12 +90,11 @@ class HTTPClient:
                 allow_redirects=allow_redirects,
                 **kwargs
             ).result()
-        except FutureTimeoutError as e:
+        except (TimeoutError, FutureTimeoutError) as e:
             logger.error(e)
             raise HTTPClientError(e) from e
         except ClientError as e:
             logger.error(e)
-            sys.exit(1)
 
         return res
 
