@@ -1,529 +1,573 @@
 {
-  "ae": {
-    "1": {
-      "Course Code": "IT 113",
-      "Name": "Information management",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+  "areaCourses": [
+    {
+      "courseCode": "IT113",
+      "courseName": "Information management",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "2": {
-      "Course Code": "IT 115",
-      "Name": "Information technologies",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+    {
+      "courseCode": "IT115",
+      "courseName": "Information technologies",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "3": {
-      "Course Code": "IT 188",
-      "Name": "Computer-aided design",
-      "Theory": "2",
-      "ects": "7",
-      "pr": "2+0"
+    {
+      "courseCode": "IT188",
+      "courseName": "Computer-aided design",
+      "courseType": "def",
+      "ects": 7,
+      "pr": "2+0",
+      "theory": 2
     },
-    "4": {
-      "Course Code": "IT 205",
-      "Name": "Object oriented programming",
-      "Theory": "2",
-      "ects": "7",
-      "pr": "2+0"
+    {
+      "courseCode": "IT205",
+      "courseName": "Object oriented programming",
+      "courseType": "def",
+      "ects": 7,
+      "pr": "2+0",
+      "theory": 2
     },
-    "5": {
-      "Course Code": "IT 252",
-      "Name": "Basics of programming- 2",
-      "Theory": "2",
-      "ects": "5",
-      "pr": "2+0"
+    {
+      "courseCode": "IT252",
+      "courseName": "Basics of programming- 2",
+      "courseType": "def",
+      "ects": 5,
+      "pr": "2+0",
+      "theory": 2
     },
-    "6": {
-      "Course Code": "IT 338",
-      "Name": "Internet Technologies",
-      "Theory": "2",
-      "ects": "6",
-      "pr": "2+0"
+    {
+      "courseCode": "IT338",
+      "courseName": "Internet Technologies",
+      "courseType": "def",
+      "ects": 6,
+      "pr": "2+0",
+      "theory": 2
     },
-    "7": {
-      "Course Code": "IT 383",
-      "Name": "Computer modeling",
-      "Theory": "2",
-      "ects": "7",
-      "pr": "2+0"
+    {
+      "courseCode": "IT383",
+      "courseName": "Computer modeling",
+      "courseType": "def",
+      "ects": 7,
+      "pr": "2+0",
+      "theory": 2
     },
-    "8": {
-      "Course Code": "IT 385",
-      "Name": "Management in information systems",
-      "Theory": "2",
-      "ects": "7",
-      "pr": "2+0"
+    {
+      "courseCode": "IT385",
+      "courseName": "Management in information systems",
+      "courseType": "def",
+      "ects": 7,
+      "pr": "2+0",
+      "theory": 2
     },
-    "9": {
-      "Course Code": "IT 386",
-      "Name": "Web programming",
-      "Theory": "2",
-      "ects": "6",
-      "pr": "2+0"
+    {
+      "courseCode": "IT386",
+      "courseName": "Web programming",
+      "courseType": "def",
+      "ects": 6,
+      "pr": "2+0",
+      "theory": 2
     },
-    "10": {
-      "Course Code": "IT 387",
-      "Name": "Introduction to multi-platform programming",
-      "Theory": "2",
-      "ects": "7",
-      "pr": "2+0"
+    {
+      "courseCode": "IT387",
+      "courseName": "Introduction to multi-platform programming",
+      "courseType": "def",
+      "ects": 7,
+      "pr": "2+0",
+      "theory": 2
     },
-    "11": {
-      "Course Code": "IT 388",
-      "Name": "Modern programming languages- 2",
-      "Theory": "2",
-      "ects": "7",
-      "pr": "2+0"
+    {
+      "courseCode": "IT388",
+      "courseName": "Modern programming languages- 2",
+      "courseType": "def",
+      "ects": 7,
+      "pr": "2+0",
+      "theory": 2
     },
-    "12": {
-      "Course Code": "IT 390",
-      "Name": "Mobile application design",
-      "Theory": "2",
-      "ects": "7",
-      "pr": "2+0"
+    {
+      "courseCode": "IT390",
+      "courseName": "Mobile application design",
+      "courseType": "def",
+      "ects": 7,
+      "pr": "2+0",
+      "theory": 2
     },
-    "13": {
-      "Course Code": "IT 437",
-      "Name": "Machine Learning",
-      "Theory": "2",
-      "ects": "6",
-      "pr": "2+0"
+    {
+      "courseCode": "IT437",
+      "courseName": "Machine Learning",
+      "courseType": "def",
+      "ects": 6,
+      "pr": "2+0",
+      "theory": 2
     },
-    "14": {
-      "Course Code": "IT 451",
-      "Name": "Data Mining and Storing",
-      "Theory": "2",
-      "ects": "6",
-      "pr": "2+0"
+    {
+      "courseCode": "IT451",
+      "courseName": "Data Mining and Storing",
+      "courseType": "def",
+      "ects": 6,
+      "pr": "2+0",
+      "theory": 2
     },
-    "15": {
-      "Course Code": "IT 485",
-      "Name": "Database programming",
-      "Theory": "2",
-      "ects": "6",
-      "pr": "2+0"
+    {
+      "courseCode": "IT485",
+      "courseName": "Database programming",
+      "courseType": "def",
+      "ects": 6,
+      "pr": "2+0",
+      "theory": 2
     },
-    "16": {
-      "Course Code": "IT 487",
-      "Name": "Data analytics and information management",
-      "Theory": "2",
-      "ects": "6",
-      "pr": "2+0"
+    {
+      "courseCode": "IT487",
+      "courseName": "Data analytics and information management",
+      "courseType": "def",
+      "ects": 6,
+      "pr": "2+0",
+      "theory": 2
     },
-    "17": {
-      "Course Code": "MINF 273",
-      "Name": "Mathematical programming",
-      "Theory": "2",
-      "ects": "7",
-      "pr": "2+0"
+    {
+      "courseCode": "MINF273",
+      "courseName": "Mathematical programming",
+      "courseType": "def",
+      "ects": 7,
+      "pr": "2+0",
+      "theory": 2
     }
+  ],
+  "courseRefs": [],
+  "courses": {
+    "1": [
+      {
+        "courseCode": "TRX111",
+        "courseName": "History of Azerbaijan",
+        "courseType": "def",
+        "ects": 5,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseType": "nae",
+        "ects": 3,
+        "pr": "1+0",
+        "theory": 1
+      },
+      {
+        "courseType": "nae",
+        "ects": 3,
+        "pr": "1+0",
+        "theory": 1
+      },
+      {
+        "courseType": "nae",
+        "ects": 9,
+        "pr": "1+0",
+        "theory": 1
+      },
+      {
+        "courseType": "lang",
+        "ects": 5,
+        "pr": "7+0",
+        "theory": 0
+      },
+      {
+        "courseType": "lang",
+        "ects": 5,
+        "pr": "7+0",
+        "theory": 0
+      }
+    ],
+    "2": [
+      {
+        "courseCode": "IT136",
+        "courseName": "Web systems and technologies",
+        "courseType": "def",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "IT186",
+        "courseName": "Basics of information technology",
+        "courseType": "def",
+        "ects": 8,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "MATH136",
+        "courseName": "Linear algebra and analytic geometry",
+        "courseType": "def",
+        "ects": 3,
+        "pr": "1+0",
+        "theory": 2
+      },
+      {
+        "courseType": "ae",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseType": "lang",
+        "ects": 5,
+        "pr": "8+0",
+        "theory": 0
+      }
+    ],
+    "3": [
+      {
+        "courseCode": "AZD130",
+        "courseName": "Official and Academic Communication in Azerbaijani language",
+        "courseType": "def",
+        "ects": 4,
+        "pr": "3+0",
+        "theory": 0
+      },
+      {
+        "courseCode": "COMP236",
+        "courseName": "Computer architecture",
+        "courseType": "def",
+        "ects": 8,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "IT120",
+        "courseName": "Fundamentals of Programming- 1",
+        "courseType": "def",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "MATH166",
+        "courseName": "Mathematical analysis",
+        "courseType": "def",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "PHYS202",
+        "courseName": "Phyisics",
+        "courseType": "def",
+        "ects": 5,
+        "pr": "2+0",
+        "theory": 2
+      }
+    ],
+    "4": [
+      {
+        "courseCode": "COMP326",
+        "courseName": "Operating Systems",
+        "courseType": "def",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "IT206",
+        "courseName": "Multimedia technologies",
+        "courseType": "def",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "IT254",
+        "courseName": "Data structure and algorithms",
+        "courseType": "def",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "MATH235",
+        "courseName": "Differential equations",
+        "courseType": "def",
+        "ects": 3,
+        "pr": "1+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "MATH275",
+        "courseName": "Discrete mathematics",
+        "courseType": "def",
+        "ects": 3,
+        "pr": "1+0",
+        "theory": 2
+      },
+      {
+        "courseType": "ae",
+        "ects": 5,
+        "pr": "2+0",
+        "theory": 2
+      }
+    ],
+    "5": [
+      {
+        "courseCode": "IT317",
+        "courseName": "Modern Programming Languages- 1",
+        "courseType": "def",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "IT389",
+        "courseName": "Database systems",
+        "courseType": "def",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "MM101",
+        "courseName": "Civil Defence",
+        "courseType": "def",
+        "ects": 3,
+        "pr": "1+0",
+        "theory": 2
+      },
+      {
+        "courseType": "ae",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseType": "ae",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      }
+    ],
+    "6": [
+      {
+        "courseCode": "COMP369",
+        "courseName": "Computer networks",
+        "courseType": "def",
+        "ects": 8,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "INFS326",
+        "courseName": "Information security",
+        "courseType": "def",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "MINF461",
+        "courseName": "Probability theory and mathematical statistics",
+        "courseType": "def",
+        "ects": 3,
+        "pr": "1+0",
+        "theory": 2
+      },
+      {
+        "courseType": "ae",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseType": "ae",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      }
+    ],
+    "7": [
+      {
+        "courseCode": "IT453",
+        "courseName": "Artificial intelligence",
+        "courseType": "def",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "IT481",
+        "courseName": "Human-computer interface",
+        "courseType": "def",
+        "ects": 7,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseCode": "IT483",
+        "courseName": "IT project management",
+        "courseType": "def",
+        "ects": 5,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseType": "ae",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      },
+      {
+        "courseType": "ae",
+        "ects": 6,
+        "pr": "2+0",
+        "theory": 2
+      }
+    ],
+    "8": [
+      {
+        "courseCode": "IT480",
+        "courseName": "Internship",
+        "courseType": "def",
+        "ects": 30,
+        "pr": "0+0",
+        "theory": 0
+      }
+    ]
   },
-  "nae": {
-    "1": {
-      "Course Code": "BA 108",
-      "Name": "Principles of Entrepreneurship and Introduction to Business",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+  "nonAreaCourses": [
+    {
+      "courseCode": "BA108",
+      "courseName": "Principles of Entrepreneurship and Introduction to Business",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "2": {
-      "Course Code": "BA 111",
-      "Name": "Fundamentals of Management",
-      "Theory": "1",
-      "ects": "9",
-      "pr": "1+0"
+    {
+      "courseCode": "BA111",
+      "courseName": "Fundamentals of Management",
+      "courseType": "def",
+      "ects": 9,
+      "pr": "1+0",
+      "theory": 1
     },
-    "3": {
-      "Course Code": "ECON 163",
-      "Name": "Engineering Economics",
-      "Theory": "1",
-      "ects": "9",
-      "pr": "1+0"
+    {
+      "courseCode": "ECON163",
+      "courseName": "Engineering Economics",
+      "courseType": "def",
+      "ects": 9,
+      "pr": "1+0",
+      "theory": 1
     },
-    "4": {
-      "Course Code": "ENG 010",
-      "Name": "English for business and academic communication (reading and writing)",
-      "Theory": "0",
-      "ects": "5",
-      "pr": "7+0"
+    {
+      "courseCode": "ENG010",
+      "courseName": "English for business and academic communication (reading and writing)",
+      "courseType": "def",
+      "ects": 5,
+      "pr": "7+0",
+      "theory": 0
     },
-    "5": {
-      "Course Code": "ENG 020",
-      "Name": "English for business and academic communication (listening and speaking)",
-      "Theory": "0",
-      "ects": "5",
-      "pr": "7+0"
+    {
+      "courseCode": "ENG020",
+      "courseName": "English for business and academic communication (listening and speaking)",
+      "courseType": "def",
+      "ects": 5,
+      "pr": "7+0",
+      "theory": 0
     },
-    "6": {
-      "Course Code": "ENG 030",
-      "Name": "English for business and academic communication (for academic purposes)",
-      "Theory": "0",
-      "ects": "5",
-      "pr": "8+0"
+    {
+      "courseCode": "ENG030",
+      "courseName": "English for business and academic communication (for academic purposes)",
+      "courseType": "def",
+      "ects": 5,
+      "pr": "8+0",
+      "theory": 0
     },
-    "7": {
-      "Course Code": "GER 010",
-      "Name": "German business and academic communication (reading and writing)",
-      "Theory": "0",
-      "ects": "5",
-      "pr": "7+0"
+    {
+      "courseCode": "GER010",
+      "courseName": "German business and academic communication (reading and writing)",
+      "courseType": "def",
+      "ects": 5,
+      "pr": "7+0",
+      "theory": 0
     },
-    "8": {
-      "Course Code": "GER 020",
-      "Name": "German for business and academic communication (listening and speaking)",
-      "Theory": "0",
-      "ects": "5",
-      "pr": "7+0"
+    {
+      "courseCode": "GER020",
+      "courseName": "German for business and academic communication (listening and speaking)",
+      "courseType": "def",
+      "ects": 5,
+      "pr": "7+0",
+      "theory": 0
     },
-    "9": {
-      "Course Code": "GER 030",
-      "Name": "German for business and academic communication (for academic purposes)",
-      "Theory": "0",
-      "ects": "5",
-      "pr": "8+0"
+    {
+      "courseCode": "GER030",
+      "courseName": "German for business and academic communication (for academic purposes)",
+      "courseType": "def",
+      "ects": 5,
+      "pr": "8+0",
+      "theory": 0
     },
-    "10": {
-      "Course Code": "LAW 110",
-      "Name": "Constitution of Republic of Azerbaijan and Fundamentals of Law",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+    {
+      "courseCode": "LAW110",
+      "courseName": "Constitution of Republic of Azerbaijan and Fundamentals of Law",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "11": {
-      "Course Code": "MATH 285",
-      "Name": "Numerical analysis",
-      "Theory": "2",
-      "ects": "5",
-      "pr": "2+0"
+    {
+      "courseCode": "MATH285",
+      "courseName": "Numerical analysis",
+      "courseType": "def",
+      "ects": 5,
+      "pr": "2+0",
+      "theory": 2
     },
-    "12": {
-      "Course Code": "MINF 167",
-      "Name": "Logic",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+    {
+      "courseCode": "MINF167",
+      "courseName": "Logic",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "13": {
-      "Course Code": "PA 139",
-      "Name": "Politology",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+    {
+      "courseCode": "PA139",
+      "courseName": "Politology",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "14": {
-      "Course Code": "PHIL 159",
-      "Name": "Philosophy",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+    {
+      "courseCode": "PHIL159",
+      "courseName": "Philosophy",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "15": {
-      "Course Code": "SOC 110",
-      "Name": "Sociology",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+    {
+      "courseCode": "SOC110",
+      "courseName": "Sociology",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "16": {
-      "Course Code": "SOC 150",
-      "Name": "Introduction to Multiculturalism",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+    {
+      "courseCode": "SOC150",
+      "courseName": "Introduction to Multiculturalism",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     },
-    "17": {
-      "Course Code": "SOC 180",
-      "Name": "Ethics and aesthetics",
-      "Theory": "1",
-      "ects": "3",
-      "pr": "1+0"
+    {
+      "courseCode": "SOC180",
+      "courseName": "Ethics and aesthetics",
+      "courseType": "def",
+      "ects": 3,
+      "pr": "1+0",
+      "theory": 1
     }
-  },
-  "program": {
-    "0": {
-      "1": {
-        "Course Code": "TRX 111",
-        "Name": "History of Azerbaijan",
-        "Theory": "2",
-        "ects": "5",
-        "pr": "2+0"
-      },
-      "2": {
-        "Course Code": "",
-        "Name": "nae",
-        "Theory": "1",
-        "ects": "3",
-        "pr": "1+0"
-      },
-      "3": {
-        "Course Code": "",
-        "Name": "nae",
-        "Theory": "1",
-        "ects": "3",
-        "pr": "1+0"
-      },
-      "4": {
-        "Course Code": "",
-        "Name": "nae",
-        "Theory": "1",
-        "ects": "9",
-        "pr": "1+0"
-      },
-      "5": {
-        "Course Code": "",
-        "Name": "nae_language",
-        "Theory": "0",
-        "ects": "5",
-        "pr": "7+0"
-      },
-      "6": {
-        "Course Code": "",
-        "Name": "nae_language",
-        "Theory": "0",
-        "ects": "5",
-        "pr": "7+0"
-      }
-    },
-    "1": {
-      "1": {
-        "Course Code": "IT 136",
-        "Name": "Web systems and technologies",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      },
-      "2": {
-        "Course Code": "IT 186",
-        "Name": "Basics of information technology",
-        "Theory": "2",
-        "ects": "8",
-        "pr": "2+0"
-      },
-      "3": {
-        "Course Code": "MATH 136",
-        "Name": "Linear algebra and analytic geometry",
-        "Theory": "2",
-        "ects": "3",
-        "pr": "1+0"
-      },
-      "4": {
-        "Course Code": "",
-        "Name": "ae",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      },
-      "5": {
-        "Course Code": "",
-        "Name": "nae_language",
-        "Theory": "0",
-        "ects": "5",
-        "pr": "8+0"
-      }
-    },
-    "2": {
-      "1": {
-        "Course Code": "AZD 130",
-        "Name": "Official and Academic Communication in Azerbaijani language",
-        "Theory": "0",
-        "ects": "4",
-        "pr": "3+0"
-      },
-      "2": {
-        "Course Code": "COMP 236",
-        "Name": "Computer architecture",
-        "Theory": "2",
-        "ects": "8",
-        "pr": "2+0"
-      },
-      "3": {
-        "Course Code": "IT 120",
-        "Name": "Fundamentals of Programming- 1",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      },
-      "4": {
-        "Course Code": "MATH 166",
-        "Name": "Mathematical analysis",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      },
-      "5": {
-        "Course Code": "PHYS 202",
-        "Name": "Phyisics",
-        "Theory": "2",
-        "ects": "5",
-        "pr": "2+0"
-      }
-    },
-    "3": {
-      "1": {
-        "Course Code": "COMP 326",
-        "Name": "Operating Systems",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      },
-      "2": {
-        "Course Code": "IT 206",
-        "Name": "Multimedia technologies",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      },
-      "3": {
-        "Course Code": "IT 254",
-        "Name": "Data structure and algorithms",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      },
-      "4": {
-        "Course Code": "MATH 235",
-        "Name": "Differential equations",
-        "Theory": "2",
-        "ects": "3",
-        "pr": "1+0"
-      },
-      "5": {
-        "Course Code": "MATH 275",
-        "Name": "Discrete mathematics",
-        "Theory": "2",
-        "ects": "3",
-        "pr": "1+0"
-      },
-      "6": {
-        "Course Code": "",
-        "Name": "ae",
-        "Theory": "2",
-        "ects": "5",
-        "pr": "2+0"
-      }
-    },
-    "4": {
-      "1": {
-        "Course Code": "IT 317",
-        "Name": "Modern Programming Languages- 1",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      },
-      "2": {
-        "Course Code": "IT 389",
-        "Name": "Database systems",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      },
-      "3": {
-        "Course Code": "MM 101",
-        "Name": "Civil Defence",
-        "Theory": "2",
-        "ects": "3",
-        "pr": "1+0"
-      },
-      "4": {
-        "Course Code": "",
-        "Name": "ae",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      },
-      "5": {
-        "Course Code": "",
-        "Name": "ae",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      }
-    },
-    "5": {
-      "1": {
-        "Course Code": "COMP 369",
-        "Name": "Computer networks",
-        "Theory": "2",
-        "ects": "8",
-        "pr": "2+0"
-      },
-      "2": {
-        "Course Code": "INFS 326",
-        "Name": "Information security",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      },
-      "3": {
-        "Course Code": "MINF 461",
-        "Name": "Probability theory and mathematical statistics",
-        "Theory": "2",
-        "ects": "3",
-        "pr": "1+0"
-      },
-      "4": {
-        "Course Code": "",
-        "Name": "ae",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      },
-      "5": {
-        "Course Code": "",
-        "Name": "ae",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      }
-    },
-    "6": {
-      "1": {
-        "Course Code": "IT 453",
-        "Name": "Artificial intelligence",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      },
-      "2": {
-        "Course Code": "IT 481",
-        "Name": "Human-computer interface",
-        "Theory": "2",
-        "ects": "7",
-        "pr": "2+0"
-      },
-      "3": {
-        "Course Code": "IT 483",
-        "Name": "IT project management",
-        "Theory": "2",
-        "ects": "5",
-        "pr": "2+0"
-      },
-      "4": {
-        "Course Code": "",
-        "Name": "ae",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      },
-      "5": {
-        "Course Code": "",
-        "Name": "ae",
-        "Theory": "2",
-        "ects": "6",
-        "pr": "2+0"
-      }
-    },
-    "7": {
-      "1": {
-        "Course Code": "IT 480",
-        "Name": "Internship",
-        "Theory": "0",
-        "ects": "30",
-        "pr": "0+0"
-      }
-    }
-  },
-  "references": {}
+  ]
 }

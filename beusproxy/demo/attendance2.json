@@ -1,189 +1,157 @@
 {
-  "attendance": {
-    "course_code": "IT 254",
-    "course_name": "Data structure and algorithms",
-    "data": [
-      {
-        "date": "20.FEB",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "20.FEB",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "27.FEB",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "27.FEB",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "05.MAR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "05.MAR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "12.MAR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "12.MAR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "19.MAR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "19.MAR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "26.MAR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": ""
-      },
-      {
-        "date": "26.MAR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": ""
-      },
-      {
-        "date": "02.APR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "02.APR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "09.APR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "09.APR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "16.APR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "16.APR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "23.APR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "23.APR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "30.APR",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "30.APR",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "07.MAY",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "07.MAY",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "14.MAY",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "14.MAY",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "21.MAY",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "21.MAY",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": "+"
-      },
-      {
-        "date": "28.MAY",
-        "hour": "10:30",
-        "place": "238 (Laboratory)",
-        "present": ""
-      },
-      {
-        "date": "28.MAY",
-        "hour": "11:10",
-        "place": "238 (Laboratory)",
-        "present": ""
-      }
-    ],
-    "educator": "Etibar Seyidzade"
-  }
+  "course_code": "IT254",
+  "course_name": "Data structure and algorithms",
+  "educator": "John Doe",
+  "entries": [
+    {
+      "datetime": "20-02T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "20-02T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "27-02T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "27-02T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "05-03T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "05-03T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "12-03T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "12-03T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "19-03T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "19-03T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "26-03T10:30",
+      "place": 238,
+      "present": false
+    },
+    {
+      "datetime": "26-03T11:10",
+      "place": 238,
+      "present": false
+    },
+    {
+      "datetime": "02-04T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "02-04T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "09-04T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "09-04T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "16-04T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "16-04T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "23-04T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "23-04T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "30-04T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "30-04T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "07-05T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "07-05T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "14-05T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "14-05T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "21-05T10:30",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "21-05T11:10",
+      "place": 238,
+      "present": true
+    },
+    {
+      "datetime": "28-05T10:30",
+      "place": 238,
+      "present": false
+    },
+    {
+      "datetime": "28-05T11:10",
+      "place": 238,
+      "present": false
+    }
+  ]
 }

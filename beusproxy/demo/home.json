@@ -1,35 +1,36 @@
 {
-  "home": {
-    "documents": {
-      "BMU_REKVIZIT.docx": "Kapital Bank rekvizitləri",
-      "Kocurulme_xaric_edilme_berpa_qaydalari.pdf": "Köçürülmə, xaric edilmə, bərpa qaydaları",
-      "Telim_tedris_esasname_yeni.pdf": "Kredit sistemi ilə tədrisin təşkili qaydaları",
-      "documents/TL-025-AZ_Tahsil_haqqi_hesablama_qaydalari.pdf": "Təhsil haqqı hesablama qaydaları",
-      "documents/Tehsilalanlar_terefinden_tehsil_muessiselerinin_ixtisasin_deyisdirilmesi_onlarin_xaric_ve_berpa_olunmasi_mezuniyyet_verilmesi.pdf": "Təhsil alanların köçürülməsi, xaric edilməsi, bərpa olunması və akademik məzuniyyətə götürülməsi qaydaları",
-      "documents/Telebeler_ucun_imtahanda_istirak_telimati.pdf": "Tələbələr üçün imtahanda iştirak təlimatı",
-      "documents/Valideyn_himayesinden_mehrum_telebelerin_sosial_mudafiesi_haqqinda-QANUN.pdf": "Valideyn himayəsindən məhrum tələbələrin sosial müdafiəsi haqqında qanun",
-      "documents/Valideyn_himayesinden_mehrum_telebelerin_sosial_mudafiesi_haqqinda_qerar.pdf": "Valideyn himayəsindən məhrum tələbələrin sosial müdafiəsi haqqında qərar",
-      "İntizam qaydaları.pdf": "İntizam qaydaları"
+  "documents": {},
+  "image": "a1f2fdbca994e59d2456ca872be9bf50",
+  "lang": "en",
+  "studentInfo": {
+    "advisor": "John Doe",
+    "beuEmail": "example@std.beu.edu.az",
+    "birthDate": "2005-05-05",
+    "dimScore": "628.3",
+    "dissTopic": "",
+    "dormDebt": 0,
+    "eduDebt": {
+      "amount": 0,
+      "paymentAnnual": 2500,
+      "paymentType": "state_funded",
+      "semester": 2,
+      "year": 2024
     },
-    "student_info": {
-      "Advisor": "John Doe",
-      "BEU e-mail": "example@std.beu.edu.az",
-      "Birth date": "19-Jan-2038",
-      "Debt (dormitory)": "500 AZN",
-      "Dissertation topic": "",
-      "Education debt  \r\n                                [2024 - 1]": "20000 AZN",
-      "Last login date": "15.DEC.2024   01:05",
-      "Last login ip": "172.20.1.1",
-      "Name surname patronymic": "Sekiro Wolf Owl",
-      "Presidential scholarship": "Yes",
-      "Program / Class": "Information Technologies-EN / 3",
-      "Qrup kodu": "1162i",
-      "Registration date": "07.09.2022",
-      "SEC exam score": "628.6",
-      "State-funded": "Bəli",
-      "Status": "Oxuyur",
-      "Təhsil haqqı ödəniş forması": "DS",
-      "İllik Təhsil haqqı": "-146 AZN"
-    }
+    "fullNamePatronymic": "Sekiro Wolf Owl",
+    "groupCode": "1162i",
+    "lastLogin": {
+      "datetime": "2025-05-05T01:31:00",
+      "ip": "172.20.1.1"
+    },
+    "presidentScholar": false,
+    "registerDate": "2022-05-05",
+    "speciality": {
+      "lang": "en",
+      "program": "Information Technologies",
+      "year": 3
+    },
+    "stateFunded": true,
+    "status": "studying",
+    "studentId": 220106099
   }
 }

@@ -1,287 +1,345 @@
 {
-  "transcript": {
-    "semesters": {
-      "2022#1": {
+  "entryDate": "2022-05-05T00:00:00",
+  "faculty": "Faculty of Computer and Information Technologies",
+  "fullName": "Sekiro Wolf",
+  "graduateDate": "",
+  "level": "Bachelor",
+  "semesters": {
+    "2022": {
+      "1": {
         "courses": {
           "BA108": {
-            "credit": "3",
-            "grade": "98",
-            "hours": "2",
-            "letter_grade": "A",
-            "name": "Principles of Entrepreneurship and Introduction to Business",
-            "repeat": ""
+            "courseName": "Principles of Entrepreneurship and Introduction to Business",
+            "courses": 3,
+            "grade": 98,
+            "gradeLetter": "A",
+            "hours": 2,
+            "repeat": false
           },
           "ECON163": {
-            "credit": "9",
-            "grade": "87",
-            "hours": "2",
-            "letter_grade": "B",
-            "name": "Engineering Economics",
-            "repeat": ""
+            "courseName": "Engineering Economics",
+            "courses": 9,
+            "grade": 87,
+            "gradeLetter": "B",
+            "hours": 2,
+            "repeat": false
           },
           "ENG010": {
-            "credit": "5",
-            "grade": "99",
-            "hours": "7",
-            "letter_grade": "A",
-            "name": "English for business and academic communication (reading and writing)",
-            "repeat": ""
+            "courseName": "English for business and academic communication (reading and writing)",
+            "courses": 5,
+            "grade": 99,
+            "gradeLetter": "A",
+            "hours": 7,
+            "repeat": false
           },
           "ENG020": {
-            "credit": "5",
-            "grade": "96",
-            "hours": "7",
-            "letter_grade": "A",
-            "name": "English for business and academic communication (listening and speaking)",
-            "repeat": ""
+            "courseName": "English for business and academic communication (listening and speaking)",
+            "courses": 5,
+            "grade": 96,
+            "gradeLetter": "A",
+            "hours": 7,
+            "repeat": false
           },
           "LAW110": {
-            "credit": "3",
-            "grade": "79",
-            "hours": "2",
-            "letter_grade": "C",
-            "name": "Constitution of Republic of Azerbaijan and Fundamentals of Law",
-            "repeat": ""
+            "courseName": "Constitution of Republic of Azerbaijan and Fundamentals of Law",
+            "courses": 3,
+            "grade": 79,
+            "gradeLetter": "C",
+            "hours": 2,
+            "repeat": false
           },
           "TRX111": {
-            "credit": "5",
-            "grade": "83",
-            "hours": "4",
-            "letter_grade": "B",
-            "name": "History of Azerbaijan",
-            "repeat": ""
+            "courseName": "History of Azerbaijan",
+            "courses": 5,
+            "grade": 83,
+            "gradeLetter": "B",
+            "hours": 4,
+            "repeat": false
           }
         },
-        "gpa": "90.13",
-        "sac": "30",
-        "spa": "90.13",
-        "tacc": "30",
-        "tatc": "30",
-        "total_credits": "30",
-        "total_hours": "24"
+        "gpa": 90.13,
+        "sac": 30,
+        "spa": 90.13,
+        "tacc": 30,
+        "tatc": 30,
+        "totalCredits": 30,
+        "totalHours": 24
       },
-      "2022#2": {
+      "2": {
         "courses": {
           "ENG030": {
-            "credit": "5",
-            "grade": "91",
-            "hours": "8",
-            "letter_grade": "A",
-            "name": "English for business and academic communication (for academic purposes)",
-            "repeat": ""
+            "courseName": "English for business and academic communication (for academic purposes)",
+            "courses": 5,
+            "grade": 91,
+            "gradeLetter": "A",
+            "hours": 8,
+            "repeat": false
           },
           "IT136": {
-            "credit": "7",
-            "grade": "100",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Web systems and technologies",
-            "repeat": ""
+            "courseName": "Web systems and technologies",
+            "courses": 7,
+            "grade": 100,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
           },
           "IT186": {
-            "credit": "8",
-            "grade": "97",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Basics of information technology",
-            "repeat": ""
+            "courseName": "Basics of information technology",
+            "courses": 8,
+            "grade": 97,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
           },
           "IT188": {
-            "credit": "7",
-            "grade": "100",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Computer-aided design",
-            "repeat": ""
+            "courseName": "Computer-aided design",
+            "courses": 7,
+            "grade": 100,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
           },
           "MATH136": {
-            "credit": "3",
-            "grade": "94",
-            "hours": "3",
-            "letter_grade": "A",
-            "name": "Linear algebra and analytic geometry",
-            "repeat": ""
+            "courseName": "Linear algebra and analytic geometry",
+            "courses": 3,
+            "grade": 94,
+            "gradeLetter": "A",
+            "hours": 3,
+            "repeat": false
           }
         },
-        "gpa": "93.62",
-        "sac": "30",
-        "spa": "97.1",
-        "tacc": "60",
-        "tatc": "60",
-        "total_credits": "30",
-        "total_hours": "23"
-      },
-      "2023#1": {
-        "courses": {
-          "AZD130": {
-            "credit": "4",
-            "grade": "93",
-            "hours": "3",
-            "letter_grade": "A",
-            "name": "Official and Academic Communication in Azerbaijani language",
-            "repeat": ""
-          },
-          "COMP236": {
-            "credit": "8",
-            "grade": "86",
-            "hours": "4",
-            "letter_grade": "B",
-            "name": "Computer architecture",
-            "repeat": ""
-          },
-          "IT120": {
-            "credit": "6",
-            "grade": "99",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Fundamentals of Programming- 1",
-            "repeat": ""
-          },
-          "MATH166": {
-            "credit": "7",
-            "grade": "91",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Mathematical analysis",
-            "repeat": ""
-          },
-          "PHYS202": {
-            "credit": "5",
-            "grade": "94",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Phyisics",
-            "repeat": ""
-          }
-        },
-        "gpa": "93.09",
-        "sac": "30",
-        "spa": "92.03",
-        "tacc": "90",
-        "tatc": "90",
-        "total_credits": "30",
-        "total_hours": "19"
-      },
-      "2023#2": {
-        "courses": {
-          "COMP326": {
-            "credit": "6",
-            "grade": "97",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Operating Systems",
-            "repeat": ""
-          },
-          "IT206": {
-            "credit": "6",
-            "grade": "96",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Multimedia technologies",
-            "repeat": ""
-          },
-          "IT252": {
-            "credit": "5",
-            "grade": "96",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Basics of programming- 2",
-            "repeat": ""
-          },
-          "IT254": {
-            "credit": "7",
-            "grade": "91",
-            "hours": "4",
-            "letter_grade": "A",
-            "name": "Data structure and algorithms",
-            "repeat": ""
-          },
-          "MATH235": {
-            "credit": "3",
-            "grade": "95",
-            "hours": "3",
-            "letter_grade": "A",
-            "name": "Differential equations",
-            "repeat": ""
-          },
-          "MATH275": {
-            "credit": "3",
-            "grade": "90",
-            "hours": "3",
-            "letter_grade": "B",
-            "name": "Discrete mathematics",
-            "repeat": ""
-          }
-        },
-        "gpa": "93.4",
-        "sac": "30",
-        "spa": "94.33",
-        "tacc": "120",
-        "tatc": "120",
-        "total_credits": "30",
-        "total_hours": "22"
-      },
-      "2024#1": {
-        "courses": {
-          "IT205": {
-            "credit": "7",
-            "grade": "0",
-            "hours": "4",
-            "letter_grade": "In progress",
-            "name": "Object oriented programming",
-            "repeat": ""
-          },
-          "IT317": {
-            "credit": "6",
-            "grade": "0",
-            "hours": "4",
-            "letter_grade": "In progress",
-            "name": "Modern Programming Languages- 1",
-            "repeat": ""
-          },
-          "IT387": {
-            "credit": "7",
-            "grade": "0",
-            "hours": "4",
-            "letter_grade": "In progress",
-            "name": "Introduction to multi-platform programming",
-            "repeat": ""
-          },
-          "IT389": {
-            "credit": "7",
-            "grade": "0",
-            "hours": "4",
-            "letter_grade": "In progress",
-            "name": "Database systems",
-            "repeat": ""
-          },
-          "MM101": {
-            "credit": "3",
-            "grade": "0",
-            "hours": "3",
-            "letter_grade": "In progress",
-            "name": "Civil Defence",
-            "repeat": ""
-          }
-        },
-        "gpa": "93.4",
-        "sac": "0t",
-        "spa": "0",
-        "tacc": "120",
-        "tatc": "120",
-        "total_credits": "30",
-        "total_hours": "19"
+        "gpa": 93.62,
+        "sac": 30,
+        "spa": 97.1,
+        "tacc": 60,
+        "tatc": 60,
+        "totalCredits": 30,
+        "totalHours": 23
       }
     },
-    "entry_date": "07 September 2022",
-    "faculty": "Faculty of Computer and Information Technologies",
-    "graduation_date": "",
-    "id": "220106099",
-    "level": "Bachelor",
-    "name": "Linus Torvalds",
-    "program": "Information Technologies (EN)",
-    "total_earned_credits": "120",
-    "total_earned_ects": "120",
-    "total_gpa": "93.4"
-  }
+    "2023": {
+      "1": {
+        "courses": {
+          "AZD130": {
+            "courseName": "Official and Academic Communication in Azerbaijani language",
+            "courses": 4,
+            "grade": 93,
+            "gradeLetter": "A",
+            "hours": 3,
+            "repeat": false
+          },
+          "COMP236": {
+            "courseName": "Computer architecture",
+            "courses": 8,
+            "grade": 86,
+            "gradeLetter": "B",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT120": {
+            "courseName": "Fundamentals of Programming- 1",
+            "courses": 6,
+            "grade": 99,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "MATH166": {
+            "courseName": "Mathematical analysis",
+            "courses": 7,
+            "grade": 91,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "PHYS202": {
+            "courseName": "Phyisics",
+            "courses": 5,
+            "grade": 94,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          }
+        },
+        "gpa": 93.09,
+        "sac": 30,
+        "spa": 92.03,
+        "tacc": 90,
+        "tatc": 90,
+        "totalCredits": 30,
+        "totalHours": 19
+      },
+      "2": {
+        "courses": {
+          "COMP326": {
+            "courseName": "Operating Systems",
+            "courses": 6,
+            "grade": 97,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT206": {
+            "courseName": "Multimedia technologies",
+            "courses": 6,
+            "grade": 96,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT252": {
+            "courseName": "Basics of programming- 2",
+            "courses": 5,
+            "grade": 96,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT254": {
+            "courseName": "Data structure and algorithms",
+            "courses": 7,
+            "grade": 91,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "MATH235": {
+            "courseName": "Differential equations",
+            "courses": 3,
+            "grade": 95,
+            "gradeLetter": "A",
+            "hours": 3,
+            "repeat": false
+          },
+          "MATH275": {
+            "courseName": "Discrete mathematics",
+            "courses": 3,
+            "grade": 90,
+            "gradeLetter": "B",
+            "hours": 3,
+            "repeat": false
+          }
+        },
+        "gpa": 93.4,
+        "sac": 30,
+        "spa": 94.33,
+        "tacc": 120,
+        "tatc": 120,
+        "totalCredits": 30,
+        "totalHours": 22
+      }
+    },
+    "2024": {
+      "1": {
+        "courses": {
+          "IT205": {
+            "courseName": "Object oriented programming",
+            "courses": 7,
+            "grade": 100,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT317": {
+            "courseName": "Modern Programming Languages- 1",
+            "courses": 6,
+            "grade": 99,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT387": {
+            "courseName": "Introduction to multi-platform programming",
+            "courses": 7,
+            "grade": 100,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT389": {
+            "courseName": "Database systems",
+            "courses": 7,
+            "grade": 100,
+            "gradeLetter": "A",
+            "hours": 4,
+            "repeat": false
+          },
+          "MM101": {
+            "courseName": "Civil Defence",
+            "courses": 3,
+            "grade": 93,
+            "gradeLetter": "A",
+            "hours": 3,
+            "repeat": false
+          }
+        },
+        "gpa": 94.54,
+        "sac": 30,
+        "spa": 99.1,
+        "tacc": 150,
+        "tatc": 150,
+        "totalCredits": 30,
+        "totalHours": 19
+      },
+      "2": {
+        "courses": {
+          "COMP369": {
+            "courseName": "Computer networks",
+            "courses": 8,
+            "grade": 0,
+            "gradeLetter": "In progress",
+            "hours": 4,
+            "repeat": false
+          },
+          "INFS326": {
+            "courseName": "Information security",
+            "courses": 6,
+            "grade": 0,
+            "gradeLetter": "In progress",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT338": {
+            "courseName": "Internet Technologies",
+            "courses": 6,
+            "grade": 0,
+            "gradeLetter": "In progress",
+            "hours": 4,
+            "repeat": false
+          },
+          "IT388": {
+            "courseName": "Modern programming languages- 2",
+            "courses": 7,
+            "grade": 0,
+            "gradeLetter": "In progress",
+            "hours": 4,
+            "repeat": false
+          },
+          "MINF461": {
+            "courseName": "Probability theory and mathematical statistics",
+            "courses": 3,
+            "grade": 0,
+            "gradeLetter": "In progress",
+            "hours": 3,
+            "repeat": false
+          }
+        },
+        "gpa": 94.54,
+        "sac": 0,
+        "spa": 0.0,
+        "tacc": 150,
+        "tatc": 150,
+        "totalCredits": 30,
+        "totalHours": 19
+      }
+    }
+  },
+  "speciality": {
+    "lang": "en",
+    "program": 2022
+  },
+  "studentId": 220106099,
+  "totalEarnedCredits": 150,
+  "totalEarnedEcts": 150,
+  "totalGpa": 94.54
 }
