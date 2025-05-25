@@ -175,5 +175,5 @@ todo.md
 beusp.db
 
 *.lock
-beusproxy/demo/*.json
+# beusproxy/demo/*.json
 beusp
