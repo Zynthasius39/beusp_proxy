@@ -1,0 +1,13 @@
+[Unit]
+Description=HPage uWSGI offline container
+Requires=beusp-network.service
+After=beusp-network.service
+
+[Container]
+Image=zynthasius/beusproxy:alpine
+Network=beusp
+HostName=api_offline
+Volume=/root/hpage/shared:/hpage/shared
+EnvironmentFile=/root/hpage/env
+Environment=TMSAPI_OFFLINE=true
+Environment=BOT_ENABLED=false
