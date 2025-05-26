@@ -1,0 +1,43 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: Build
+    steps:
+    
+    - name: Check out the repo
+      run: git clone https://github.com/${{ github.repository }}.git --single-branch repo
+
+    - name: Get metadata
+      id: meta
+      run: echo "tag=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_OUTPUT
+      working-directory: ./repo
+          
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build images
+      run: |
+        docker build . -f beusproxy.Dockerfile -t ${{ vars.DOCKERHUB_USERNAME }}/beusproxy:${{ steps.meta.outputs.tag }}-alpine &&
+        docker build . -f bot.Dockerfile -t ${{ vars.DOCKERHUB_USERNAME }}/beusproxy:${{ steps.meta.outputs.tag }}-bot-alpine
+      working-directory: ./repo
+
+    - name: Tag latest images
+      run: |
+        docker image tag ${{ vars.DOCKERHUB_USERNAME }}/beusproxy:${{ steps.meta.outputs.tag }}-alpine ${{ vars.DOCKERHUB_USERNAME }}/beusproxy:alpine &&
+        docker image tag ${{ vars.DOCKERHUB_USERNAME }}/beusproxy:${{ steps.meta.outputs.tag }}-bot-alpine ${{ vars.DOCKERHUB_USERNAME }}/beusproxy:bot-alpine
+
+    - name: Push images
+      run: |
+        docker push -a ${{ vars.DOCKERHUB_USERNAME }}/beusproxy
+

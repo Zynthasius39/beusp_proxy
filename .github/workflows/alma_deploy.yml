@@ -1,0 +1,20 @@
+name: Alma Deploy
+
+on:
+  workflow_run:
+    workflows: [Docker Build]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    environment: Deployment
+    steps:
+
+    - name: Update and Restart stack
+      run: |
+        mkdir -p ~/.ssh &&
+        echo "${{ secrets.ALMA_KEY }}" > ~/.ssh/id_rsa &&
+        chmod 600 ~/.ssh/id_rsa &&
+        ssh -o StrictHostKeyChecking=no git@${{ secrets.ALMA_HOSTNAME }} sudo hpage_restart
