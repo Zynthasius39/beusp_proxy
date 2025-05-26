@@ -155,7 +155,7 @@ def check_grades(conn, httpc, nmgr):
                 continue
         # Write notes and changes back to db
         # High level debugging
-        with open("/var/log/grades_history.log", "a") as f:
+        with open("log/grades_history.log", "a") as f:
             text = json.dumps(
                 {
                     "old": json.loads(dict(subs_grades_old).get(sub_id, "{X: 1}")),
@@ -168,7 +168,7 @@ def check_grades(conn, httpc, nmgr):
                     )
                 }
             )
-            f.write(f"[{datetime.now().isoformat()}] Sub {sub_id}: {text}")
+            f.write(f"[{datetime.now().isoformat()}] - Sub {sub_id}: {text}\n")
         cur = conn.execute(
             """
             REPLACE INTO Student_Grades (
