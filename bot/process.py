@@ -15,8 +15,8 @@ logger = get_logger(__package__)
 class BotProc:
     """Bot Process Base Class"""
 
-    def __init__(self, daemon=True):
-        self._shevent = Event()
+    def __init__(self, daemon=True, shevent=Event()):
+        self._shevent = shevent
         self._proc = None
         self._daemon = daemon
         self._lock_file = Path(".bot.lock")
@@ -60,5 +60,4 @@ def proc_worker(shevent=None):
         schedule.run_pending()
         time.sleep(1)
     schedule.clear()
-    emailc.close()
     httpc.close()
