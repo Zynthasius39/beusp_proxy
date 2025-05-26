@@ -1,12 +1,11 @@
 import json
 import socket
-import sys
 from datetime import datetime
 from json import JSONDecodeError
-
-from asyncio import TimeoutError
-from aiohttp import ClientError
+from asyncio import TimeoutError as AsyncioTimeoutError
 from smtplib import SMTPException
+
+from aiohttp import ClientError
 
 from beusproxy.common.utils import get_logger
 from beusproxy.config import API_INTERNAL_HOSTNAME, HOST, USER_AGENT
@@ -67,7 +66,7 @@ def check_grades(conn, httpc, nmgr):
         httpc.gather(
             *[grades_coro(cr_dict, sub["id"], sub["session_id"]) for sub in subs]
         )
-    except (TimeoutError, ClientError) as e:
+    except (AsyncioTimeoutError, TimeoutError, ClientError) as e:
         logger.error(e)
         return
 
@@ -120,14 +119,17 @@ def check_grades(conn, httpc, nmgr):
     for sub_id, sub_grades in cr_dict.items():
         if isinstance(sub_grades, int):
             if sub_grades == 401:
-                cur = conn.execute("""
+                cur = conn.execute(
+                    """
                     UPDATE
                         Student_Sessions
                     SET
                         logged_out = 1
                     WHERE
                         owner_id = ?;
-                """, (sub_id,))
+                """,
+                    (sub_id,),
+                )
                 if cur.rowcount > 0:
                     conn.commit()
                 else:
@@ -137,19 +139,36 @@ def check_grades(conn, httpc, nmgr):
         if sub_grades and dict(subs_grades_old).get(sub_id):
             # Grade diff util
             try:
-                diffs = grade_diff(json.loads(
-                    dict(subs_grades_old)[sub_id]), sub_grades)
+                diffs = grade_diff(
+                    json.loads(dict(subs_grades_old)[sub_id]), sub_grades
+                )
                 if len(diffs) != 0:
                     # Push to notifier
                     nmgr.notify(sub_id, diffs, sub_grades, emailc=emailc)
                     logger.debug(
-                        "Changes found for Sub %d -> %s", sub_id, json.dumps(
-                            diffs, ensure_ascii=True)
+                        "Changes found for Sub %d -> %s",
+                        sub_id,
+                        json.dumps(diffs, ensure_ascii=True),
                     )
             except JSONDecodeError as e:
                 logger.error("Couldn't decode JSON from DB for Sub %d: %s", sub_id, e)
                 continue
         # Write notes and changes back to db
+        # High level debugging
+        with open("/var/log/grades_history.log", "a") as f:
+            text = json.dumps(
+                {
+                    "old": json.loads(dict(subs_grades_old).get(sub_id, "{X: 1}")),
+                    "new": sub_grades,
+                    "diff": grade_diff(
+                        json.loads(
+                            dict(subs_grades_old)[sub_id]
+                        ),
+                        sub_grades
+                    )
+                }
+            )
+            f.write(f"[{datetime.now().isoformat()}] Sub {sub_id}: {text}")
         cur = conn.execute(
             """
             REPLACE INTO Student_Grades (

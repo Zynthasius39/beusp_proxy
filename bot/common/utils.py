@@ -186,7 +186,6 @@ def report_gen_list(diffs, grades, *, telegram=False):
                     diffs_dict[escape_tg_chars(rename_table_inv.get(kk, kk))] = vv
                 else:
                     diffs_dict[rename_table_inv.get(kk, kk)] = vv
-        print(diffs_dict)
         courses.append(
             {
                 "courseCode": escape_tg_chars(k),
