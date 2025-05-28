@@ -369,6 +369,8 @@ def get_me(*, httpc):
     res = httpc.request(
         "GET", f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/getMe"
     )
+    if res is None:
+        return res
 
     if not res.status == 200:
         raise ClientError(res.status)

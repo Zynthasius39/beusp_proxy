@@ -15,6 +15,7 @@ from ..config import REQUEST_TIMEOUT
 logger = logging.getLogger("httpclient")
 logger.addHandler(flogging.default_handler)
 
+
 class HTTPClient:
     """HTTPClient base class.
     Running tasks in seperate worker thread,
@@ -41,8 +42,7 @@ class HTTPClient:
             self._loop.run_forever()
 
         self._shevent = Event()
-        self._thread = Thread(
-            name=__name__, target=_client_worker, daemon=True)
+        self._thread = Thread(name=__name__, target=_client_worker, daemon=True)
         self._thread.start()
         self._session = ClientSession(
             base_url, loop=self._loop, timeout=timeout, **kwargs
@@ -82,6 +82,8 @@ class HTTPClient:
         Returns:
             ClientResponse: Response object
         """
+        res = None
+
         try:
             res = self.submit_coro(
                 self.request_coro,

@@ -155,10 +155,10 @@ def check_grades(conn, httpc, nmgr):
                 continue
         # Write notes and changes back to db
         # High level debugging
-        with open("log/grades_history.log", "a") as f:
+        with open("log/grades_history.log", "a", encoding="utf-8") as f:
             text = json.dumps(
                 {
-                    "old": json.loads(dict(subs_grades_old).get(sub_id, "{X: 1}")),
+                    "old": json.loads(dict(subs_grades_old).get(sub_id, "{\"X\": 1}")),
                     "new": sub_grades,
                     "diff": grade_diff(
                         json.loads(
