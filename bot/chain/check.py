@@ -8,10 +8,11 @@ from smtplib import SMTPException
 from aiohttp import ClientError
 
 from beusproxy.common.utils import get_logger
-from beusproxy.config import API_INTERNAL_HOSTNAME, HOST, USER_AGENT
+from beusproxy.config import API_INTERNAL_HOSTNAME, DEBUG, HOST, USER_AGENT
 from beusproxy.services.email import EmailClient
 
 from ..common.utils import grade_diff
+from ..common.debug import log4grades
 
 logger = get_logger(__package__)
 
@@ -112,7 +113,7 @@ def check_grades(conn, httpc, nmgr):
     try:
         emailc = EmailClient()
     except (SMTPException, socket.gaierror, OSError) as e:
-        logger.error(e)
+        logger.error(f"emailc: {e}")
         return
 
     # Compare grades wisely
@@ -153,22 +154,8 @@ def check_grades(conn, httpc, nmgr):
             except JSONDecodeError as e:
                 logger.error("Couldn't decode JSON from DB for Sub %d: %s", sub_id, e)
                 continue
-        # Write notes and changes back to db
-        # High level debugging
-        with open("log/grades_history.log", "a", encoding="utf-8") as f:
-            text = json.dumps(
-                {
-                    "old": json.loads(dict(subs_grades_old).get(sub_id, "{\"X\": 1}")),
-                    "new": sub_grades,
-                    "diff": grade_diff(
-                        json.loads(
-                            dict(subs_grades_old)[sub_id]
-                        ),
-                        sub_grades
-                    )
-                }
-            )
-            f.write(f"[{datetime.now().isoformat()}] - Sub {sub_id}: {text}\n")
+        if DEBUG:
+            log4grades(sub_id, subs_grades_old, sub_grades)
         cur = conn.execute(
             """
             REPLACE INTO Student_Grades (
