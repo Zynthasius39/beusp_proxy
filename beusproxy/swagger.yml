@@ -11,9 +11,9 @@ info:
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   version: 1.12
 servers:
-  - url: /
+  - url: /api
     description: Production server (uses root server)
-  - url: http://localhost:5000/
+  - url: /api2
     description: Offline server (uses demo data)
 tags:
   - name: Authorization
