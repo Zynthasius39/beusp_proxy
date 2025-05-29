@@ -66,8 +66,8 @@ class Auth(Resource):
             location="args",
         )
         args = rp.parse_args()
-        student_id = args.get("studentId")
-        password = args.get("password")
+        student_id = 220600099
+        password = "s3cr3c_p4ssw0rd"
 
         with get_db() as db_con:
             db_res = db_con.execute(
@@ -97,6 +97,6 @@ class Auth(Resource):
 
         res = make_response("You entered a blackhole", 200)
         res.set_cookie("SessionID", "offline_mode")
-        res.set_cookie("StudentID", student_id)
+        res.set_cookie("StudentID", str(student_id))
 
         return res
