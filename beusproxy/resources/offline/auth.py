@@ -12,7 +12,7 @@ class Auth(Resource):
     Flask-RESTFUL resource
     """
 
-    def get(self):
+    def post(self):
         """Bakes cookies for students
         Authenticates and returns a SessionID to be used in API. \
         If there is no record of the student/educator in the database, \
@@ -21,22 +21,23 @@ class Auth(Resource):
         ---
         tags:
           - Authorization
-        parameters:
-        - name: studentId
-          in: query
-          description: Student ID to login as
-          required: true
-          schema:
-            type: integer
-          example: 220106000
-        - name: password
-          in: query
-          description: Password of the Student
-          required: true
-          schema:
-            type: string
-            format: password
-          example: demostudent
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        properties:
+                            studentId:
+                                type: integer
+                                required: true
+                                description: Student ID to login as
+                                example: 220106000
+                            password:
+                                type: string
+                                format: password
+                                description: Password of the Student
+                                required: true
+                                example: demostudent
         responses:
             200:
                 description: Authenticated
@@ -57,13 +58,13 @@ class Auth(Resource):
             "studentId",
             required=True,
             help="Missing the credential parameter in the JSON body",
-            location="args",
+            location="json",
         )
         rp.add_argument(
             "password",
             required=True,
             help="Missing the credential parameter in the JSON body",
-            location="args",
+            location="json",
         )
         args = rp.parse_args()
         student_id = 220600099

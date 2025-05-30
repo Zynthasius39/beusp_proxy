@@ -49,14 +49,15 @@ demo_table = {
 }
 
 res = httpc.request(
-    "GET",
+    "POST",
     f"{url}auth",
-    params={
+    json={
         "studentId": args.student_id,
         "password": args.password
     }
 )
 
+print(res.status)
 assert res.status == 200
 
 session_id = res.cookies.get("SessionID")

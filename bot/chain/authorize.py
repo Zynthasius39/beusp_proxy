@@ -51,9 +51,9 @@ def authorize_subs(conn, httpc):
         return (
             student_id,
             await httpc.request_coro(
-                "GET",
+                "POST",
                 f"{API_INTERNAL_HOSTNAME}auth",
-                params={"studentId": student_id, "password": password},
+                json={"studentId": student_id, "password": password},
             ),
         )
 

@@ -1,12 +1,12 @@
 {
   "documents": {},
-  "image": "a1f2fdbca994e59d2456ca872be9bf50",
+  "image": "290bfdbca994e59e4466ca862be9bf50",
   "lang": "en",
   "studentInfo": {
-    "advisor": "John Doe",
-    "beuEmail": "example@std.beu.edu.az",
-    "birthDate": "2005-05-05",
-    "dimScore": "628.3",
+    "advisor": "Ulviyya Guliyeva",
+    "beuEmail": "zelekberov@std.beu.edu.az",
+    "birthDate": "2005-01-09",
+    "dimScore": "628.6",
     "dissTopic": "",
     "dormDebt": 0,
     "eduDebt": {
@@ -16,14 +16,14 @@
       "semester": 2,
       "year": 2024
     },
-    "fullNamePatronymic": "Sekiro Wolf Owl",
+    "fullNamePatronymic": "Zaur Ələkbərov Mehman",
     "groupCode": "1162i",
     "lastLogin": {
-      "datetime": "2025-05-05T01:31:00",
-      "ip": "172.20.1.1"
+      "datetime": "2025-05-31T00:41:00",
+      "ip": "172.71.17.135"
     },
     "presidentScholar": false,
-    "registerDate": "2022-05-05",
+    "registerDate": "2022-07-09",
     "speciality": {
       "lang": "en",
       "program": "Information Technologies",
@@ -31,6 +31,6 @@
     },
     "stateFunded": true,
     "status": "studying",
-    "studentId": 220106099
+    "studentId": 220106041
   }
 }

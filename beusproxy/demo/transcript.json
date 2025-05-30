@@ -1,7 +1,7 @@
 {
-  "entryDate": "2022-05-05T00:00:00",
+  "entryDate": "2022-09-07T00:00:00",
   "faculty": "Faculty of Computer and Information Technologies",
-  "fullName": "Sekiro Wolf",
+  "fullName": "Zaur Ələkbərov",
   "graduateDate": "",
   "level": "Bachelor",
   "semesters": {
@@ -338,7 +338,7 @@
     "lang": "en",
     "program": 2022
   },
-  "studentId": 220106099,
+  "studentId": 220106041,
   "totalEarnedCredits": 150,
   "totalEarnedEcts": 150,
   "totalGpa": 94.54

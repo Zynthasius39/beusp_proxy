@@ -1,7 +1,7 @@
 {
-  "botEnabled": true,
-  "studentsRegistered": 9,
-  "subscriptions": 18,
+  "botEnabled": false,
+  "studentsRegistered": 1,
+  "subscriptions": 2,
   "rootServerIsUp": true,
   "sha256sums": [
     "26647bdcffc28c9beaf268f3fd7b2a4779d776cf84a4640f9a52cfc5137a80d3 index.php",
