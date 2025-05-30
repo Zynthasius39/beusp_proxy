@@ -1,6 +1,6 @@
 # BEUSP Notification Bot
 
-Notifies nerdy students for  any changes on
+Notifies nerdy students for any changes on
 grades table using Student Portal API.
 Uses **schedule** python library to schedule checks internally.
 A cycle of check consists of these steps:
@@ -34,4 +34,9 @@ schedule.every(1).hours.until(datetime(2020, 5, 17, 11, 36, 20)).do(run_chain, h
 ```
 Ref: https://schedule.readthedocs.io/en/stable/examples.html
 
-[//]: # (TODO: Dockerize)
+Enabled Grade Logging for debugging:
+```bash
+export DEBUG=true
+
+# Change .env file for docker / podman deployments.
+```
