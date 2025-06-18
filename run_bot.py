@@ -1,9 +1,14 @@
+import logging
 import signal
 from multiprocessing import Event
 
 from bot.process import BotProc
+from beusproxy.config import DEBUG
 
 shevent = Event()
+
+if DEBUG:
+    logging.basicConfig(level=logging.DEBUG)
 
 def handle_shutdown(_, __):
     """Handles Shutdown after a signal is received"""
