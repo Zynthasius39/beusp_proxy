@@ -90,31 +90,36 @@ def check_grades(conn, httpc, nmgr):
         logger.error(e)
         return
 
-    subs_grades_old = conn.execute(
-        """
-        SELECT
-            sg.owner_id,
-            sg.grades
-        FROM
-            Student_Grades sg
-        INNER JOIN
-            Students s
-        ON
-            sg.owner_id == s.id AND
-            NOT (
-                s.active_telegram_id IS NULL AND
-                s.active_discord_id IS NULL AND
-                s.active_email_id IS NULL
-            );
-    """
-    ).fetchall()
+    if DEBUG:
+        with open("log/grades_history_nodb.log", "a", encoding="utf-8") as f:
+            for sub_id, sub_grades in cr_dict.items():
+                f.write(f"[{datetime.now().isoformat()}] - Sub_{sub_id}: {json.dumps(sub_grades)}\n")
 
-    # Get a EmailClient
-    try:
-        emailc = EmailClient()
-    except (SMTPException, socket.gaierror, OSError) as e:
-        logger.error(f"emailc: {e}")
-        return
+    # subs_grades_old = conn.execute(
+    #     """
+    #     SELECT
+    #         sg.owner_id,
+    #         sg.grades
+    #     FROM
+    #         Student_Grades sg
+    #     INNER JOIN
+    #         Students s
+    #     ON
+    #         sg.owner_id == s.id AND
+    #         NOT (
+    #             s.active_telegram_id IS NULL AND
+    #             s.active_discord_id IS NULL AND
+    #             s.active_email_id IS NULL
+    #         );
+    # """
+    # ).fetchall()
+
+    # # Get a EmailClient
+    # try:
+    #     emailc = EmailClient()
+    # except (SMTPException, socket.gaierror, OSError) as e:
+    #     logger.error(f"emailc: {e}")
+    #     return
 
     # Compare grades wisely
     for sub_id, sub_grades in cr_dict.items():
@@ -137,39 +142,39 @@ def check_grades(conn, httpc, nmgr):
                     conn.rollback()
             logger.error("Invalid response %d for %d", sub_grades, sub_id)
             continue
-        if sub_grades and dict(subs_grades_old).get(sub_id):
-            # Grade diff util
-            try:
-                diffs = grade_diff(
-                    json.loads(dict(subs_grades_old)[sub_id]), sub_grades
-                )
-                if len(diffs) != 0:
-                    # Push to notifier
-                    nmgr.notify(sub_id, diffs, sub_grades, emailc=emailc)
-                    logger.debug(
-                        "Changes found for Sub %d -> %s",
-                        sub_id,
-                        json.dumps(diffs, ensure_ascii=True),
-                    )
-            except JSONDecodeError as e:
-                logger.error("Couldn't decode JSON from DB for Sub %d: %s", sub_id, e)
-                continue
-        if DEBUG:
-            log4grades(sub_id, subs_grades_old, sub_grades)
-        cur = conn.execute(
-            """
-            REPLACE INTO Student_Grades (
-                owner_id, grades, updated
-            )
-            VALUES (
-                ?, ?, ?
-            );
-        """,
-            (sub_id, json.dumps(sub_grades), datetime.now().isoformat()),
-        )
-        if cur.rowcount > 0:
-            conn.commit()
-        else:
-            conn.rollback()
+    #     if sub_grades and dict(subs_grades_old).get(sub_id):
+    #         # Grade diff util
+    #         try:
+    #             diffs = grade_diff(
+    #                 json.loads(dict(subs_grades_old)[sub_id]), sub_grades
+    #             )
+    #             if len(diffs) != 0:
+    #                 # Push to notifier
+    #                 nmgr.notify(sub_id, diffs, sub_grades, emailc=emailc)
+    #                 logger.debug(
+    #                     "Changes found for Sub %d -> %s",
+    #                     sub_id,
+    #                     json.dumps(diffs, ensure_ascii=True),
+    #                 )
+    #         except JSONDecodeError as e:
+    #             logger.error("Couldn't decode JSON from DB for Sub %d: %s", sub_id, e)
+    #             continue
+    #     if DEBUG:
+    #         log4grades(sub_id, subs_grades_old, sub_grades)
+    #     cur = conn.execute(
+    #         """
+    #         REPLACE INTO Student_Grades (
+    #             owner_id, grades, updated
+    #         )
+    #         VALUES (
+    #             ?, ?, ?
+    #         );
+    #     """,
+    #         (sub_id, json.dumps(sub_grades), datetime.now().isoformat()),
+    #     )
+    #     if cur.rowcount > 0:
+    #         conn.commit()
+    #     else:
+    #         conn.rollback()
 
-    emailc.quit()
+    # emailc.quit()
