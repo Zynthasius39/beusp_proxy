@@ -135,7 +135,7 @@ class NotifyManager:
 
     def close(self):
         """Clean up the manager"""
-        self._loop.stop()
+        self._loop.call_soon_threadsafe(self._loop.stop)
 
     def notify(self, sub_id, diffs, grades, *, emailc):
         """Notify Asynchronously
