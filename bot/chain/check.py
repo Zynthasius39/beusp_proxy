@@ -1,4 +1,5 @@
 import json
+import requests
 import socket
 from datetime import datetime
 from json import JSONDecodeError
@@ -26,7 +27,7 @@ def check_grades(conn, httpc, nmgr):
         emailc (EmailClient): Email Client
         nmgr (NotifyManager): Notification Manager
     """
-    subs = conn.execute(
+    sub = conn.execute(
         """
         SELECT
             id,
@@ -46,54 +47,76 @@ def check_grades(conn, httpc, nmgr):
             s.id == ses.owner_id AND
             ses.logged_out == 0
         ) t
-        WHERE rn = 1;
+        WHERE rn = 1 AND id = 1;
     """
-    ).fetchall()
+    ).fetchone()
 
-    async def grades_coro(cr, owner_id, session_id):
-        cr[owner_id] = await httpc.request_coro(
-            "GET",
+    if sub:
+        sub_res = requests.get(
             f"{API_INTERNAL_HOSTNAME}resource/grades/latest",
             headers={
-                "Host": HOST,
-                "Cookie": f"SessionID={session_id};",
+                "Cookie": f"SessionID={sub["session_id"]};",
                 "User-Agent": USER_AGENT,
             },
         )
-
-    # Fetch grades via API
-    cr_dict = {}
-    try:
-        httpc.gather(
-            *[grades_coro(cr_dict, sub["id"], sub["session_id"]) for sub in subs]
-        )
-    except (AsyncioTimeoutError, TimeoutError, ClientError) as e:
-        logger.error(e)
+        if sub_res.status_code == 401:
+            cur = conn.execute(
+                """
+                UPDATE
+                    Student_Sessions
+                SET
+                    logged_out = 1
+                WHERE
+                    owner_id = 1;
+            """)
+            if cur.rowcount > 0:
+                conn.commit()
+            else:
+                conn.rollback()
+        with open("log/grades_history_sub1.log", "a", encoding="utf-8") as f:
+            f.write(f"[{datetime.now().isoformat()}] - {sub_res.status_code} : {sub_res.text}")
+    else:
         return
 
-    async def grades_json_coro(cr, sub_id, sub_grades_cr):
-        if sub_grades_cr.status == 200:
-            cr[sub_id] = await sub_grades_cr.json(
-                encoding="UTF-8", loads=json.loads, content_type="application/json"
-            )
-        else:
-            cr[sub_id] = sub_grades_cr.status
+    # async def grades_coro(cr, owner_id, session_id):
+    #     cr[owner_id] = await httpc.request_coro(
+    #         "GET",
+    #         f"{API_INTERNAL_HOSTNAME}resource/grades/latest",
+    #         headers={
+    #             "Host": HOST,
+    #             "Cookie": f"SessionID={session_id};",
+    #             "User-Agent": USER_AGENT,
+    #         },
+    #     )
 
-    try:
-        httpc.gather(
-            *[
-                grades_json_coro(cr_dict, sub_id, sub_grades_cr)
-                for sub_id, sub_grades_cr in cr_dict.items()
-            ]
-        )
-    except ClientError as e:
-        logger.error(e)
-        return
+    # # Fetch grades via API
+    # cr_dict = {}
+    # try:
+    #     httpc.gather(
+    #         *[grades_coro(cr_dict, sub["id"], sub["session_id"]) for sub in subs]
+    #     )
+    # except (AsyncioTimeoutError, TimeoutError, ClientError) as e:
+    #     logger.error(e)
+    #     return
 
-    if DEBUG:
-        with open("log/grades_history_nodb.log", "a", encoding="utf-8") as f:
-            for sub_id, sub_grades in cr_dict.items():
-                f.write(f"[{datetime.now().isoformat()}] - Sub_{sub_id}: {json.dumps(sub_grades)}\n")
+    # async def grades_json_coro(cr, sub_id, sub_grades_cr):
+    #     if sub_grades_cr.status == 200:
+    #         cr[sub_id] = await sub_grades_cr.json(
+    #             encoding="UTF-8", loads=json.loads, content_type="application/json"
+    #         )
+    #     else:
+    #         cr[sub_id] = sub_grades_cr.status
+
+    # try:
+    #     httpc.gather(
+    #         *[
+    #             grades_json_coro(cr_dict, sub_id, sub_grades_cr)
+    #             for sub_id, sub_grades_cr in cr_dict.items()
+    #         ]
+    #     )
+    # except ClientError as e:
+    #     logger.error(e)
+    #     return
 
     # subs_grades_old = conn.execute(
     #     """
@@ -121,27 +144,27 @@ def check_grades(conn, httpc, nmgr):
     #     logger.error(f"emailc: {e}")
     #     return
 
-    # Compare grades wisely
-    for sub_id, sub_grades in cr_dict.items():
-        if isinstance(sub_grades, int):
-            if sub_grades == 401:
-                cur = conn.execute(
-                    """
-                    UPDATE
-                        Student_Sessions
-                    SET
-                        logged_out = 1
-                    WHERE
-                        owner_id = ?;
-                """,
-                    (sub_id,),
-                )
-                if cur.rowcount > 0:
-                    conn.commit()
-                else:
-                    conn.rollback()
-            logger.error("Invalid response %d for %d", sub_grades, sub_id)
-            continue
+    # # Compare grades wisely
+    # for sub_id, sub_grades in cr_dict.items():
+    # if isinstance(sub_grades, int):
+    #     if sub_grades == 401:
+    #         cur = conn.execute(
+    #             """
+    #             UPDATE
+    #                 Student_Sessions
+    #             SET
+    #                 logged_out = 1
+    #             WHERE
+    #                 owner_id = ?;
+    #         """,
+    #             (sub_id,),
+    #         )
+    #         if cur.rowcount > 0:
+    #             conn.commit()
+    #         else:
+    #             conn.rollback()
+    #     logger.error("Invalid response %d for %d", sub_grades, sub_id)
+    #     continue
     #     if sub_grades and dict(subs_grades_old).get(sub_id):
     #         # Grade diff util
     #         try:

@@ -30,6 +30,7 @@ def authorize_subs(conn, httpc):
             s.id == ses.owner_id AND
             ses.logged_out == 0
         WHERE
+            s.id = 1 AND
             ses.session_id IS NULL AND
             NOT (
                 s.active_telegram_id IS NULL AND
@@ -39,11 +40,7 @@ def authorize_subs(conn, httpc):
     """
     ).fetchall()
 
-    # Mapping sqlite3.Row's.
-    id_table = {}
-    for stud in stud_credentials:
-        id_table[stud["student_id"]] = stud["id"]
-    logger.debug("Authenticating -> %s", str(id_table))
+    logger.debug("Authenticating -> %s", str([stud["id"] for stud in stud_credentials]))
 
     # Authorization Coroutine
     async def auth_stud_coro(student_id, password):
