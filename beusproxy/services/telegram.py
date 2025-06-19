@@ -6,8 +6,9 @@ from sqlite3 import Error
 from threading import Event, Thread
 from typing import Optional
 
-from aiohttp import ClientError
+import requests
 from jinja2 import Environment
+from requests import RequestException
 
 from ..common.utils import get_logger
 from ..config import (
@@ -18,7 +19,6 @@ from ..config import (
     WEB_HOSTNAME,
 )
 from .database import get_db
-from .httpclient import HTTPClient, HTTPClientError
 
 logger = get_logger(__name__)
 
@@ -32,7 +32,6 @@ class TelegramClient:
 
     def __init__(
         self,
-        http_client: HTTPClient,
         jinja_env: Environment,
         *,
         request_timeout=REQUEST_TIMEOUT,
@@ -42,7 +41,6 @@ class TelegramClient:
         worker_name: Optional[str] = None,
     ):
         self._jinja_env = jinja_env
-        self._httpc = http_client
         self._request_timeout = request_timeout
         self._polling_timeout = polling_timeout
         self._api_hostname = api_hostname
@@ -54,7 +52,7 @@ class TelegramClient:
             """Telegram Updates Thread"""
             while not self._shevent.is_set():
                 try:
-                    res = self._httpc.request(
+                    res = requests.request(
                         "GET",
                         f"https://{api_hostname}/bot{api_key}/getUpdates",
                         params={
@@ -68,7 +66,7 @@ class TelegramClient:
                         timeout=None,
                     )
                     if res.status == 200:
-                        for u in self._httpc.cr_json(res)["result"]:
+                        for u in res.json()["result"]:
                             self._offset = u["update_id"] + 1
                             self.process_update(u)
                     else:
@@ -101,9 +99,7 @@ class TelegramClient:
             user_id (str): Telegram user_id
         """
         logger.debug("User '@%s' issued start command", user_id)
-        send_template(
-            "start", chat_id, user_id, httpc=self._httpc, jinja_env=self._jinja_env
-        )
+        send_template("start", chat_id, user_id, jinja_env=self._jinja_env)
 
     def help_cmd(self, chat_id, user_id):
         """/help command logic.
@@ -119,7 +115,6 @@ class TelegramClient:
             chat_id,
             user_id,
             WEB_HOSTNAME,
-            httpc=self._httpc,
             jinja_env=self._jinja_env,
         )
 
@@ -138,7 +133,6 @@ class TelegramClient:
                 "verify_empty",
                 chat_id,
                 user_id,
-                httpc=self._httpc,
                 jinja_env=self._jinja_env,
             )
             return
@@ -166,7 +160,6 @@ class TelegramClient:
                     "verify_invalid",
                     chat_id,
                     user_id,
-                    httpc=self._httpc,
                     jinja_env=self._jinja_env,
                 )
                 logger.info(
@@ -189,7 +182,6 @@ class TelegramClient:
                     "verify_expired",
                     chat_id,
                     user_id,
-                    httpc=self._httpc,
                     jinja_env=self._jinja_env,
                 )
                 logger.info("User '@%s'`s verification code has been expired")
@@ -257,7 +249,6 @@ class TelegramClient:
                 "verify_success",
                 chat_id,
                 user_id,
-                httpc=self._httpc,
                 jinja_env=self._jinja_env,
             )
             db_con.commit()
@@ -299,7 +290,6 @@ class TelegramClient:
                 chat_id,
                 user_id,
                 WEB_HOSTNAME,
-                httpc=self._httpc,
                 jinja_env=self._jinja_env,
             )
             logger.info(
@@ -313,7 +303,6 @@ class TelegramClient:
             "unsubscribe",
             chat_id,
             user_id,
-            httpc=self._httpc,
             jinja_env=self._jinja_env,
         )
         logger.info("Telegram user '@%s' unsubscribed", user_id)
@@ -360,32 +349,33 @@ class TelegramClient:
                     logger.error(e)
 
 
-def get_me(*, httpc):
+def get_me():
     """Telegram API: getMe
 
     Returns:
         dict: JSON response
     """
-    res = httpc.request(
-        "GET", f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/getMe"
+    res = requests.request(
+        "GET",
+        f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/getMe",
+        timeout=REQUEST_TIMEOUT,
     )
     if res is None:
         return res
 
-    if not res.status == 200:
-        raise ClientError(res.status)
+    if res.status_code != 200:
+        raise RequestException(res.status_code)
 
-    return httpc.cr_json(res)
+    return res.json()
 
 
-def send_message(text=None, chat_id=None, *, params=None, httpc):
+def send_message(text=None, chat_id=None, *, params=None):
     """Telegram API: sendMessage
 
     Args:
         text (str): Text message
         chat_id (int): Telegram Chat ID
         params (dict): sendMessage parameters
-        httpc (HTTPClient): HTTP Client
     """
     if params is None:
         params = {}
@@ -393,7 +383,7 @@ def send_message(text=None, chat_id=None, *, params=None, httpc):
         params["text"] = text
     if chat_id:
         params["chat_id"] = chat_id
-    res = httpc.request(
+    res = requests.request(
         "GET",
         f"https://{BOT_TELEGRAM_HOSTNAME}/bot{BOT_TELEGRAM_API_KEY}/sendMessage",
         params=params,
@@ -401,24 +391,22 @@ def send_message(text=None, chat_id=None, *, params=None, httpc):
     )
 
     if not res.status == 200:
-        raise HTTPClientError(res.status, httpc.cr_text(res))
+        raise RequestException(res.status_code, res.text)
 
-    return httpc.cr_json(res)
+    return res.json()
 
 
-def send_template(template, chat_id, *args, httpc, jinja_env):
+def send_template(template, chat_id, *args, jinja_env):
     """Telegram API Wrapper.
     Send template messages
 
     Args:
         template (str): Template key
         chat_id (int): Telegram Chat ID
-        httpc (HTTPClient): HTTP Client
         jinja_env (Environment): Jinja2 Environment
     """
     logger.debug("Sent template '%s' to chat %d'", template, chat_id)
     send_message(
         jinja_env.get_template(f"{template}.txt").render(args=args),
         chat_id,
-        httpc=httpc,
     )

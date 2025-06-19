@@ -6,7 +6,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from .common.utils import get_logger
 from .config import BOT_ENABLED, TEMPLATES_FOLDER
-from .services.httpclient import HTTPClient
 from .services.telegram_proc import TelegramProc
 
 
@@ -38,7 +37,7 @@ def init_context():
 
     try:
         c.set("jinjaenv", Environment(loader=FileSystemLoader(TEMPLATES_FOLDER)))
-        c.set("httpc", HTTPClient(trust_env=True))
+        # c.set("httpc", HTTPClient(trust_env=True))
         if BOT_ENABLED:
             c.set("tgproc", TelegramProc())
     except SMTPAuthenticationError as e:

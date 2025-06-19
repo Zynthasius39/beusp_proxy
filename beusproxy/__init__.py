@@ -5,6 +5,7 @@ from flasgger import Swagger
 from flask import Flask, g
 from flask_cors import CORS
 from flask_restful import Api
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import (APP_NAME, BOT_ENABLED, DEBUG, FLASGGER_ENABLED,
                      TMSAPI_OFFLINE)
@@ -27,6 +28,7 @@ def create_app():
     init_context()
 
     app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app)
 
     if FLASGGER_ENABLED:
         app.name = APP_NAME

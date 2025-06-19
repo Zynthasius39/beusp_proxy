@@ -7,7 +7,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from ..common.utils import get_logger
 from ..config import TEMPLATES_FOLDER
-from .httpclient import HTTPClient
 from .telegram import TelegramClient
 
 
@@ -30,7 +29,6 @@ class TelegramProc:
 
         def proc_init():
             tc = TelegramClient(
-                HTTPClient(trust_env=True),
                 Environment(loader=FileSystemLoader(TEMPLATES_FOLDER)),
             )
             while not self._shevent.is_set():

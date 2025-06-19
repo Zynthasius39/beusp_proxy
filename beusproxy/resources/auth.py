@@ -1,14 +1,14 @@
 import secrets
 from datetime import datetime
 
+import requests
 from flask import current_app as app
 from flask import make_response
 from flask_restful import Resource, abort, reqparse
+from requests import RequestException
 
 from ..common.utils import get_db
-from ..config import HOST, ROOT, USER_AGENT
-from ..context import c
-from ..services.httpclient import HTTPClientError
+from ..config import HOST, ROOT, USER_AGENT, REQUEST_TIMEOUT
 
 
 class Auth(Resource):
@@ -58,7 +58,6 @@ class Auth(Resource):
             502:
                 description: Bad response from root server
         """
-        httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
             "studentId",
@@ -85,7 +84,7 @@ class Auth(Resource):
 
         try:
             # Authenticate the student_id with session_id
-            mid_res = httpc.request(
+            mid_res = requests.request(
                 "POST",
                 f"{ROOT}auth.php",
                 data={
@@ -99,17 +98,18 @@ class Auth(Resource):
                     "User-Agent": USER_AGENT,
                 },
                 allow_redirects=False,
+                timeout=REQUEST_TIMEOUT,
             )
 
-        except HTTPClientError as ce:
+        except RequestException as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 
         # Respond with 401 if it was not redirected.
-        if mid_res.status == 200:
+        if mid_res.status_code == 200:
             abort(401, help="Bad credentials")
 
-        if not mid_res.status == 302:
+        if not mid_res.status_code == 302:
             abort(502, help="Bad response from root server")
 
         app.logger.info("Student %s has logged in", student_id)

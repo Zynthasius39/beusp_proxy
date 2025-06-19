@@ -1,12 +1,12 @@
+import requests
 from flask import current_app as app
 from flask import jsonify, make_response
 from flask_restful import Resource, abort, reqparse
+from requests import RequestException
 
 from .. import parser
 from ..common.utils import is_expired, read_msgs
-from ..config import HOST, ROOT, USER_AGENT
-from ..context import c
-from ..services.httpclient import HTTPClientError
+from ..config import HOST, ROOT, USER_AGENT, REQUEST_TIMEOUT
 
 
 class Msg(Resource):
@@ -36,7 +36,6 @@ class Msg(Resource):
             502:
                 description: Bad response from root server
         """
-        httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
             "SessionID",
@@ -49,7 +48,7 @@ class Msg(Resource):
 
         msgs = []
         try:
-            mid_res = httpc.request(
+            mid_res = requests.request(
                 "GET",
                 ROOT,
                 params={
@@ -60,22 +59,21 @@ class Msg(Resource):
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                 },
+                timeout=REQUEST_TIMEOUT,
             )
 
-            if not mid_res.status == 200:
+            if not mid_res.status_code == 200:
                 abort(502, help="Bad response from root server")
 
-            mid_res = httpc.cr_text(mid_res)
+            mid_res = mid_res.text
 
             if is_expired(mid_res):
                 abort(401, help="Session invalid or has expired")
 
-            results = read_msgs(httpc, args.get("SessionID"), parser.msg(mid_res))
+            msgs_raw = read_msgs(args.get("SessionID"), parser.msg(mid_res))
+            msgs = [parser.msg2(msg_raw) for msg_raw in msgs_raw]
 
-            for res in results:
-                if res.status == 200:
-                    msgs.append(parser.msg2(httpc.cr_text(res)))
-        except HTTPClientError as ce:
+        except RequestException as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 

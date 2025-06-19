@@ -4,12 +4,11 @@ from smtplib import SMTPException
 from threading import Thread
 
 import aiosqlite
-from aiohttp import ClientError
+from requests import RequestException
 
 from beusproxy.common.utils import get_logger
 from beusproxy.config import DATABASE, APP_NAME
 from beusproxy.services.email import generate_mime
-from beusproxy.services.httpclient import HTTPClientError
 from beusproxy.services.telegram import send_message as tg_send_message
 from beusproxy.services.discord import send_message as dc_send_message
 from bot.common.utils import report_gen_md, report_gen_dcmsg, report_gen_html
@@ -72,8 +71,8 @@ async def get_sub(sub_id) -> sqlite3.Row | list[sqlite3.Row]:
     """, sub_id, fetchone=True)
 
 
-async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
-    sub = await get_sub(sub_id)
+def notify(sub_id, diffs, grades, *, emailc):
+    sub = asyncio.run(get_sub(sub_id))
 
     if sub["telegram_chat_id"]:
         try:
@@ -83,10 +82,9 @@ async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
                 params={
                     "parse_mode": "MarkdownV2"
                 },
-                httpc=httpc
             )
             logger.debug("Notification sent for sub %d via Telegram.", sub_id)
-        except (HTTPClientError, ClientError) as ex:
+        except RequestException as ex:
             logger.error("Couldn't send notification for sub %d via Telegram: %s", sub_id, ex)
     if sub["email"]:
         try:
@@ -105,27 +103,14 @@ async def notify_coro(sub_id, diffs, grades, *, httpc, emailc):
             dc_send_message(
                 sub["discord_webhook_url"],
                 message=report_gen_dcmsg(diffs, grades),
-                httpc=httpc
             )
             logger.debug("Notification sent for sub %d via Discord.", sub_id)
-        except (HTTPClientError, ClientError) as ex:
+        except RequestException as ex:
             logger.error("Couldn't send notification for sub %d via Discord: %s", sub_id, ex)
 
 
 class NotifyManager:
     """Notification Manager Base Class"""
-
-    def __init__(self, *, httpc):
-        self._httpc = httpc
-        self._loop = asyncio.new_event_loop()
-
-        def nm_worker():
-            """Thread worker"""
-            asyncio.set_event_loop(self._loop)
-            self._loop.run_forever()
-
-        self._thread = Thread(target=nm_worker, daemon=True)
-        self._thread.start()
 
     def __enter__(self):
         return self
@@ -135,7 +120,6 @@ class NotifyManager:
 
     def close(self):
         """Clean up the manager"""
-        self._loop.call_soon_threadsafe(self._loop.stop)
 
     def notify(self, sub_id, diffs, grades, *, emailc):
         """Notify Asynchronously
@@ -149,32 +133,33 @@ class NotifyManager:
             Future: Future object
         """
 
-        self.submit_coro(notify_coro, sub_id, diffs, grades, httpc=self._httpc, emailc=emailc).result()
+        notify(sub_id, diffs, grades, emailc=emailc)
+        # self.submit_coro(notify_coro, sub_id, diffs, grades, emailc=emailc).result()
 
-    def submit_coro(self, task, *args, **kwargs):
-        """Thread-safe method via submit coroutine task.
+    # def submit_coro(self, task, *args, **kwargs):
+    #     """Thread-safe method via submit coroutine task.
 
-        Args:
-            task (function): Coroutine
+    #     Args:
+    #         task (function): Coroutine
 
-        Returns:
-            Future: Future object
-        """
-        return asyncio.run_coroutine_threadsafe(task(*args, **kwargs), self._loop)
+    #     Returns:
+    #         Future: Future object
+    #     """
+    #     return asyncio.run_coroutine_threadsafe(task(*args, **kwargs), self._loop)
 
-    def service_coro_gen(self, service_t, diffs):
-        """Generate Coroutine via send diffs for the service type
+    # def service_coro_gen(self, service_t, diffs):
+    #     """Generate Coroutine via send diffs for the service type
 
-        Args:
-            service_t (SubService): Service Type Enum
-            diffs (dict): Differences
+    #     Args:
+    #         service_t (SubService): Service Type Enum
+    #         diffs (dict): Differences
 
-        Returns:
-            coroutine: Sender Coroutine
-        """
-        # match service_t:
-        #     case SubService.TELEGRAM:
-        #         pass
+    #     Returns:
+    #         coroutine: Sender Coroutine
+    #     """
+    #     # match service_t:
+    #     #     case SubService.TELEGRAM:
+    #     #         pass
 
 
 class Notification:

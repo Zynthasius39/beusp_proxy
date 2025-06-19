@@ -1,3 +1,8 @@
+    """HTTPClient Service (Depreciated)
+
+    Will be used again when flask is switched to async entirely
+    """
+
 import asyncio
 import json
 import logging

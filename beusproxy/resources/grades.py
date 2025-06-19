@@ -1,15 +1,14 @@
-import json
 import time
 
+import requests
 from flask import current_app as app
 from flask import jsonify, make_response
 from flask_restful import Resource, abort, reqparse
+from requests import RequestException
 
 from .. import parser
 from ..common.utils import is_expired
-from ..config import HOST, ROOT, USER_AGENT, API_INTERNAL_HOSTNAME
-from ..context import c
-from ..services.httpclient import HTTPClientError
+from ..config import HOST, ROOT, USER_AGENT, API_INTERNAL_HOSTNAME, REQUEST_TIMEOUT
 
 
 class Grades(Resource):
@@ -87,7 +86,6 @@ class Grades(Resource):
             502:
                 description: Bad response from root server
         """
-        httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
             "SessionID",
@@ -99,7 +97,7 @@ class Grades(Resource):
         args = rp.parse_args()
 
         try:
-            mid_res = httpc.request(
+            mid_res = requests.request(
                 "POST",
                 ROOT,
                 data={
@@ -114,19 +112,19 @@ class Grades(Resource):
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                 },
+                timeout=REQUEST_TIMEOUT,
             )
 
-            if not mid_res.status == 200:
+            if not mid_res.status_code == 200:
                 abort(502, help="Bad response from root server")
 
-            mid_res = httpc.cr_text(mid_res)
-        except HTTPClientError as ce:
+        except RequestException as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
-        if is_expired(mid_res):
+        if is_expired(mid_res.text):
             abort(401, help="Session invalid or has expired")
 
-        ajax = json.loads(mid_res)
+        ajax = mid_res.json()
         if int(ajax["CODE"]) < 1:
             abort(400, help=f"Proxy server returned CODE {ajax["CODE"]}")
 
@@ -211,7 +209,6 @@ class GradesAll(Resource):
             502:
                 description: Bad response from root server
         """
-        httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
             "SessionID",
@@ -223,7 +220,7 @@ class GradesAll(Resource):
         args = rp.parse_args()
 
         try:
-            mid_res = httpc.request(
+            mid_res = requests.request(
                 "POST",
                 ROOT,
                 data={
@@ -238,20 +235,20 @@ class GradesAll(Resource):
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                 },
+                timeout=REQUEST_TIMEOUT,
             )
 
-            if not mid_res.status == 200:
+            if not mid_res.status_code == 200:
                 abort(502, help="Bad response from root server")
 
-            mid_res = httpc.cr_text(mid_res)
-        except HTTPClientError as ce:
+        except RequestException as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 
-        if is_expired(mid_res):
+        if is_expired(mid_res.text):
             abort(401, help="Session invalid or has expired")
 
-        ajax = json.loads(mid_res)
+        ajax = mid_res.json()
         if int(ajax["CODE"]) < 1:
             abort(400, help=f"Proxy server returned CODE {ajax["CODE"]}")
 
@@ -336,7 +333,6 @@ class GradesLatest(Resource):
             502:
                 description: Bad response from root server
         """
-        httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
             "SessionID",
@@ -348,7 +344,7 @@ class GradesLatest(Resource):
         args = rp.parse_args()
 
         try:
-            mid_res = httpc.request(
+            mid_res = requests.request(
                 "GET",
                 f"{API_INTERNAL_HOSTNAME}resource/grades",
                 headers={
@@ -356,11 +352,12 @@ class GradesLatest(Resource):
                     "Cookie": f"SessionID={args.get("SessionID")};",
                     "User-Agent": USER_AGENT,
                 },
+                timeout=REQUEST_TIMEOUT,
             )
 
-            mid_json = httpc.cr_json(mid_res)
-            if not mid_res.status == 200:
-                return mid_json, mid_res.status
+            mid_json = mid_res.json()
+            if not mid_res.status_code == 200:
+                return mid_json, mid_res.status_code
 
             year, semester = (
                 mid_json["entries"][-1]["year"],
@@ -370,7 +367,7 @@ class GradesLatest(Resource):
             if not mid_json.get("entries"):
                 abort(502, help="Bad response from root server")
 
-            mid_res = httpc.request(
+            mid_res = requests.request(
                 "GET",
                 f"{API_INTERNAL_HOSTNAME}resource/grades/{year}/{semester}",
                 headers={
@@ -378,12 +375,13 @@ class GradesLatest(Resource):
                     "Cookie": f"SessionID={args.get("SessionID")};",
                     "User-Agent": USER_AGENT,
                 },
+                timeout=REQUEST_TIMEOUT
             )
 
-            mid_json = httpc.cr_json(mid_res)
-            if not mid_res.status == 200:
-                return mid_json, mid_res.status
-        except HTTPClientError as ce:
+            mid_json = mid_res.json()
+            if not mid_res.status_code == 200:
+                return mid_json, mid_res.status_code
+        except RequestException as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 

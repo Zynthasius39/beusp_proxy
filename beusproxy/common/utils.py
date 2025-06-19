@@ -1,16 +1,18 @@
+import asyncio
 import json
 import logging
 import os
 import random
 import sqlite3
+import requests
 from datetime import datetime
 
+import aiohttp
 from bs4 import BeautifulSoup
 from dateutil import parser
 from flask import abort, g, logging as flogging
 
-from ..config import DATABASE, DEMO_FOLDER, HOST, ROOT, USER_AGENT
-from ..services.httpclient import HTTPClient
+from ..config import DATABASE, DEMO_FOLDER, HOST, ROOT, USER_AGENT, REQUEST_TIMEOUT
 from ..services.email import EmailClient
 
 def get_logger(name=None):
@@ -47,13 +49,13 @@ def get_emailc():
     return emailc
 
 
-def read_announce(http_client: HTTPClient, sessid):
+def read_announce(sessid):
     """Read announces of student
 
     Args:
         sessid (str): Student session_id
     """
-    http_client.request(
+    requests.request(
         "POST",
         ROOT,
         data={
@@ -64,14 +66,14 @@ def read_announce(http_client: HTTPClient, sessid):
             "Cookie": f"PHPSESSID={sessid}; uname=240218019; BEU_STUD_AR=0; ",
             "User-Agent": USER_AGENT,
         },
+        timeout=REQUEST_TIMEOUT,
     )
 
 
-def read_msgs(httpc: HTTPClient, sessid, msg_ids):
+def read_msgs(sessid, msg_ids):
     """Read messages of student
 
     Args:
-        httpc (HTTPClient): HTTP Client
         sessid (str): Student session_id
         msg_ids (list): List of message ids to be read
 
@@ -79,26 +81,37 @@ def read_msgs(httpc: HTTPClient, sessid, msg_ids):
         list: List of responses
     """
 
-    return httpc.gather(
-        *[
-            httpc.request_coro(
-                "POST",
-                ROOT,
-                data={
-                    "ajx": 1,
-                    "mod": "msg",
-                    "action": "ShowReceivedMessage",
-                    "sm_id": id,
-                },
-                headers={
-                    "Host": HOST,
-                    "Cookie": f"PHPSESSID={sessid}; ",
-                    "User-Agent": USER_AGENT,
-                },
+    async def read_msgs_coro():
+        async with aiohttp.ClientSession() as httpc:
+            results = await asyncio.gather(
+                *[
+                    httpc.request(
+                        "POST",
+                        ROOT,
+                        data={
+                            "ajx": 1,
+                            "mod": "msg",
+                            "action": "ShowReceivedMessage",
+                            "sm_id": id,
+                        },
+                        headers={
+                            "Host": HOST,
+                            "Cookie": f"PHPSESSID={sessid}; ",
+                            "User-Agent": USER_AGENT,
+                        },
+                    )
+                    for id in msg_ids
+                ]
             )
-            for id in msg_ids
-        ]
-    )
+
+            msgs_raw = []
+            for res in results:
+                if res.status == 200:
+                    msgs_raw.append(await res.text())
+
+            return msgs_raw
+
+    return asyncio.run(read_msgs_coro())
 
 def verify_code_gen(length):
     """Generate verification code of given length

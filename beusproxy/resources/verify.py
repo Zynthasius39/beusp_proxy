@@ -1,11 +1,11 @@
+import requests
 from flask import current_app as app
 from flask import make_response
 from flask_restful import Resource, abort, reqparse
+from requests import RequestException
 
 from ..common.utils import is_expired
-from ..config import HOST, ROOT, USER_AGENT
-from ..context import c
-from ..services.httpclient import HTTPClientError
+from ..config import HOST, ROOT, USER_AGENT, REQUEST_TIMEOUT
 
 
 class Verify(Resource):
@@ -30,7 +30,6 @@ class Verify(Resource):
             502:
                 description: Bad response from root server
         """
-        httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
             "SessionID",
@@ -42,7 +41,7 @@ class Verify(Resource):
         args = rp.parse_args()
 
         try:
-            mid_res = httpc.request(
+            mid_res = requests.request(
                 "POST",
                 ROOT,
                 data={"ajx": 1},
@@ -51,13 +50,14 @@ class Verify(Resource):
                     "Cookie": f"PHPSESSID={args.get("SessionID")}; BEU_STUD_AR=1; ",
                     "User-Agent": USER_AGENT,
                 },
+                timeout=REQUEST_TIMEOUT,
             )
 
-            if not mid_res.status == 200:
+            if not mid_res.status_code == 200:
                 abort(502, help="Bad response from root server")
 
-            mid_res = httpc.cr_text(mid_res)
-        except HTTPClientError as ce:
+            mid_res = mid_res.text
+        except RequestException as ce:
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
 

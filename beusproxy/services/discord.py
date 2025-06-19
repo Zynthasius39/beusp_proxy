@@ -1,7 +1,9 @@
 import re
 
-from ..config import BOT_DISCORD_USERNAME, BOT_DISCORD_AVATAR
-from .httpclient import HTTPClientError
+import requests
+from requests import RequestException
+
+from ..config import BOT_DISCORD_USERNAME, BOT_DISCORD_AVATAR, REQUEST_TIMEOUT
 
 
 def is_webhook(url):
@@ -19,7 +21,7 @@ def is_webhook(url):
     ) is not None
 
 
-def send_content(webhook, *, content, embeds=None, httpc):
+def send_content(webhook, *, content, embeds=None):
     """Discord Webhook: send_content
     Sends content with optional embeds
 
@@ -27,12 +29,11 @@ def send_content(webhook, *, content, embeds=None, httpc):
         webhook (str): Webhook URL
         content (str): Content
         embeds (list): Discord Embeds List
-        httpc (HTTPClient): HTTP Client
     """
     if embeds is None:
         embeds = []
 
-    return send_message(webhook, httpc=httpc, message={
+    return send_message(webhook, message={
         "username": BOT_DISCORD_USERNAME,
         "avatar_url": BOT_DISCORD_AVATAR,
         "content": content,
@@ -40,14 +41,13 @@ def send_content(webhook, *, content, embeds=None, httpc):
     })
 
 
-def send_message(webhook, *, message, httpc):
+def send_message(webhook, *, message):
     """Discord Webhook: send_message
     Sends message object
 
     Args:
         webhook (str): Webhook URL
         message (dict): Message Dictionary
-        httpc (HTTPClient): HTTP Client
 
     Returns:
         bool: If it was successful
@@ -55,13 +55,14 @@ def send_message(webhook, *, message, httpc):
     if not is_webhook(webhook):
         return False
 
-    res = httpc.request(
+    res = requests.request(
         "POST",
         webhook,
-        json=message
+        json=message,
+        timeout=REQUEST_TIMEOUT,
     )
 
     if not res.status == 204:
-        raise HTTPClientError(res.status, httpc.cr_text(res))
+        raise RequestException(res.status_code, res.text)
 
-    return httpc.cr_text(res)
+    return res.text

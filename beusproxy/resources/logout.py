@@ -1,11 +1,14 @@
+import asyncio
+
+import requests
+from aiohttp import ClientSession, ClientResponseError, ClientConnectionError, ClientTimeout
 from flask import current_app as app
 from flask import make_response
 from flask_restful import Resource, abort, reqparse
+from requests import RequestException
 
 from ..common.utils import get_db
-from ..config import HOST, ROOT, USER_AGENT
-from ..context import c
-from ..services.httpclient import HTTPClientError
+from ..config import HOST, ROOT, USER_AGENT, REQUEST_TIMEOUT
 
 
 class LogOut(Resource):
@@ -28,7 +31,6 @@ class LogOut(Resource):
             400:
                 description: Couldn't log out
         """
-        httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
             "SessionID",
@@ -87,27 +89,30 @@ class LogOut(Resource):
             )
             db_con.commit()
 
-        try:
-            ress = httpc.gather(
-                *[
-                    httpc.request_coro(
-                        "GET",
-                        f"{ROOT}logout.php",
-                        headers={
-                            "Host": HOST,
-                            "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
-                            "User-Agent": USER_AGENT,
-                        },
-                        allow_redirects=False,
+        async def logout_coro():
+            async with ClientSession(timeout=ClientTimeout(REQUEST_TIMEOUT)) as httpc:
+                try:
+                    return await asyncio.gather(
+                        *[
+                            httpc.request(
+                                "GET",
+                                f"{ROOT}logout.php",
+                                headers={
+                                    "Host": HOST,
+                                    "Cookie": f"PHPSESSID={session_id}; BEU_STUD_AR=1; ",
+                                    "User-Agent": USER_AGENT,
+                                },
+                                allow_redirects=False,
+                            )
+                            for session_id in list(map(lambda row: row["session_id"], db_res))
+                        ]
                     )
-                    for session_id in list(map(lambda row: row["session_id"], db_res))
-                ]
-            )
-        except HTTPClientError as ce:
-            app.logger.error(ce)
-            abort(502, help="Bad response from root server")
+                except (ClientResponseError, ClientConnectionError) as ce:
+                    app.logger.error(ce)
+                    abort(502, help="Bad response from root server")
 
         # Logging out of all sessions with fetched session_ids
+        ress = asyncio.run(logout_coro())
 
         try:
             if ress[0].status != 302:

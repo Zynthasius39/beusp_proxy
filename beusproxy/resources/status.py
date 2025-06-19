@@ -1,13 +1,13 @@
+import asyncio
 import hashlib
 
 from flask import current_app as app
 from flask_restful import Resource, abort, reqparse
+from aiohttp import ClientSession, ClientResponseError, ClientConnectionError, ClientTimeout
 
 from .. import BOT_ENABLED
 from ..common.utils import get_db
-from ..config import HOST, ROOT, USER_AGENT
-from ..context import c
-from ..services.httpclient import HTTPClientError
+from ..config import HOST, ROOT, USER_AGENT, REQUEST_TIMEOUT
 
 # Files to calculate the sha256 hashsum of.
 hash_files = [
@@ -72,7 +72,6 @@ class Status(Resource):
             502:
                 description: Bad response from root server
         """
-        httpc = c.get("httpc")
         rp = reqparse.RequestParser()
         rp.add_argument(
             "advanced",
@@ -106,52 +105,55 @@ class Status(Resource):
             if db_res:
                 status_table["subscriptions"] = db_res["c"]
 
-        try:
-            # Check root server status.
-            mid_res = httpc.request(
-                "GET", ROOT, headers={"Host": HOST, "User-Agent": USER_AGENT}
-            )
-            status_table["rootServerIsUp"] = mid_res.status == 200
-
-            # Advanced status check.
-            # Return hashsums of given files.
-            async def none():
-                return None
-
-            if args.get("advanced"):
-                status_table["sha256sums"] = []
-                mid_ress = httpc.gather(
-                    *[
-                        res.text() if res.status == 200 else none()
-                        for res in list(
-                            res
-                            for res in httpc.gather(
-                                *[
-                                    httpc.request_coro(
-                                        "GET",
-                                        ROOT + hash_file,
-                                        headers={
-                                            "Host": HOST,
-                                            "User-Agent": USER_AGENT,
-                                        },
-                                        allow_redirects=False,
-                                    )
-                                    for hash_file in hash_files
-                                ]
-                            )
-                        )
-                    ]
-                )
-                for inx, mid_res in enumerate(mid_ress):
-                    if not mid_res:
-                        continue
-                    status_table["sha256sums"].append(
-                        f"{hashlib.sha256(
-                        mid_res.encode("UTF-8")
-                        ).hexdigest()} {hash_files[inx].split("/")[-1]}"
+        async def status_coro(status_table):
+            async with ClientSession(timeout=ClientTimeout(REQUEST_TIMEOUT)) as httpc:
+                try:
+                    # Check root server status.
+                    mid_res = await httpc.request(
+                        "GET", ROOT, headers={"Host": HOST, "User-Agent": USER_AGENT}
                     )
-        except HTTPClientError as ce:
-            app.logger.error(ce)
-            abort(502, help="Bad response from root server")
+                    status_table["rootServerIsUp"] = mid_res.status == 200
 
+                    # Advanced status check.
+                    # Return hashsums of given files.
+                    async def none():
+                        return None
+
+                    if args.get("advanced"):
+                        status_table["sha256sums"] = []
+                        mid_ress = await asyncio.gather(
+                            *[
+                                res.text() if res.status == 200 else none()
+                                for res in list(
+                                    res
+                                    for res in await asyncio.gather(
+                                        *[
+                                            httpc.request(
+                                                "GET",
+                                                ROOT + hash_file,
+                                                headers={
+                                                    "Host": HOST,
+                                                    "User-Agent": USER_AGENT,
+                                                },
+                                                allow_redirects=False,
+                                            )
+                                            for hash_file in hash_files
+                                        ]
+                                    )
+                                )
+                            ]
+                        )
+                        for inx, mid_res in enumerate(mid_ress):
+                            if not mid_res:
+                                continue
+                            status_table["sha256sums"].append(
+                                f"{hashlib.sha256(
+                                mid_res.encode("UTF-8")
+                                ).hexdigest()} {hash_files[inx].split("/")[-1]}"
+                            )
+                except (ClientResponseError, ClientConnectionError) as ce:
+                    app.logger.error(ce)
+                    abort(502, help="Bad response from root server")
+
+        asyncio.run(status_coro(status_table))
         return status_table

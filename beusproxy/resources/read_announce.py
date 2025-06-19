@@ -1,10 +1,8 @@
 from flask import make_response
 from flask_restful import Resource, abort, reqparse
+from requests import RequestException
 
 from beusproxy.common.utils import read_announce
-
-from ..context import c
-from ..services.httpclient import HTTPClientError
 
 
 class ReadAnnounce(Resource):
@@ -41,8 +39,8 @@ class ReadAnnounce(Resource):
         args = rq.parse_args()
 
         try:
-            read_announce(c.get("httpc"), args.get("SessionID"))
-        except HTTPClientError:
+            read_announce(args.get("SessionID"))
+        except RequestException:
             abort(502)
 
         return make_response("", 200)
