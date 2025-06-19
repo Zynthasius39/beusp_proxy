@@ -62,7 +62,7 @@ def send_message(webhook, *, message):
         timeout=REQUEST_TIMEOUT,
     )
 
-    if not res.status == 204:
+    if not res.status_code == 204:
         raise RequestException(res.status_code, res.text)
 
     return res.text

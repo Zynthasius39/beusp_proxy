@@ -6,7 +6,6 @@ from pathlib import Path
 import schedule
 
 from beusproxy.common.utils import get_logger
-from beusproxy.services.httpclient import HTTPClient
 from . import run_chain
 
 logger = get_logger(__package__)
@@ -54,10 +53,8 @@ class BotProc:
 
 
 def proc_worker(shevent=None):
-    httpc = HTTPClient(trust_env=True)
-    schedule.every(2).minutes.do(run_chain, httpc)
+    schedule.every(2).minutes.do(run_chain)
     while not shevent.is_set():
         schedule.run_pending()
         time.sleep(1)
     schedule.clear()
-    httpc.close()

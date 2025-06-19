@@ -163,14 +163,14 @@ class Auth(Resource):
             sessid,
             httponly=False,
             secure=False,
-            samesite="Lax",
+            # samesite="Lax",
         )
         mid_res.set_cookie(
             "StudentID",
             student_id,
             httponly=False,
             secure=False,
-            samesite="Lax",
+            # samesite="Lax",
         )
 
         return mid_res

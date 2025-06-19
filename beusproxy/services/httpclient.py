@@ -1,7 +1,7 @@
-    """HTTPClient Service (Depreciated)
+"""HTTPClient Service (Depreciated)
 
-    Will be used again when flask is switched to async entirely
-    """
+Will be used again when flask is switched to async entirely
+"""
 
 import asyncio
 import json

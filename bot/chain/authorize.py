@@ -1,17 +1,16 @@
 import asyncio
 
-from aiohttp import ClientError
+from aiohttp import ClientSession, ClientTimeout, ClientResponseError, ClientConnectorError
 
 from beusproxy.common.utils import get_logger
-from beusproxy.config import API_INTERNAL_HOSTNAME
+from beusproxy.config import API_INTERNAL_HOSTNAME, REQUEST_TIMEOUT
 
 
-def authorize_subs(conn, httpc):
+def authorize_subs(conn):
     """Authorize Student Subscribers
 
     Args:
         conn (sqlite3.Connection): MainDB Connection
-        httpc (HTTPClient): HTTP Client
     """
     logger = get_logger(__package__)
 
@@ -39,35 +38,34 @@ def authorize_subs(conn, httpc):
     """
     ).fetchall()
 
-    # Mapping sqlite3.Row's.
-    id_table = {}
-    for stud in stud_credentials:
-        id_table[stud["student_id"]] = stud["id"]
-    logger.debug("Authenticating -> %s", str(id_table))
+    logger.debug("Authenticating -> %s", str([stud["student_id"] for stud in stud_credentials]))
 
     # Authorization Coroutine
     async def auth_stud_coro(student_id, password):
         """Authorize Student"""
-        return (
-            student_id,
-            await httpc.request_coro(
-                "POST",
-                f"{API_INTERNAL_HOSTNAME}auth",
-                json={"studentId": student_id, "password": password},
-            ),
-        )
+        async with ClientSession(timeout=ClientTimeout(REQUEST_TIMEOUT)) as httpc:
+            return (
+                student_id,
+                await httpc.request(
+                    "POST",
+                    f"{API_INTERNAL_HOSTNAME}auth",
+                    json={"studentId": student_id, "password": password},
+                ),
+            )
 
     # Grab hot cookies for every student.
-    try:
-        ress = httpc.gather(
-            *[
-                auth_stud_coro(stud["student_id"], stud["password"])
-                for stud in stud_credentials
-            ]
-        )
-    except (ClientError, asyncio.TimeoutError) as e:
-        logger.error(e)
-        return
+    async def auth_stud_gather_coro():
+        try:
+            return await asyncio.gather(
+                *[
+                    auth_stud_coro(stud["student_id"], stud["password"])
+                    for stud in stud_credentials
+                ]
+            )
+        except (ClientConnectorError, ClientResponseError, asyncio.TimeoutError) as e:
+            logger.error(e)
+
+    ress = asyncio.run(auth_stud_gather_coro())
 
     for student_id, res in ress:
         if res.status != 200:

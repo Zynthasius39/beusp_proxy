@@ -1,3 +1,4 @@
+import asyncio
 import json
 import socket
 from datetime import datetime
@@ -5,26 +6,24 @@ from json import JSONDecodeError
 from asyncio import TimeoutError as AsyncioTimeoutError
 from smtplib import SMTPException
 
-from aiohttp import ClientError
+from aiohttp import ClientSession, ClientTimeout, ClientError
 
 from beusproxy.common.utils import get_logger
-from beusproxy.config import API_INTERNAL_HOSTNAME, DEBUG, HOST, USER_AGENT
+from beusproxy.config import API_INTERNAL_HOSTNAME, DEBUG, HOST, USER_AGENT, REQUEST_TIMEOUT
 from beusproxy.services.email import EmailClient
 
 from ..common.utils import grade_diff
 from ..common.debug import log4grades
+from ..notify_mgr import notify
 
 logger = get_logger(__package__)
 
 
-def check_grades(conn, httpc, nmgr):
+def check_grades(conn):
     """Fetch grades and compare
 
     Args:
         conn (sqlite3.Connection): MainDB Connection
-        httpc (HTTPClient): HTTP Client
-        emailc (EmailClient): Email Client
-        nmgr (NotifyManager): Notification Manager
     """
     subs = conn.execute(
         """
@@ -50,28 +49,30 @@ def check_grades(conn, httpc, nmgr):
     """
     ).fetchall()
 
-    async def grades_coro(cr, owner_id, session_id):
-        cr[owner_id] = await httpc.request_coro(
-            "GET",
-            f"{API_INTERNAL_HOSTNAME}resource/grades/latest",
-            headers={
-                "Host": HOST,
-                "Cookie": f"SessionID={session_id};",
-                "User-Agent": USER_AGENT,
-            },
-        )
+    cr = {}
+    async def grades_coro(owner_id, session_id):
+        async with ClientSession(timeout=ClientTimeout(REQUEST_TIMEOUT)) as httpc:
+            cr[owner_id] = await httpc.request(
+                "GET",
+                f"{API_INTERNAL_HOSTNAME}resource/grades/latest",
+                headers={
+                    "Host": HOST,
+                    "Cookie": f"SessionID={session_id};",
+                    "User-Agent": USER_AGENT,
+                },
+            )
 
     # Fetch grades via API
-    cr_dict = {}
-    try:
-        httpc.gather(
-            *[grades_coro(cr_dict, sub["id"], sub["session_id"]) for sub in subs]
-        )
-    except (AsyncioTimeoutError, TimeoutError, ClientError) as e:
-        logger.error(e)
-        return
+    async def grades_gather_coro():
+        try:
+            await asyncio.gather(
+                *[grades_coro(sub["id"], sub["session_id"]) for sub in subs]
+            )
+        except (AsyncioTimeoutError, ClientError) as e:
+            logger.error(e)
+            return
 
-    async def grades_json_coro(cr, sub_id, sub_grades_cr):
+    async def grades_json_coro(sub_id, sub_grades_cr):
         if sub_grades_cr.status == 200:
             cr[sub_id] = await sub_grades_cr.json(
                 encoding="UTF-8", loads=json.loads, content_type="application/json"
@@ -79,16 +80,20 @@ def check_grades(conn, httpc, nmgr):
         else:
             cr[sub_id] = sub_grades_cr.status
 
-    try:
-        httpc.gather(
-            *[
-                grades_json_coro(cr_dict, sub_id, sub_grades_cr)
-                for sub_id, sub_grades_cr in cr_dict.items()
-            ]
-        )
-    except ClientError as e:
-        logger.error(e)
-        return
+    async def grades_json_gather_coro():
+        try:
+            await asyncio.gather(
+                *[
+                    grades_json_coro(sub_id, sub_grades_cr)
+                    for sub_id, sub_grades_cr in cr.items()
+                ]
+            )
+        except ClientError as e:
+            logger.error(e)
+            return
+
+    asyncio.run(grades_gather_coro())
+    asyncio.run(grades_json_gather_coro())
 
     subs_grades_old = conn.execute(
         """
@@ -117,7 +122,7 @@ def check_grades(conn, httpc, nmgr):
         return
 
     # Compare grades wisely
-    for sub_id, sub_grades in cr_dict.items():
+    for sub_id, sub_grades in cr.items():
         if isinstance(sub_grades, int):
             if sub_grades == 401:
                 cur = conn.execute(
@@ -145,7 +150,7 @@ def check_grades(conn, httpc, nmgr):
                 )
                 if len(diffs) != 0:
                     # Push to notifier
-                    nmgr.notify(sub_id, diffs, sub_grades, emailc=emailc)
+                    notify(sub_id, diffs, sub_grades, emailc=emailc)
                     logger.debug(
                         "Changes found for Sub %d -> %s",
                         sub_id,

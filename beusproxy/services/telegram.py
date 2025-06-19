@@ -65,7 +65,7 @@ class TelegramClient:
                         },
                         timeout=None,
                     )
-                    if res.status == 200:
+                    if res.status_code == 200:
                         for u in res.json()["result"]:
                             self._offset = u["update_id"] + 1
                             self.process_update(u)
@@ -390,7 +390,7 @@ def send_message(text=None, chat_id=None, *, params=None):
         timeout=REQUEST_TIMEOUT,
     )
 
-    if not res.status == 200:
+    if not res.status_code == 200:
         raise RequestException(res.status_code, res.text)
 
     return res.json()

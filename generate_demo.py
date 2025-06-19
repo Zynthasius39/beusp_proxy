@@ -6,13 +6,15 @@ In offline mode, from root server
 # TODO: Add to README
 
 import argparse
+import asyncio
 import json
 import logging
 import pathlib
 from urllib.parse import urlparse
 
+from aiohttp import ClientSession
+
 from beusproxy.config import API_HOSTNAME
-from beusproxy.services.httpclient import HTTPClient
 
 parser = argparse.ArgumentParser()
 
@@ -27,8 +29,6 @@ api_host = urlparse(args.url)
 if api_host.scheme and api_host.netloc:
     parsed_url = api_host.geturl()
     url = parsed_url if api_host.path else parsed_url + "/"
-
-httpc = HTTPClient(trust_env=True)
 
 demo_table = {
     "transcript.json": "resource/transcript",
@@ -48,35 +48,36 @@ demo_table = {
     "status.json": "status?advanced=1",
 }
 
-res = httpc.request(
-    "POST",
-    f"{url}auth",
-    json={
-        "studentId": args.student_id,
-        "password": args.password
-    }
-)
+async def demo_coro():
+    async with ClientSession() as httpc:
+        res = await httpc.request(
+            "POST",
+            f"{url}auth",
+            json={
+                "studentId": args.student_id,
+                "password": args.password
+            }
+        )
+        session_id = res.cookies.get("SessionID")
+        student_id = res.cookies.get("StudentID")
+        dest_path = pathlib.Path(args.destination)
 
-print(res.status)
-assert res.status == 200
+        if not dest_path.is_dir():
+            logging.error("Invalid destination directory: %s", str(dest_path))
 
-session_id = res.cookies.get("SessionID")
-student_id = res.cookies.get("StudentID")
-dest_path = pathlib.Path(args.destination)
+        assert res.status == 200
+        for fn, path in demo_table.items():
+            res = await httpc.request(
+                "GET",
+                f"{url}{path}",
+                headers={
+                    "Cookie": f"SessionID={session_id}; StudentID={student_id}",
+                }
+            )
+            if res.status != 200:
+                logging.error("Couldn't get response for %s: %d, %s", path, res.status, await res.text())
+                continue
+            with open(dest_path.joinpath(fn), "w", encoding="UTF-8") as f:
+                f.write(json.dumps(await res.json(), indent=2, ensure_ascii=False))
 
-if not dest_path.is_dir():
-    logging.error("Invalid destination directory: %s", str(dest_path))
-
-for fn, path in demo_table.items():
-    res = httpc.request(
-        "GET",
-        f"{url}{path}",
-        headers={
-            "Cookie": f"SessionID={session_id}; StudentID={student_id}",
-        }
-    )
-    if res.status != 200:
-        logging.error("Couldn't get response for %s: %d, %s", path, res.status, httpc.cr_text(res))
-        continue
-    with open(dest_path.joinpath(fn), "w", encoding="UTF-8") as f:
-        f.write(json.dumps(httpc.cr_json(res), indent=2, ensure_ascii=False))
+asyncio.run(demo_coro())

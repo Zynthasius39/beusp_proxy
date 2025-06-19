@@ -1,7 +1,6 @@
 import asyncio
 import sqlite3
 from smtplib import SMTPException
-from threading import Thread
 
 import aiosqlite
 from requests import RequestException
@@ -32,6 +31,7 @@ async def query(
                 return await cursor.fetchone()
             if fetchall:
                 return await cursor.fetchall()
+            return None
 
 
 async def get_sub(sub_id) -> sqlite3.Row | list[sqlite3.Row]:
@@ -109,31 +109,31 @@ def notify(sub_id, diffs, grades, *, emailc):
             logger.error("Couldn't send notification for sub %d via Discord: %s", sub_id, ex)
 
 
-class NotifyManager:
-    """Notification Manager Base Class"""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *_):
-        self.close()
-
-    def close(self):
-        """Clean up the manager"""
-
-    def notify(self, sub_id, diffs, grades, *, emailc):
-        """Notify Asynchronously
-
-        Args:
-            sub_id (int): Subscriber ID
-            diffs (dict): Differences
-            grades (dict): Grades
-
-        Returns:
-            Future: Future object
-        """
-
-        notify(sub_id, diffs, grades, emailc=emailc)
+# class NotifyManager:
+#     """Notification Manager Base Class"""
+#
+#     def __enter__(self):
+#         return self
+#
+#     def __exit__(self, *_):
+#         self.close()
+#
+#     def close(self):
+#         """Clean up the manager"""
+#
+#     def notify(self, sub_id, diffs, grades, *, emailc):
+#         """Notify Asynchronously
+#
+#         Args:
+#             sub_id (int): Subscriber ID
+#             diffs (dict): Differences
+#             grades (dict): Grades
+#
+#         Returns:
+#             Future: Future object
+#         """
+#
+#         notify(sub_id, diffs, grades, emailc=emailc)
         # self.submit_coro(notify_coro, sub_id, diffs, grades, emailc=emailc).result()
 
     # def submit_coro(self, task, *args, **kwargs):
