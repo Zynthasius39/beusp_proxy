@@ -1,5 +1,4 @@
 import re
-import sys
 
 from bs4 import BeautifulSoup
 
@@ -65,7 +64,7 @@ def grades2(html):
     for table_r in soup.find_all("div", class_="table-responsive"):
         # Seperate table for each semester table.
         table = []
-        act3_enabled = False
+        mode = "old"
         for tr in table_r.find_all("tr"):
             row = []
             for td in tr.find_all("td"):
@@ -83,10 +82,15 @@ def grades2(html):
         # Checking if SDF3 exists in header row.
         for i in table[0]:
             if i == "act3":
-                act3_enabled = True
+                mode = "oldold"
+                break
+            elif i == "sem":
+                mode = "latest"
                 break
         # Iterating through rows while ignoring header and empty last row.
         for i in table[1:-1]:
+            # Old grade X/100
+            # New grade X/(10/15/50)
             is_old_graded = False
             row_name = ""
             row = {}
@@ -125,10 +129,7 @@ def grades2(html):
                     # Actual Grade parsing
                     elif j.isdigit():
                         # Getting scale in given column.
-                        grade_field = grade_fields.get(table[0][inx])
-                        # Set SDF1 and SDF2 scale to 10, if SDF3 is enabled.
-                        if act3_enabled and grade_field == 15:
-                            grade_field = 10
+                        grade_field = grade_fields[mode].get(table[0][inx])
                         # Convert 100-point scale grade to new scale
                         if grade_field is not None and is_old_graded:
                             j = round(int(j) / 100 * grade_field, 2)
@@ -154,7 +155,8 @@ rename_table = {
     "IGB": "calc",
     "SDF1": "act1",
     "SDF2": "act2",
-    "SDF3": "act3",
+    "SDF3": "act3",  # Əfsanələrə görə...
+    "SEM": "sem",  # Mırtdaşmaq balı
     "TSI": "iw",
     "DVM": "attendance",
     "SSI": "final",
@@ -173,15 +175,38 @@ rename_table = {
 
 # New grade scale
 grade_fields = {
-    "sum": 100,
-    "act1": 15,
-    "act2": 15,
-    "act3": 10,
-    "iw": 10,
-    "attendance": 10,
-    "final": 50,
-    "addfinal": 50,
-    "refinal": 50,
+    "oldold": {
+        "sum": 100,
+        "act1": 10,
+        "act2": 10,
+        "act3": 10,
+        "iw": 10,
+        "attendance": 10,
+        "final": 50,
+        "addfinal": 50,
+        "refinal": 50,
+    },
+    "old": {
+        "sum": 100,
+        "act1": 15,
+        "act2": 15,
+        "iw": 10,
+        "attendance": 10,
+        "final": 50,
+        "addfinal": 50,
+        "refinal": 50,
+    },
+    "latest": {
+        "sum": 100,
+        "act1": 10,
+        "act2": 10,
+        "sem": 10,
+        "iw": 10,
+        "attendance": 10,
+        "final": 50,
+        "addfinal": 50,
+        "refinal": 50,
+    },
 }
 
 # Inverted headers table
@@ -192,6 +217,7 @@ rename_table_inv = {
     "act1": "Mid-semester 1",
     "act2": "Mid-semester 2",
     "act3": "Mid-semester 3",
+    "sem": "Practice",
     "iw": "Individual Work",
     "attendance": "Attendance",
     "final": "Final",
@@ -206,8 +232,8 @@ rename_table_inv = {
 digit_fields = [
     "absents",
     "ects",
-    # "l", Unknown field
+    # "l",  # Unknown field
     "m",
     "n",
-    *grade_fields.keys(),
+    *list({k for i in grade_fields.values() for k in i.keys()}),
 ]

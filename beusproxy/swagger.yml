@@ -2,19 +2,20 @@ openapi: 3.0.3
 swagger: 2.0
 info:
   title: "Baku Engineering University: TMS - Rest API"
-  description:
-    Student Portal API for students of Baku Engineering University. Written in Flask-RESTful, acts as middleman. Parses incoming HTML, JSON responses to more friendly format and provides documentation for it. Includes notifying bot and subscription services.
+  description: Student Portal API for students of Baku Engineering University. Written in Flask-RESTful, acts as middleman. Parses incoming HTML, JSON responses to more friendly format and provides documentation for it. Includes notifying bot and subscription services.
   contact:
     email: super.alekberov+beusp@proton.me
   license:
     name: GPL3
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
-  version: 1.12.3
+  version: 1.12.4
 servers:
   - url: /api
     description: Production server (uses root server)
   - url: /api2
     description: Offline server (uses demo data)
+  - url: /
+    description: Development server
 tags:
   - name: Authorization
     description: |

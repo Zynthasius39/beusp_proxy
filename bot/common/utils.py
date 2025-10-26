@@ -40,11 +40,13 @@ def grade_diff(grades_old, grades):
         "absents",
         "act1",
         "act2",
+        "act3",
+        "sem",
         "addFinal",
         "attendance",
         "final",
         "iw",
-        "reFinal"
+        "reFinal",
     }
 
     for k, v in dict(diff_dic).items():
@@ -93,20 +95,14 @@ def report_gen_dcmsg(diffs, grades):
         for k, v in course["diffs"].items():
             value += f"{k}\n"
             # value += f"{k}: {v}\n"
-        fields.append({
-            "name": f"{course["courseCode"]} - {course["courseName"]}",
-            "value": value
-        })
+        fields.append(
+            {"name": f"{course['courseCode']} - {course['courseName']}", "value": value}
+        )
     return {
         "content": None,
-        "embeds": [
-            {
-                "color": random_dec_color(minimum=64),
-                "fields": fields
-            }
-        ],
+        "embeds": [{"color": random_dec_color(minimum=64), "fields": fields}],
         "username": BOT_DISCORD_USERNAME,
-        "avatar_url": BOT_DISCORD_AVATAR
+        "avatar_url": BOT_DISCORD_AVATAR,
     }
 
 
@@ -123,7 +119,9 @@ def report_gen_md(diffs, grades, *, telegram=False):
     """
     # Render and return.
     env = Environment(loader=FileSystemLoader("bot/templates"))
-    return env.get_template("telegram_report.txt").render(courses=report_gen_list(diffs, grades, telegram=telegram))
+    return env.get_template("telegram_report.txt").render(
+        courses=report_gen_list(diffs, grades, telegram=telegram)
+    )
 
 
 def report_gen_html(diffs, grades):
@@ -144,11 +142,13 @@ def report_gen_html(diffs, grades):
     report = report_gen_list(diffs, grades)
     for i in report:
         r, g, b = random_rgb_color(minimum=64)
-        colors.append({
-        "fgColor": rgb2hex((r - 64, g - 64, b - 64)),
-        "bgColor": rgb2hex((r, g, b)),
-        "borderColor": rgb2hex((r, g, b)),
-    })
+        colors.append(
+            {
+                "fgColor": rgb2hex((r - 64, g - 64, b - 64)),
+                "bgColor": rgb2hex((r, g, b)),
+                "borderColor": rgb2hex((r, g, b)),
+            }
+        )
 
     return env.get_template("report.html").render(divs=report, colors=colors)
 
@@ -189,8 +189,12 @@ def report_gen_list(diffs, grades, *, telegram=False):
         courses.append(
             {
                 "courseCode": escape_tg_chars(k),
-                "courseName": escape_tg_chars(grades[k].get("courseName")) if telegram else grades[k].get("courseName"),
-                "diffs": diffs_dict
+                "courseName": (
+                    escape_tg_chars(grades[k].get("courseName"))
+                    if telegram
+                    else grades[k].get("courseName")
+                ),
+                "diffs": diffs_dict,
             }
         )
 
@@ -206,7 +210,26 @@ def escape_tg_chars(input_str):
     Returns:
         str: Output string
     """
-    special_chars = {"_", "-", "*", "[", "]", "(", ")", "~", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+    special_chars = {
+        "_",
+        "-",
+        "*",
+        "[",
+        "]",
+        "(",
+        ")",
+        "~",
+        ">",
+        "#",
+        "+",
+        "-",
+        "=",
+        "|",
+        "{",
+        "}",
+        ".",
+        "!",
+    }
 
     for char in special_chars:
         input_str = input_str.replace(char, "\\" + char)
@@ -220,7 +243,7 @@ def random_hex_color():
     Returns:
         str: HEX Color
     """
-    return "#" + "".join([random.choice('ABCDEF0123456789') for i in range(6)])
+    return "#" + "".join([random.choice("ABCDEF0123456789") for i in range(6)])
 
 
 def random_rgb_color(*, minimum=0):
@@ -232,7 +255,11 @@ def random_rgb_color(*, minimum=0):
     Returns:
         tuple: RGB Color
     """
-    return random.randint(minimum, 255), random.randint(minimum, 255), random.randint(minimum, 255)
+    return (
+        random.randint(minimum, 255),
+        random.randint(minimum, 255),
+        random.randint(minimum, 255),
+    )
 
 
 def random_dec_color(*, minimum=0):
@@ -245,7 +272,8 @@ def random_dec_color(*, minimum=0):
         int: Decimal color
     """
     r, g, b = random_rgb_color(minimum=minimum)
-    return r * 256 ** 2 + g * 256 + b
+    return r * 256**2 + g * 256 + b
+
 
 def rgb2hex(rgb_color):
     """RGB To HEX
