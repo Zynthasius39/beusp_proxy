@@ -49,4 +49,4 @@ def init_context():
         """Cleanup resources"""
         if BOT_ENABLED:
             c.get("tgproc").close()
-        c.get("httpc").close()
+        # c.get("httpc").close()

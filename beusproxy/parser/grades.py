@@ -97,7 +97,7 @@ def grades2(html):
             # Iterating through cells with index.
             for inx, j in enumerate(i):
                 # Getting scale in given column.
-                grade_field = grade_fields.get(table[0][inx])
+                grade_field = grade_fields[mode].get(table[0][inx])
                 # If field exists in scale table
                 # and if it is a digit.
                 if grade_field is not None and j.isdigit():
@@ -200,9 +200,8 @@ grade_fields = {
         "sum": 100,
         "act1": 10,
         "act2": 10,
-        "sem": 10,
+        "sem": 20,
         "iw": 10,
-        "attendance": 10,
         "final": 50,
         "addfinal": 50,
         "refinal": 50,
