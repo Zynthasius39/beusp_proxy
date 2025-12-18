@@ -150,6 +150,7 @@ def grades2(html):
 rename_table = {
     "ABS.": "absents",
     "Dav": "absents",
+    "Qaib": "absents",  # New absents label
     "AVG": "sum",
     "ORT": "sum",
     "IGB": "calc",

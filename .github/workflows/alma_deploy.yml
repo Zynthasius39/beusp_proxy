@@ -1,9 +1,6 @@
 name: Alma Deploy
 
 on:
-  workflow_run:
-    workflows: [Docker Build]
-    types: [completed]
   workflow_dispatch:
 
 jobs:
