@@ -153,7 +153,7 @@ def demo_response(res):
     """
     file = os.path.join(DEMO_FOLDER, f"{res}.json")
     if not os.path.exists(file):
-        abort(503, help=f"Resource '{res}.json' doesn't exists")
+        abort(503, help=f"Resource '{res}.json' doesn't exist")
 
     with open(file, "r", encoding="UTF-8") as f:
         return json.load(f)

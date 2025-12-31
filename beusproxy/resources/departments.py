@@ -77,7 +77,7 @@ class Deps(Resource):
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
         if is_expired(mid_res):
-            abort(401, help="Session invalid or has expired")
+            abort(401, help="errorApiUnauthorized")
 
         page = jsonify(parser.deps2(mid_res))
         res = make_response(page, 200)

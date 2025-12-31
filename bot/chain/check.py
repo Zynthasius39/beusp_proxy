@@ -42,8 +42,14 @@ def check_grades(conn):
           FROM Students s
           INNER JOIN Student_Sessions ses
           ON
-            s.id == ses.owner_id AND
-            ses.logged_out == 0
+            s.id == ses.owner_id
+          WHERE
+            ses.logged_out == 0 AND
+            NOT (
+                s.active_telegram_id IS NULL AND
+                s.active_discord_id IS NULL AND
+                s.active_email_id IS NULL
+            )
         ) t
         WHERE rn = 1;
     """
@@ -51,16 +57,18 @@ def check_grades(conn):
 
     cr = {}
     async def grades_coro(owner_id, session_id):
-        async with ClientSession(timeout=ClientTimeout(REQUEST_TIMEOUT)) as httpc:
-            cr[owner_id] = await httpc.request(
-                "GET",
-                f"{API_INTERNAL_HOSTNAME}resource/grades/latest",
-                headers={
-                    "Host": HOST,
-                    "Cookie": f"SessionID={session_id};",
-                    "User-Agent": USER_AGENT,
-                },
-            )
+        try:
+            async with ClientSession(timeout=ClientTimeout(REQUEST_TIMEOUT)) as httpc:
+                cr[owner_id] = await httpc.request(
+                    "GET",
+                    f"{API_INTERNAL_HOSTNAME}resource/grades/latest",
+                    headers={
+                        "Cookie": f"SessionID={session_id};",
+                        "User-Agent": USER_AGENT,
+                    },
+                )
+        except ClientError as e:
+            logger.error("Error occurred in grades_coro for owner_id %s: %s", owner_id, e)
 
     # Fetch grades via API
     async def grades_gather_coro():
@@ -68,17 +76,20 @@ def check_grades(conn):
             await asyncio.gather(
                 *[grades_coro(sub["id"], sub["session_id"]) for sub in subs]
             )
-        except (AsyncioTimeoutError, ClientError) as e:
+        except AsyncioTimeoutError as e:
             logger.error(e)
-            return
 
+    cr_json = {}
     async def grades_json_coro(sub_id, sub_grades_cr):
         if sub_grades_cr.status == 200:
-            cr[sub_id] = await sub_grades_cr.json(
-                encoding="UTF-8", loads=json.loads, content_type="application/json"
-            )
+            try:
+                cr_json[sub_id] = await sub_grades_cr.json(
+                    encoding="UTF-8", loads=json.loads, content_type="application/json"
+                )
+            except RuntimeError as e:
+                logger.error("Error occurred in grades_json_coro for sub_id %s: %s", sub_id, e)
         else:
-            cr[sub_id] = sub_grades_cr.status
+            cr_json[sub_id] = sub_grades_cr.status
 
     async def grades_json_gather_coro():
         try:
@@ -90,7 +101,6 @@ def check_grades(conn):
             )
         except ClientError as e:
             logger.error(e)
-            return
 
     asyncio.run(grades_gather_coro())
     asyncio.run(grades_json_gather_coro())
@@ -118,11 +128,11 @@ def check_grades(conn):
     try:
         emailc = EmailClient()
     except (SMTPException, socket.gaierror, OSError) as e:
-        logger.error(f"emailc: {e}")
+        logger.error("emailc: %s", e)
         return
 
     # Compare grades wisely
-    for sub_id, sub_grades in cr.items():
+    for sub_id, sub_grades in cr_json.items():
         if isinstance(sub_grades, int):
             if sub_grades == 401:
                 cur = conn.execute(

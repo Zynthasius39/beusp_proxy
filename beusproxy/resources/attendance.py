@@ -104,7 +104,7 @@ class AttendanceBySemester(Resource):
             abort(502, help="Bad response from root server")
 
         if is_expired(mid_res):
-            abort(401, help="Session invalid or has expired")
+            abort(401, help="errorApiUnauthorized")
 
         if not mid_res.find("No section found.") == -1:
             abort(400, help="No section found")
@@ -183,7 +183,7 @@ class AttendanceByCourse(Resource):
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
         if is_expired(mid_res.text):
-            abort(401, help="Session invalid or has expired")
+            abort(401, help="errorApiUnauthorized")
 
         ajax = mid_res.json()
         if int(ajax["CODE"]) < 1:

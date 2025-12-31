@@ -122,7 +122,7 @@ class Grades(Resource):
             app.logger.error(ce)
             abort(502, help="Bad response from root server")
         if is_expired(mid_res.text):
-            abort(401, help="Session invalid or has expired")
+            abort(401, help="errorApiUnauthorized")
 
         ajax = mid_res.json()
         if int(ajax["CODE"]) < 1:
@@ -246,7 +246,7 @@ class GradesAll(Resource):
             abort(502, help="Bad response from root server")
 
         if is_expired(mid_res.text):
-            abort(401, help="Session invalid or has expired")
+            abort(401, help="errorApiUnauthorized")
 
         ajax = mid_res.json()
         if int(ajax["CODE"]) < 1:

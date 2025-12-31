@@ -40,7 +40,7 @@ demo_table = {
     "faq.json": "resource/faq",
     "grades.json": "resource/grades",
     "grades2.json": "resource/grades/2022/2",
-    "grades_latest.json": "resource/grades/2024/1",
+    "grades_latest.json": "resource/grades/2025/1",
     "grades_all.json": "resource/grades/all",
     "home.json": "resource/home",
     "msg.json": "resource/msg",

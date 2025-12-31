@@ -12,7 +12,7 @@ def handle_shutdown(_, __):
 
 # Graceful shutdown
 signal.signal(signal.SIGTERM, handle_shutdown)
-signal.signal(signal.SIGINT, handle_shutdown) 
+signal.signal(signal.SIGINT, handle_shutdown)
 
 with BotProc(shevent=shevent, daemon=False) as bp:
     bp.run()

@@ -62,6 +62,6 @@ class Verify(Resource):
             abort(502, help="Bad response from root server")
 
         if is_expired(mid_res):
-            abort(401, help="Session invalid or has expired")
+            abort(401, help="errorApiUnauthorized")
 
         return make_response("", 200)

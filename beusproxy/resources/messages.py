@@ -68,7 +68,7 @@ class Msg(Resource):
             mid_res = mid_res.text
 
             if is_expired(mid_res):
-                abort(401, help="Session invalid or has expired")
+                abort(401, help="errorApiUnauthorized")
 
             msgs_raw = read_msgs(args.get("SessionID"), parser.msg(mid_res))
             msgs = [parser.msg2(msg_raw) for msg_raw in msgs_raw]

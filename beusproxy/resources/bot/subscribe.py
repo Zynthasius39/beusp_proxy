@@ -4,6 +4,7 @@ from smtplib import SMTPException
 from flask import make_response
 from flask_restful import Resource, abort, reqparse
 
+from ...config import BOT_RESTRICTED, BOT_ADMIN_STDID
 from ...common.utils import get_db, get_emailc, verify_code_gen
 from ...services.discord import is_webhook
 from ...services.email import is_email
@@ -77,7 +78,7 @@ class BotSubscribe(Resource):
                 (args.get("StudentID"), args.get("SessionID")),
             ).fetchone()
             if db_res is None:
-                abort(401, help="Session invalid or has expired")
+                abort(401, help="errorApiUnauthorized")
 
             subscriptions = {}
             owner_id = db_res["owner_id"]
@@ -233,7 +234,9 @@ class BotSubscribe(Resource):
             ).fetchone()
 
             if db_res is None:
-                abort(401, help="Session invalid or has expired")
+                abort(401, help="errorApiUnauthorized")
+            if BOT_RESTRICTED and args.get("StudentID") != BOT_ADMIN_STDID:
+                abort(401, help="errorApiBotRestricted")
 
             owner_id = db_res["owner_id"]
             if args.get("telegram") is not None:
@@ -404,7 +407,7 @@ class BotSubscribe(Resource):
             res = make_response("", 202)
 
             if db_res is None:
-                abort(401, help="Session invalid or has expired")
+                abort(401, help="errorApiUnauthorized")
 
             owner_id = db_res["owner_id"]
             unsub_list = args.get("unsubscribe")

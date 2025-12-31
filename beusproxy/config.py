@@ -50,6 +50,10 @@ USER_AGENT = (
 
 BOT_ENABLED = False
 
+# Restricted
+BOT_RESTRICTED = False
+BOT_ADMIN_STDID = ""
+
 # Used by bot to generate
 # emails and telegram response
 WEB_HOSTNAME = ""
@@ -159,6 +163,9 @@ if BOT_ENABLED:
     BOT_TELEGRAM_API_KEY = os.getenv("BOT_TELEGRAM_API_KEY", BOT_TELEGRAM_API_KEY)
 
     BOT_TELEGRAM_HOSTNAME = os.getenv("BOT_TELEGRAM_HOSTNAME", BOT_TELEGRAM_HOSTNAME)
+    
+    BOT_RESTRICTED = os.getenv("BOT_RESTRICTED", BOT_RESTRICTED)
+    BOT_ADMIN_STDID = os.getenv("BOT_ADMIN_STDID", BOT_ADMIN_STDID)
 
     if re.match(EMAIL_REGEX, bot_email := os.getenv("BOT_EMAIL", "")):
         BOT_EMAIL = bot_email
