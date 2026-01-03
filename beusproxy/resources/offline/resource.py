@@ -67,7 +67,11 @@ class Res(Resource):
 
         if resource == "home":
             res.set_cookie(
-                "ImgID", "offline_img_id", httponly=False, secure=False, samesite="Lax"
+                "ImgID",
+                "offline_img_id",
+                httponly=False,
+                secure=False,
+                # samesite="Lax"
             )
 
         return res

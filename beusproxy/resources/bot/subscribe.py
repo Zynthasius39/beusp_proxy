@@ -4,11 +4,10 @@ from smtplib import SMTPException
 from flask import make_response
 from flask_restful import Resource, abort, reqparse
 
-from ...config import BOT_RESTRICTED, BOT_ADMIN_STDID
+from ...config import TMSAPI_OFFLINE, BOT_RESTRICTED, BOT_ADMIN_STDID
 from ...common.utils import get_db, get_emailc, verify_code_gen
 from ...services.discord import is_webhook
 from ...services.email import is_email
-
 
 class BotSubscribe(Resource):
     """BeuTMSBot Subscribe
@@ -66,17 +65,38 @@ class BotSubscribe(Resource):
 
         with get_db() as db_con:
             db_cur = db_con.cursor()
-            db_res = db_cur.execute(
-                """
-                SELECT ss.owner_id, s.active_telegram_id, s.active_discord_id, s.active_email_id
-                FROM Student_Sessions ss
-                INNER JOIN Students s
-                ON ss.owner_id = s.id
-                WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
-                LIMIT 1;
-            """,
-                (args.get("StudentID"), args.get("SessionID")),
-            ).fetchone()
+            db_res = None
+            if TMSAPI_OFFLINE:
+                db_res = db_cur.execute(
+                    """
+                    SELECT
+                        id as owner_id,
+                        active_telegram_id,
+                        active_discord_id,
+                        active_email_id
+                    FROM Students
+                    WHERE student_id = 99;
+                """).fetchone()
+            else:
+                db_res = db_cur.execute(
+                    """
+                    SELECT
+                        ss.owner_id,
+                        s.active_telegram_id,
+                        s.active_discord_id,
+                        s.active_email_id
+                    FROM Student_Sessions ss
+                    INNER JOIN Students s
+                    ON ss.owner_id = s.id
+                    WHERE
+                        s.student_id = ? AND
+                        ss.session_id = ? AND
+                        ss.logged_out = 0
+                    LIMIT 1;
+                """,
+                    (args.get("StudentID"), args.get("SessionID")),
+                ).fetchone()
+            
             if db_res is None:
                 abort(401, help="errorApiUnauthorized")
 
@@ -221,17 +241,36 @@ class BotSubscribe(Resource):
 
         with get_db() as db_con:
             db_cur = db_con.cursor()
-            db_res = db_cur.execute(
-                """
-                SELECT ss.owner_id
-                FROM Student_Sessions ss
-                INNER JOIN Students s
-                ON ss.owner_id = s.id
-                WHERE s.student_id = ? AND ss.session_id = ? AND ss.logged_out = 0
-                LIMIT 1;
+            if TMSAPI_OFFLINE:
+                db_res = db_cur.execute(
+                    """
+                    SELECT
+                        id as owner_id,
+                        active_telegram_id,
+                        active_discord_id,
+                        active_email_id
+                    FROM Students
+                    WHERE student_id = 99;
+                """).fetchone()
+            else:
+                db_res = db_cur.execute(
+                    """
+                    SELECT
+                        ss.owner_id,
+                        s.active_telegram_id,
+                        s.active_discord_id,
+                        s.active_email_id
+                    FROM Student_Sessions ss
+                    INNER JOIN Students s
+                    ON ss.owner_id = s.id
+                    WHERE
+                        s.student_id = ? AND
+                        ss.session_id = ? AND
+                        ss.logged_out = 0
+                    LIMIT 1;
                 """,
-                (args.get("StudentID"), args.get("SessionID")),
-            ).fetchone()
+                    (args.get("StudentID"), args.get("SessionID")),
+                ).fetchone()
 
             if db_res is None:
                 abort(401, help="errorApiUnauthorized")
@@ -381,28 +420,36 @@ class BotSubscribe(Resource):
 
         with get_db() as db_con:
             db_cur = db_con.cursor()
-            db_res = db_cur.execute(
-                """
-                SELECT
-                    ss.owner_id,
-                    s.active_telegram_id,
-                    s.active_discord_id,
-                    s.active_email_id
-                FROM
-                    Student_Sessions ss
-                INNER JOIN
-                    Students s
-                ON
-                    ss.owner_id = s.id
-                WHERE
-                    s.student_id = ? AND
-                    ss.session_id = ? AND
-                    ss.logged_out = 0
-                LIMIT
-                    1;
+            if TMSAPI_OFFLINE:
+                db_res = db_cur.execute(
+                    """
+                    SELECT
+                        id as owner_id,
+                        active_telegram_id,
+                        active_discord_id,
+                        active_email_id
+                    FROM Students
+                    WHERE student_id = 99;
+                """).fetchone()
+            else:
+                db_res = db_cur.execute(
+                    """
+                    SELECT
+                        ss.owner_id,
+                        s.active_telegram_id,
+                        s.active_discord_id,
+                        s.active_email_id
+                    FROM Student_Sessions ss
+                    INNER JOIN Students s
+                    ON ss.owner_id = s.id
+                    WHERE
+                        s.student_id = ? AND
+                        ss.session_id = ? AND
+                        ss.logged_out = 0
+                    LIMIT 1;
                 """,
-                (args.get("StudentID"), args.get("SessionID")),
-            ).fetchone()
+                    (args.get("StudentID"), args.get("SessionID")),
+                ).fetchone()
 
             res = make_response("", 202)
 

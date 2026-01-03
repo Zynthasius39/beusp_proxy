@@ -122,7 +122,7 @@ class Res(Resource):
                 page.get("image"),
                 httponly=False,
                 secure=False,
-                samesite="Lax",
+                # samesite="Lax",
             )
 
         return res
