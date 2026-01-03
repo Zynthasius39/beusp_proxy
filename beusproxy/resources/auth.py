@@ -129,16 +129,22 @@ class Auth(Resource):
             db_cur = db_con.cursor()
 
             # Update student information, adding new student
-            # if it's not present who hopefully read the ToS.
-            db_res = db_cur.execute(
+            # without password if it's not present
+            db_cur.execute(
                 """
                 INSERT INTO Students (student_id, password)
-                VALUES (?, ?)
-                ON CONFLICT (student_id) DO UPDATE
-                SET password = ?
-                RETURNING id;
+                VALUES (?, '')
+                ON CONFLICT (student_id) DO NOTHING;
             """,
-                (student_id, password, password),
+                (student_id, )
+            )
+
+            db_res = db_cur.execute(
+                """
+                SELECT id FROM Students
+                WHERE student_id = ?;           
+            """,
+                (student_id, )
             ).fetchone()
 
             if db_res is None:

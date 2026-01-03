@@ -34,7 +34,8 @@ def authorize_subs(conn):
                 s.active_telegram_id IS NULL AND
                 s.active_discord_id IS NULL AND
                 s.active_email_id IS NULL
-            );
+            ) AND
+            s.student_id != 99;
     """
     ).fetchall()
 
