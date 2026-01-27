@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 from multiprocessing import Event, Process
 from pathlib import Path
 
@@ -55,6 +56,11 @@ class BotProc:
 def proc_worker(shevent=None):
     schedule.every(2).minutes.do(run_chain)
     while not shevent.is_set():
-        schedule.run_pending()
+        now = datetime.now().time()
+        start = datetime.strptime("06:00", "%H:%M").time()
+        end = datetime.strptime("01:00", "%H:%M").time()
+
+        if now >= start or now <= end:
+            schedule.run_pending()
         time.sleep(1)
     schedule.clear()
