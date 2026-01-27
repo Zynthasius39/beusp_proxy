@@ -54,6 +54,7 @@ def transcript(html):
     table = soup.find("table", class_="table").find_all("tr")
     courses_count = 0
     a_courses_count = 0
+    a_eligible = True
 
     # Iterating through rows while ignoring header row.
     for tr in table[1:]:
@@ -156,10 +157,17 @@ def transcript(html):
         hours_str = tds[2].text.strip()
         credit_str = tds[3].text.strip()
         grade_str = tds[4].text.strip()
+        grade_letter = tds[5].text.strip()
 
         courses_count += 1
         if tds[5].text.strip() == "A":
             a_courses_count += 1
+        if (
+            grade_letter != "A" and
+            grade_letter != "B" and
+            grade_letter != "C"
+        ):
+            a_eligible = False
 
         # Never seen other states of 'repeat'
         course_table = {
@@ -172,7 +180,7 @@ def transcript(html):
         current_semester["courses"][tds[0].text.strip().replace(" ", "")] = course_table
 
     transcript_table["aGradePercentage"] = f"{(a_courses_count / courses_count * 100):.2f}"
-    transcript_table["goldDiplomaEligible"] = round(a_courses_count / courses_count, 2) > 0.75
+    transcript_table["goldDiplomaEligible"] = round(a_courses_count / courses_count, 2) > 0.75 and a_eligible
 
     return transcript_table
 
