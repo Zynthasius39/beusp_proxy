@@ -1,0 +1,14 @@
+[Unit]
+Description=HPage Nginx container
+Requires=hpage-network.service hpage_api.c.service hpage_api_offline.c.service
+After=hpage-network.service hpage_api.c.service hpage_api_offline.c.service
+
+[Service]
+AllowedCPUs=2
+MemoryMax=2G
+
+[Container]
+ContainerName=hpage_web
+Network=hpage
+Image=localhost/zynthasius/beusp:alpine
+PublishPort=8080:80

@@ -1,0 +1,18 @@
+[Unit]
+Description=HPage Bot container
+Requires=hpage-network.service hpage_web.c.service
+After=hpage-network.service hpage_web.c.service
+
+[Service]
+AllowedCPUs=2
+MemoryMax=1G
+
+[Container]
+ContainerName=hpage_bot
+Network=hpage
+Image=localhost/zynthasius/beusproxy:bot-alpine
+Volume=/root/hpage/shared:/hpage/shared:z
+Volume=/var/log/beusproxy:/hpage/log:z
+EnvironmentFile=/root/hpage/env
+PodmanArgs=--cpus 2
+PodmanArgs=--memory 1G

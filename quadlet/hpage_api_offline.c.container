@@ -1,0 +1,19 @@
+[Unit]
+Description=HPage uWSGI offline container
+After=hpage-network.service
+Requires=hpage-network.service
+
+[Service]
+AllowedCPUs=4
+MemoryMax=1G
+
+[Container]
+ContainerName=hpage_api_offline
+Network=hpage
+Image=localhost/zynthasius/beusproxy:alpine
+Volume=/root/hpage/shared:/hpage/shared:z
+EnvironmentFile=/root/hpage/env
+Environment=TMSAPI_OFFLINE=true
+Environment=BOT_ENABLED=false
+PodmanArgs=--cpus 4
+PodmanArgs=--memory 1G

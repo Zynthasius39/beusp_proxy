@@ -1,0 +1,12 @@
+[Unit]
+Description=HPage uWSGI container
+After=wait-for-internet.service hpage-network.service
+Requires=wait-for-internet.service hpage-network.service
+[Container]
+ContainerName=hpage_api
+Network=hpage
+Image=localhost/zynthasius/beusproxy:alpine
+Volume=/root/hpage/shared:/hpage/shared:z
+EnvironmentFile=/root/hpage/env
+PodmanArgs=--cpus 4
+PodmanArgs=--memory 2G

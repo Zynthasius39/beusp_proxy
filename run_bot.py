@@ -1,3 +1,4 @@
+import logging
 import signal
 from multiprocessing import Event
 
